@@ -1,4 +1,5 @@
 use std::iter::repeat;
+use std::ops::Add;
 use std::ops::AddAssign;
 use std::str::FromStr;
 
@@ -13,13 +14,13 @@ use super::basis_blade_bits::SeaBasisBladeBits;
 use super::basis_blade::SeaBasisBladeLow;
 
 
-#[derive(Debug, PartialEq)]
-pub struct SeaMultivectorLowSparseCoefficentsNoMetric<T:SeaCoefficient, I:SeaBasisBladeBitsInner>{
+#[derive(Debug, Clone, PartialEq)]
+pub struct SeaMultivectorLowSparseCoefficents<T:SeaCoefficient, I:SeaBasisBladeBitsInner>{
 	pub basis_blade_bits: SeaBasisBladeBits<I>,
 	pub coefficients: Vec<T>
 }
 
-impl<T:SeaCoefficient, I:SeaBasisBladeBitsInner> FromStr for SeaMultivectorLowSparseCoefficentsNoMetric<T, I> {
+impl<T:SeaCoefficient, I:SeaBasisBladeBitsInner> FromStr for SeaMultivectorLowSparseCoefficents<T, I> {
 	type Err = ParseMultivectorError;
 	
 	fn from_str(s: &str) -> Result<Self, Self::Err> {
@@ -61,7 +62,7 @@ impl<T:SeaCoefficient, I:SeaBasisBladeBitsInner> FromStr for SeaMultivectorLowSp
 	}
 }
 
-impl<T:SeaCoefficient, I:SeaBasisBladeBitsInner> AddAssign<&Self> for SeaMultivectorLowSparseCoefficentsNoMetric<T, I> {
+impl<T:SeaCoefficient, I:SeaBasisBladeBitsInner> AddAssign<&Self> for SeaMultivectorLowSparseCoefficents<T, I> {
 	fn add_assign(&mut self, rhs: &Self) {
 		let bb_out = &self.basis_blade_bits | &rhs.basis_blade_bits;
 
@@ -85,6 +86,15 @@ impl<T:SeaCoefficient, I:SeaBasisBladeBitsInner> AddAssign<&Self> for SeaMultive
 		self.basis_blade_bits = bb_out;
 	}
 }
+impl<T:SeaCoefficient, I:SeaBasisBladeBitsInner> Add<Self> for &SeaMultivectorLowSparseCoefficents<T, I> {
+    type Output = SeaMultivectorLowSparseCoefficents<T, I>;
+
+    fn add(self, rhs: Self) -> Self::Output {
+		let mut out = self.clone();
+		out += rhs;
+		out
+	}
+}
 
 
 #[cfg(test)]
@@ -93,38 +103,43 @@ mod tests{
 
 	#[test]
 	fn from_str() {
-		let a = SeaMultivectorLowSparseCoefficentsNoMetric::<f32, u8>::from_str("1 + e1 + 2e2 + 3e12 + 4e3 + 5e13 + 6e23 + 7e123").unwrap();
+		let a = SeaMultivectorLowSparseCoefficents::<f32, u8>::from_str("1 + e1 + 2e2 + 3e12 + 4e3 + 5e13 + 6e23 + 7e123").unwrap();
 		assert_eq!(
 			a,
-			SeaMultivectorLowSparseCoefficentsNoMetric { 
+			SeaMultivectorLowSparseCoefficents { 
 				basis_blade_bits: SeaBasisBladeBits(255), 
 				coefficients: vec![1_f32, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0] 
 			}
 		);
 
-		let a = SeaMultivectorLowSparseCoefficentsNoMetric::<f32, u16>::from_str("1 - e1 + 2e2 - 3e12 + 4e3 - 5e13 + 6e23 - 7e123 + 8e4 - 9e14 + 10e24 - 11e124 + 12e34 - 13e134 + 14e234 - 15e1234").unwrap();
+		let a = SeaMultivectorLowSparseCoefficents::<f32, u16>::from_str("1 - e1 + 2e2 - 3e12 + 4e3 - 5e13 + 6e23 - 7e123 + 8e4 - 9e14 + 10e24 - 11e124 + 12e34 - 13e134 + 14e234 - 15e1234").unwrap();
 		assert_eq!(
 			a,
-			SeaMultivectorLowSparseCoefficentsNoMetric { 
+			SeaMultivectorLowSparseCoefficents { 
 				basis_blade_bits: SeaBasisBladeBits(65535), 
 				coefficients: vec![1_f32, -1.0, 2.0, -3.0, 4.0, -5.0, 6.0, -7.0, 8.0, -9.0, 10.0, -11.0, 12.0, -13.0, 14.0, -15.0] 
 			}
 		);
 
-		assert_eq!(SeaMultivectorLowSparseCoefficentsNoMetric::<f32, u8>::from_str("e4").unwrap_err(), ParseMultivectorError::InvalidBasisBladeForAlgebra);
-		assert_eq!(SeaMultivectorLowSparseCoefficentsNoMetric::<f32, u8>::from_str("e21").unwrap_err(), ParseMultivectorError::InvalidBasisVectorOrdering);
-		assert_eq!(SeaMultivectorLowSparseCoefficentsNoMetric::<f32, u8>::from_str("e11").unwrap_err(), ParseMultivectorError::DuplicateBasisVector);
-		assert_eq!(SeaMultivectorLowSparseCoefficentsNoMetric::<f32, u8>::from_str("e1 + e1").unwrap_err(), ParseMultivectorError::DuplicateBasisBlade);
+		assert_eq!(SeaMultivectorLowSparseCoefficents::<f32, u8>::from_str("e4").unwrap_err(), ParseMultivectorError::InvalidBasisBladeForAlgebra);
+		assert_eq!(SeaMultivectorLowSparseCoefficents::<f32, u8>::from_str("e21").unwrap_err(), ParseMultivectorError::InvalidBasisVectorOrdering);
+		assert_eq!(SeaMultivectorLowSparseCoefficents::<f32, u8>::from_str("e11").unwrap_err(), ParseMultivectorError::DuplicateBasisVector);
+		assert_eq!(SeaMultivectorLowSparseCoefficents::<f32, u8>::from_str("e1 + e1").unwrap_err(), ParseMultivectorError::DuplicateBasisBlade);
 	}
 
 	#[test]
-	fn add_assign() {
-		let mut a = SeaMultivectorLowSparseCoefficentsNoMetric::<f32, u8>::from_str("-1 + e1 + 2e2 + 3e12 + 4e3 + 5e13 + 6e23 + 7e123").unwrap();
-		let b = SeaMultivectorLowSparseCoefficentsNoMetric::<f32, u8>::from_str("-1 + e1 + 2e2 + 3e12 + 4e3 + 5e13 + 6e23 + 7e123").unwrap();
+	fn add() {
+		let mut a = SeaMultivectorLowSparseCoefficents::<f32, u8>::from_str("-1 + e1 + 2e2 + 3e12 + 4e3 + 5e13 + 6e23 + 7e123").unwrap();
+		let b = SeaMultivectorLowSparseCoefficents::<f32, u8>::from_str("-1 + e1 + 2e2 + 3e12 + 4e3 + 5e13 + 6e23 + 7e123").unwrap();
+		assert_eq!(
+			&a + &b,
+			SeaMultivectorLowSparseCoefficents::<f32, u8>::from_str("-2 + 2e1 + 4e2 + 6e12 + 8e3 + 10e13 + 12e23 + 14e123").unwrap()
+		);
+
 		a += &b;
 		assert_eq!(
 			a,
-			SeaMultivectorLowSparseCoefficentsNoMetric::<f32, u8>::from_str("-2 + 2e1 + 4e2 + 6e12 + 8e3 + 10e13 + 12e23 + 14e123").unwrap()
+			SeaMultivectorLowSparseCoefficents::<f32, u8>::from_str("-2 + 2e1 + 4e2 + 6e12 + 8e3 + 10e13 + 12e23 + 14e123").unwrap()
 		);
 	}
 }

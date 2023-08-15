@@ -68,7 +68,7 @@ impl<I:SeaBasisBladeBitsInner> Iterator for BasisBladeBitsIter<I> {
 }
 
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct SeaBasisBladeBits<I: SeaBasisBladeBitsInner>(pub I);
 impl<I: SeaBasisBladeBitsInner> SeaBasisBladeBits<I> {
 	pub const DIMENSIONS: u8 = I::DIMENSIONS;

@@ -10,10 +10,10 @@ mod basis_blade_bits;
 mod without_metric;
 mod with_metric;
 
-use with_metric::SeaMultivectorLowSparseCoefficents;
+use with_metric::SeaMultivectorLowSparseCoefficentsWithMetric;
 
 
-pub type Multivector3D<T> = SeaMultivectorLowSparseCoefficents::<T, u8>;
-pub type Multivector4D<T> = SeaMultivectorLowSparseCoefficents::<T, u16>;
-pub type Multivector5D<T> = SeaMultivectorLowSparseCoefficents::<T, u32>;
-pub type Multivector6D<T> = SeaMultivectorLowSparseCoefficents::<T, u64>;
+pub type Multivector3D<T> = SeaMultivectorLowSparseCoefficentsWithMetric::<T, u8>;
+pub type Multivector4D<T> = SeaMultivectorLowSparseCoefficentsWithMetric::<T, u16>;
+pub type Multivector5D<T> = SeaMultivectorLowSparseCoefficentsWithMetric::<T, u32>;
+pub type Multivector6D<T> = SeaMultivectorLowSparseCoefficentsWithMetric::<T, u64>;
