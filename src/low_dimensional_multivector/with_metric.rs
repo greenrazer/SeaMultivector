@@ -5,7 +5,7 @@ use crate::errors::ParseMultivectorError;
 use crate::metric::SeaMetric;
 use crate::coefficient::SeaCoefficient;
 
-use super::no_metric::SeaMultivectorLowSparseCoefficentsNoMetric; 
+use super::without_metric::SeaMultivectorLowSparseCoefficentsNoMetric; 
 use super::basis_blade_bits::SeaBasisBladeBitsInner;
 use super::basis_blade_bits::SeaBasisBladeBits;
 

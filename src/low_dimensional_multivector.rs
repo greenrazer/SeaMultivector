@@ -7,7 +7,7 @@ use crate::coefficient::SeaCoefficient;
 mod basis_blade_index;
 mod basis_blade;
 mod basis_blade_bits;
-mod no_metric;
+mod without_metric;
 mod with_metric;
 
 use with_metric::SeaMultivectorLowSparseCoefficents;
