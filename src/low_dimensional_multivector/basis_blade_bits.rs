@@ -1,41 +1,31 @@
 use std::ops::{Deref, DerefMut, AddAssign, BitOrAssign, Shl};
 use std::str::FromStr;
 
-use num_traits::{Unsigned, Zero, One};
+use funty::Unsigned;
 
 use crate::errors::ParseMultivectorError;
 
 use super::basis_blade_index::SeaBasisBladeIndexLow;
 
-pub trait SeaBasisBladeBitsInner: Unsigned + BitOrAssign + for<'a> Shl<&'a u8, Output = Self>{
-	const ZERO: Self;
-	const ONE: Self;
+pub trait SeaBasisBladeBitsInner: Unsigned{
 	fn from_u8(other: u8) -> Self;
 }
 impl SeaBasisBladeBitsInner for u8 {
-	const ZERO: Self = 0;
-	const ONE: Self = 1;
 	fn from_u8(other: u8) -> Self{
 		return other as Self;
 	}
 }
 impl SeaBasisBladeBitsInner for u16 {
-	const ZERO: Self = 0;
-	const ONE: Self = 1;
 	fn from_u8(other: u8) -> Self{
 		return other as Self;
 	}
 }
 impl SeaBasisBladeBitsInner for u32 {
-	const ZERO: Self = 0;
-	const ONE: Self = 1;
 	fn from_u8(other: u8) -> Self{
 		return other as Self;
 	}
 }
 impl SeaBasisBladeBitsInner for u64 {
-	const ZERO: Self = 0;
-	const ONE: Self = 1;
 	fn from_u8(other: u8) -> Self{
 		return other as Self;
 	}
