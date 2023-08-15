@@ -119,6 +119,12 @@ mod tests{
 
 	#[test]
 	fn add_assign() {
-
+		let mut a = SeaMultivectorLowSparseCoefficentsNoMetric::<f32, u8>::from_str("-1 + e1 + 2e2 + 3e12 + 4e3 + 5e13 + 6e23 + 7e123").unwrap();
+		let b = SeaMultivectorLowSparseCoefficentsNoMetric::<f32, u8>::from_str("-1 + e1 + 2e2 + 3e12 + 4e3 + 5e13 + 6e23 + 7e123").unwrap();
+		a += &b;
+		assert_eq!(
+			a,
+			SeaMultivectorLowSparseCoefficentsNoMetric::<f32, u8>::from_str("-2 + 2e1 + 4e2 + 6e12 + 8e3 + 10e13 + 12e23 + 14e123").unwrap()
+		);
 	}
 }
