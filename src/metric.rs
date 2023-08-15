@@ -1,6 +1,7 @@
 use std::str::FromStr;
 use crate::errors::ParseMetricError;
 
+
 #[derive(Debug, PartialEq)]
 pub struct SeaMetric {
 	pub positive: u8,
@@ -18,6 +19,7 @@ impl SeaMetric {
 		}
 	}
 }
+
 impl FromStr for SeaMetric {
 	type Err = ParseMetricError;
 	fn from_str(s: &str) -> Result<Self, Self::Err> {
@@ -59,12 +61,13 @@ impl FromStr for SeaMetric {
 	}
 }
 
+
 #[cfg(test)]
 mod tests {
     use super::*;
 
     #[test]
-    fn metric_from_str() {
+    fn from_str() {
 		assert_eq!(SeaMetric::from_str("1").unwrap(), SeaMetric::new(1, 0, 0));
 		assert_eq!(SeaMetric::from_str("1, 2").unwrap(), SeaMetric::new(1, 2, 0));
 		assert_eq!(SeaMetric::from_str("1, 2, 3").unwrap(), SeaMetric::new(1, 2, 3));

@@ -5,11 +5,13 @@ use crate::coefficient::SeaCoefficient;
 
 use super::basis_blade_index::SeaBasisBladeIndexLow;
 
+
 #[derive(Debug, PartialEq)]
 pub struct SeaBasisBladeLow<T: SeaCoefficient>{
 	pub index: SeaBasisBladeIndexLow,
 	pub coefficient: T
 }
+
 impl<T: SeaCoefficient> FromStr for SeaBasisBladeLow<T> {
 	type Err = ParseMultivectorError;
 
@@ -50,13 +52,12 @@ impl<T: SeaCoefficient> FromStr for SeaBasisBladeLow<T> {
 }
 
 
-
 #[cfg(test)]
 mod tests {
     use super::*;
 
 	#[test]
-	fn basis_blade_from_str() {
+	fn from_str() {
 		assert_eq!(
 			SeaBasisBladeLow::<f32>::from_str("3e12").unwrap(),
 			SeaBasisBladeLow{index: SeaBasisBladeIndexLow(3), coefficient:3_f32}

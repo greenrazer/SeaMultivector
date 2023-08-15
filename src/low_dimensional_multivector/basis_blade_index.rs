@@ -3,8 +3,10 @@ use std::ops::{Deref, DerefMut};
 
 use crate::errors::ParseMultivectorError;
 
+
 #[derive(Debug, PartialEq, Eq, PartialOrd, Ord)]
 pub struct SeaBasisBladeIndexLow(pub u8);
+
 impl Deref for SeaBasisBladeIndexLow {
 	type Target = u8;
 	fn deref(&self) -> &Self::Target {
@@ -16,6 +18,7 @@ impl DerefMut for SeaBasisBladeIndexLow {
 		&mut self.0
 	}
 }
+
 impl FromStr for SeaBasisBladeIndexLow {
 	type Err = ParseMultivectorError;
 		

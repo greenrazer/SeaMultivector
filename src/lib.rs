@@ -6,6 +6,7 @@ mod metric;
 mod coefficient;
 mod low_dimensional_multivector;
 
+
 pub mod prelude {
     pub use std::str::FromStr;
     pub use super::low_dimensional_multivector::{
@@ -15,6 +16,7 @@ pub mod prelude {
         Multivector6D
     };
 }
+
 
 #[cfg(test)]
 mod tests {
