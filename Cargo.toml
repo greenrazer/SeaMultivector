@@ -1,0 +1,11 @@
+[package]
+name = "seagrass-math"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+lazy_static = "1.4.0"
+num-traits = "0.2.16"
+regex = "1.9.3"
