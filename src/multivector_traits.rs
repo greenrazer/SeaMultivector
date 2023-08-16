@@ -1,39 +1,24 @@
 use crate::coefficient::SeaCoefficient;
 
+
 pub trait Multivector{
 	fn new() -> Self;
 
-	fn reversed(&self) -> Self;
-	fn involuted(&self) -> Self;
-	fn conjugated(&self) -> Self;
+	fn reversion_conjugated(&self) -> Self;
+	fn involution_conjugated(&self) -> Self;
+	fn clifford_conjugated(&self) -> Self;
+}
+pub trait MultivectorMut: Multivector{
+	fn reversion_conjugation(&mut self);
+	fn involution_conjugation(&mut self);
+	fn clifford_conjugation(&mut self);
 }
 
-impl<T: SeaCoefficient> Multivector for T {
-	fn new() -> Self {
-		T::zero()
-	}
+pub trait Versor: Multivector {}
+pub trait VersorMut: Versor + MultivectorMut {}
 
-	fn reversed(&self) -> Self {
-		*self
-	}
+pub trait Motor: Multivector {}
+pub trait MotorMut: Motor + MultivectorMut {}
 
-	fn involuted(&self) -> Self {
-		*self
-	}
-
-	fn conjugated(&self) -> Self {
-		*self
-	}
-}
-
-pub trait MultivectorMut{
-	fn reversion(&mut self);
-	fn involution(&mut self);
-	fn conjugation(&mut self);
-}
-
-impl<T: SeaCoefficient> MultivectorMut for T {
-	fn reversion(&mut self){}
-	fn involution(&mut self){}
-	fn conjugation(&mut self){}
-}
+pub trait Glide: Multivector {}
+pub trait GlideMut: Glide + MultivectorMut {}

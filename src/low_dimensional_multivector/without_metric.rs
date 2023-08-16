@@ -165,28 +165,28 @@ impl<T:SeaCoefficient, I:SeaBasisBladeBitsInner> Multivector for SeaMultivectorL
 		}
 	}
 
-	fn reversed(&self) -> Self {
+	fn reversion_conjugated(&self) -> Self {
 		self.negated_basis_blades(&SeaBasisBladeBits::<I>::REVERSION_NEGATIONS)
 	}
 
-	fn involuted(&self) -> Self {
+	fn involution_conjugated(&self) -> Self {
 		self.negated_basis_blades(&SeaBasisBladeBits::<I>::ODD_GRADES)
 	}
 
-	fn conjugated(&self) -> Self {
+	fn clifford_conjugated(&self) -> Self {
 		self.negated_basis_blades(&SeaBasisBladeBits::<I>::CONJUGATION_NEGATIONS)
 	}
 }
 impl<T:SeaCoefficient, I:SeaBasisBladeBitsInner> MultivectorMut for SeaMultivectorLowSparseCoefficents<T, I>{
-	fn reversion(&mut self) {
+	fn reversion_conjugation(&mut self) {
 		self.negate_basis_blades(&SeaBasisBladeBits::<I>::REVERSION_NEGATIONS)
 	}
 
-	fn involution(&mut self) {
+	fn involution_conjugation(&mut self) {
 		self.negate_basis_blades(&SeaBasisBladeBits::<I>::ODD_GRADES)
 	}
 
-	fn conjugation(&mut self) {
+	fn clifford_conjugation(&mut self) {
 		self.negate_basis_blades(&SeaBasisBladeBits::<I>::CONJUGATION_NEGATIONS)
 	}
 }
@@ -309,21 +309,21 @@ use super::*;
 		let a = SeaMultivectorLowSparseCoefficents::<f32, u8>::from_str("1 + e1 + 2e2 + 3e12 + 4e3 + 5e13 + 6e23 + 7e123").unwrap();
 		let out = SeaMultivectorLowSparseCoefficents::<f32, u8>::from_str("1 + e1 + 2e2 - 3e12 + 4e3 - 5e13 - 6e23 - 7e123").unwrap();
 		assert_eq!(
-			a.reversed(),
+			a.reversion_conjugated(),
 			out
 		);
 
 		let a = SeaMultivectorLowSparseCoefficents::<f32, u8>::from_str("1 + e1 + 2e2 + 3e12 + 4e3 + 5e13 + 6e23 + 7e123").unwrap();
 		let out = SeaMultivectorLowSparseCoefficents::<f32, u8>::from_str("1 - e1 - 2e2 + 3e12 - 4e3 + 5e13 + 6e23 - 7e123").unwrap();
 		assert_eq!(
-			a.involuted(),
+			a.involution_conjugated(),
 			out
 		);
 
 		let a = SeaMultivectorLowSparseCoefficents::<f32, u8>::from_str("1 + e1 + 2e2 + 3e12 + 4e3 + 5e13 + 6e23 + 7e123").unwrap();
 		let out = SeaMultivectorLowSparseCoefficents::<f32, u8>::from_str("1 - e1 - 2e2 - 3e12 - 4e3 - 5e13 - 6e23 + 7e123").unwrap();
 		assert_eq!(
-			a.conjugated(),
+			a.clifford_conjugated(),
 			out
 		);
 	}
@@ -332,7 +332,7 @@ use super::*;
 	fn multivector_mut(){
 		let mut a = SeaMultivectorLowSparseCoefficents::<f32, u8>::from_str("1 + e1 + 2e2 + 3e12 + 4e3 + 5e13 + 6e23 + 7e123").unwrap();
 		let out = SeaMultivectorLowSparseCoefficents::<f32, u8>::from_str("1 + e1 + 2e2 - 3e12 + 4e3 - 5e13 - 6e23 - 7e123").unwrap();
-		a.reversion();
+		a.reversion_conjugation();
 		assert_eq!(
 			a,
 			out
@@ -340,7 +340,7 @@ use super::*;
 
 		let mut a = SeaMultivectorLowSparseCoefficents::<f32, u8>::from_str("1 + e1 + 2e2 + 3e12 + 4e3 + 5e13 + 6e23 + 7e123").unwrap();
 		let out = SeaMultivectorLowSparseCoefficents::<f32, u8>::from_str("1 - e1 - 2e2 + 3e12 - 4e3 + 5e13 + 6e23 - 7e123").unwrap();
-		a.involution();
+		a.involution_conjugation();
 		assert_eq!(
 			a,
 			out
@@ -348,7 +348,7 @@ use super::*;
 
 		let mut a = SeaMultivectorLowSparseCoefficents::<f32, u8>::from_str("1 + e1 + 2e2 + 3e12 + 4e3 + 5e13 + 6e23 + 7e123").unwrap();
 		let out = SeaMultivectorLowSparseCoefficents::<f32, u8>::from_str("1 - e1 - 2e2 - 3e12 - 4e3 - 5e13 - 6e23 + 7e123").unwrap();
-		a.conjugation();
+		a.clifford_conjugation();
 		assert_eq!(
 			a,
 			out

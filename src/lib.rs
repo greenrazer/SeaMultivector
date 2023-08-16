@@ -20,6 +20,40 @@ pub mod prelude {
 }
 
 
+// Multivector core
+// conjugations
+// geometric product
+
+// not done:
+
+// Mul for geometric product
+// geometric product for mv with metric
+//  just to see how fast implmentation goes
+// test our implementation in lib.rs
+
+// LeftContration <<, RightContraction >>, Inner |
+// Outer ^
+// do the above procedure for each of them and their symbols.
+
+// Dual !
+
+// Add basisblade for multivector
+
+// Regressive Product
+// Norm
+
+
+// grade iterator
+// collect into graded multivector (grade, array<T>) dense
+
+//scalar is T
+// vector is always just array<T>
+//pseudovector needs a wrapper<array<T>>
+//pseudoscalar needs a wrapper<T>
+//Versor/ Motor/Glide Wrappers
+//invere sandwich exponential logarithm
+
+
 #[cfg(test)]
 mod tests {
     use super::prelude::*;
