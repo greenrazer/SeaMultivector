@@ -5,6 +5,8 @@ mod errors;
 mod metric;
 mod coefficient;
 mod low_dimensional_multivector;
+mod multivector_traits;
+mod multivector_product_traits;
 
 
 pub mod prelude {

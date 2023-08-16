@@ -8,16 +8,77 @@ use regex::Regex;
 
 use crate::coefficient::SeaCoefficient;
 use crate::errors::ParseMultivectorError;
+use crate::multivector_traits::Multivector;
+use crate::multivector_traits::MultivectorMut;
+use crate::multivector_product_traits::GeometricProduct;
+use crate::metric::SeaMetric;
 
 use super::basis_blade_bits::SeaBasisBladeBitsInner;
 use super::basis_blade_bits::SeaBasisBladeBits;
 use super::basis_blade::SeaBasisBladeLow;
+use super::basis_blade_index::SeaBasisBladeIndexLow;
 
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct SeaMultivectorLowSparseCoefficents<T:SeaCoefficient, I:SeaBasisBladeBitsInner>{
 	pub basis_blade_bits: SeaBasisBladeBits<I>,
 	pub coefficients: Vec<T>
+}
+impl<T:SeaCoefficient, I:SeaBasisBladeBitsInner> SeaMultivectorLowSparseCoefficents<T, I> {
+	fn negated_basis_blades(&self, blade_bits: &SeaBasisBladeBits<I>) -> Self{
+		let mut new_coeffs = self.coefficients.clone();
+		let negation_bits = &self.basis_blade_bits & blade_bits;
+		for idx in &negation_bits {
+			let i = self.basis_blade_bits.count_basis_blades_less_than(&idx); 
+			new_coeffs[i as usize] = -new_coeffs[i as usize];
+		}
+
+		Self { 
+			basis_blade_bits: self.basis_blade_bits.clone(), 
+			coefficients: new_coeffs
+		}
+	}
+
+	fn negate_basis_blades(&mut self, blade_bits: &SeaBasisBladeBits<I>){
+		let negation_bits = &self.basis_blade_bits & blade_bits;
+		for idx in &negation_bits {
+			let i = self.basis_blade_bits.count_basis_blades_less_than(&idx); 
+			self.coefficients[i as usize] = -self.coefficients[i as usize];
+		}
+	}
+
+	fn geometric_product_swap(&mut self, swap_by:&SeaBasisBladeIndexLow){
+		for i in swap_by{
+			let bv_idx = i+1;
+			
+			let lookup_idx = bv_idx as usize;
+			let bitmask = &SeaBasisBladeBits::<I>::CONTAINS_BASIS_VECS[lookup_idx];
+			let mut msb = &self.basis_blade_bits & bitmask;
+			let mut lsb = &self.basis_blade_bits & &!bitmask;
+			
+			let shift_amnt = 1_u8 << (bv_idx-1);
+			let window = 1_u8 << bv_idx;
+			let mask = SeaBasisBladeBits::<I>::basis_blades_less_than(&SeaBasisBladeIndexLow(window));
+			
+			let mut num_seen = 0;
+			for i in (0..I::NUM_BASIS_BLADES).step_by(window as usize) {
+				let t_mask = &mask << i;
+				let msb_ones = (&msb & &t_mask).count_ones() as usize;
+				let lsb_ones = (&lsb & &t_mask).count_ones() as usize;
+				if msb_ones > 0 && lsb_ones > 0 {
+					let (left, right) = self.coefficients.split_at_mut(num_seen + lsb_ones);
+					left[num_seen..].reverse();
+					right[..msb_ones].reverse();
+					self.coefficients[num_seen..num_seen+lsb_ones+msb_ones].reverse();
+				}
+				num_seen += msb_ones + lsb_ones;
+			}
+		
+			msb >>= shift_amnt;
+			lsb <<= shift_amnt;
+			self.basis_blade_bits = &msb | &lsb;
+		}
+	}
 }
 
 impl<T:SeaCoefficient, I:SeaBasisBladeBitsInner> FromStr for SeaMultivectorLowSparseCoefficents<T, I> {
@@ -96,10 +157,110 @@ impl<T:SeaCoefficient, I:SeaBasisBladeBitsInner> Add<Self> for &SeaMultivectorLo
 	}
 }
 
+impl<T:SeaCoefficient, I:SeaBasisBladeBitsInner> Multivector for SeaMultivectorLowSparseCoefficents<T, I>{
+	fn new() -> Self {
+		Self { 
+			basis_blade_bits: SeaBasisBladeBits::ZERO, 
+			coefficients: vec![]
+		}
+	}
+
+	fn reversed(&self) -> Self {
+		self.negated_basis_blades(&SeaBasisBladeBits::<I>::REVERSION_NEGATIONS)
+	}
+
+	fn involuted(&self) -> Self {
+		self.negated_basis_blades(&SeaBasisBladeBits::<I>::ODD_GRADES)
+	}
+
+	fn conjugated(&self) -> Self {
+		self.negated_basis_blades(&SeaBasisBladeBits::<I>::CONJUGATION_NEGATIONS)
+	}
+}
+impl<T:SeaCoefficient, I:SeaBasisBladeBitsInner> MultivectorMut for SeaMultivectorLowSparseCoefficents<T, I>{
+	fn reversion(&mut self) {
+		self.negate_basis_blades(&SeaBasisBladeBits::<I>::REVERSION_NEGATIONS)
+	}
+
+	fn involution(&mut self) {
+		self.negate_basis_blades(&SeaBasisBladeBits::<I>::ODD_GRADES)
+	}
+
+	fn conjugation(&mut self) {
+		self.negate_basis_blades(&SeaBasisBladeBits::<I>::CONJUGATION_NEGATIONS)
+	}
+}
+
+impl<T:SeaCoefficient, I:SeaBasisBladeBitsInner> GeometricProduct<(&Self, &SeaMetric)> for SeaMultivectorLowSparseCoefficents<T, I>{
+	type Output = Self;
+
+	fn geometric_product(&self, (rhs, metric): (&Self, &SeaMetric)) -> Self::Output {
+		let num_metric_non_zeros = metric.positive + metric.negitive;
+		let output_basis_blade_bits = {
+			self.basis_blade_bits.geometric_product(
+				(&rhs.basis_blade_bits, num_metric_non_zeros)
+			)
+		};
+		let output_num_coeffs = output_basis_blade_bits.count_ones() as usize;
+		let mut output_coefficients = vec![T::zero(); output_num_coeffs];
+
+		let metric_non_zeros = SeaBasisBladeIndexLow::basis_vectors_less_than(num_metric_non_zeros);
+		let metric_positive = SeaBasisBladeIndexLow::basis_vectors_less_than(metric.positive);
+		let metric_negs = &metric_non_zeros ^ &metric_positive;
+
+		let mut curr_rhs = rhs.clone();
+		let mut curr_rhs_state = SeaBasisBladeIndexLow::ZERO;
+
+		let mut zero_cache: (SeaBasisBladeIndexLow, SeaBasisBladeBits<I>) = (SeaBasisBladeIndexLow::ZERO, SeaBasisBladeBits::<I>::ONE);
+		let mut out_idx = 0;
+		for o in &output_basis_blade_bits {
+			let metric_zeros_lookup = &o | &metric_non_zeros;
+			if zero_cache.0 != metric_zeros_lookup {
+				let row = SeaBasisBladeBits::<I>::zero_mask_for_output_index(&metric_zeros_lookup);
+				zero_cache = (metric_zeros_lookup, row);
+			}
+
+			let cannonical_neg_mask = SeaBasisBladeBits::<I>::cannonical_neg_mask(&o);
+			let metric_neg_mask = SeaBasisBladeBits::<I>::metric_neg_mask(&o, &metric_negs);
+			let total_neg_mask = &cannonical_neg_mask ^ &metric_neg_mask;
+
+			let swap_by = &curr_rhs_state ^ &o;
+			curr_rhs.geometric_product_swap(&swap_by);
+			curr_rhs_state  = o;
+
+			let mut dot_mask = &self.basis_blade_bits & &curr_rhs.basis_blade_bits;
+			dot_mask &= &zero_cache.1;
+
+			for i in &dot_mask {
+				let a_idx = self.basis_blade_bits.count_basis_blades_less_than(&i) as usize;
+				let b_idx = curr_rhs.basis_blade_bits.count_basis_blades_less_than(&i) as usize;
+				let c_a = self.coefficients[a_idx];
+				let c_b = curr_rhs.coefficients[b_idx];
+				let mut c = c_a * c_b;
+				
+				if total_neg_mask.has(&i){
+					c = -c; 
+				}
+
+				output_coefficients[out_idx] += c;
+			}
+
+			out_idx += 1;
+		}
+
+		Self {
+			basis_blade_bits: output_basis_blade_bits,
+			coefficients: output_coefficients
+		}
+	}
+
+}
 
 #[cfg(test)]
 mod tests{
-	use super::*;
+	use std::time::Instant;
+
+use super::*;
 
 	#[test]
 	fn from_str() {
@@ -141,5 +302,248 @@ mod tests{
 			a,
 			SeaMultivectorLowSparseCoefficents::<f32, u8>::from_str("-2 + 2e1 + 4e2 + 6e12 + 8e3 + 10e13 + 12e23 + 14e123").unwrap()
 		);
+	}
+
+	#[test]
+	fn multivector() {
+		let a = SeaMultivectorLowSparseCoefficents::<f32, u8>::from_str("1 + e1 + 2e2 + 3e12 + 4e3 + 5e13 + 6e23 + 7e123").unwrap();
+		let out = SeaMultivectorLowSparseCoefficents::<f32, u8>::from_str("1 + e1 + 2e2 - 3e12 + 4e3 - 5e13 - 6e23 - 7e123").unwrap();
+		assert_eq!(
+			a.reversed(),
+			out
+		);
+
+		let a = SeaMultivectorLowSparseCoefficents::<f32, u8>::from_str("1 + e1 + 2e2 + 3e12 + 4e3 + 5e13 + 6e23 + 7e123").unwrap();
+		let out = SeaMultivectorLowSparseCoefficents::<f32, u8>::from_str("1 - e1 - 2e2 + 3e12 - 4e3 + 5e13 + 6e23 - 7e123").unwrap();
+		assert_eq!(
+			a.involuted(),
+			out
+		);
+
+		let a = SeaMultivectorLowSparseCoefficents::<f32, u8>::from_str("1 + e1 + 2e2 + 3e12 + 4e3 + 5e13 + 6e23 + 7e123").unwrap();
+		let out = SeaMultivectorLowSparseCoefficents::<f32, u8>::from_str("1 - e1 - 2e2 - 3e12 - 4e3 - 5e13 - 6e23 + 7e123").unwrap();
+		assert_eq!(
+			a.conjugated(),
+			out
+		);
+	}
+
+	#[test]
+	fn multivector_mut(){
+		let mut a = SeaMultivectorLowSparseCoefficents::<f32, u8>::from_str("1 + e1 + 2e2 + 3e12 + 4e3 + 5e13 + 6e23 + 7e123").unwrap();
+		let out = SeaMultivectorLowSparseCoefficents::<f32, u8>::from_str("1 + e1 + 2e2 - 3e12 + 4e3 - 5e13 - 6e23 - 7e123").unwrap();
+		a.reversion();
+		assert_eq!(
+			a,
+			out
+		);
+
+		let mut a = SeaMultivectorLowSparseCoefficents::<f32, u8>::from_str("1 + e1 + 2e2 + 3e12 + 4e3 + 5e13 + 6e23 + 7e123").unwrap();
+		let out = SeaMultivectorLowSparseCoefficents::<f32, u8>::from_str("1 - e1 - 2e2 + 3e12 - 4e3 + 5e13 + 6e23 - 7e123").unwrap();
+		a.involution();
+		assert_eq!(
+			a,
+			out
+		);
+
+		let mut a = SeaMultivectorLowSparseCoefficents::<f32, u8>::from_str("1 + e1 + 2e2 + 3e12 + 4e3 + 5e13 + 6e23 + 7e123").unwrap();
+		let out = SeaMultivectorLowSparseCoefficents::<f32, u8>::from_str("1 - e1 - 2e2 - 3e12 - 4e3 - 5e13 - 6e23 + 7e123").unwrap();
+		a.conjugation();
+		assert_eq!(
+			a,
+			out
+		);
+	}
+
+	#[test]
+	fn geometric_product_euclidean() {
+		let m = SeaMetric::new(3, 0, 0);
+		
+		let a = SeaMultivectorLowSparseCoefficents::<f32, u8>::from_str("1").unwrap();
+		let b = SeaMultivectorLowSparseCoefficents::<f32, u8>::from_str("3e12").unwrap();
+
+		let out = SeaMultivectorLowSparseCoefficents::<f32, u8>::from_str("3e12").unwrap();
+		//774ns
+		assert_eq!(
+			a.geometric_product((&b, &m)),
+			out
+		);
+
+		let a = SeaMultivectorLowSparseCoefficents::<f32, u8>::from_str("e1 + e2").unwrap();
+		let b = SeaMultivectorLowSparseCoefficents::<f32, u8>::from_str("e2 + e3").unwrap();
+
+		let out = SeaMultivectorLowSparseCoefficents::<f32, u8>::from_str("1 + e12 + e13 + e23").unwrap();
+		//3.382µs
+		assert_eq!(
+			a.geometric_product((&b, &m)),
+			out
+		);
+
+		let a = SeaMultivectorLowSparseCoefficents::<f32, u8>::from_str("1 + e1 + e3").unwrap();
+		let b = SeaMultivectorLowSparseCoefficents::<f32, u8>::from_str("     e1  + 3e12").unwrap();
+
+		let out = SeaMultivectorLowSparseCoefficents::<f32, u8>::from_str("1 + e1 + 3e2 +3e12 -e13 + 3e123").unwrap();
+		assert_eq!(
+			a.geometric_product((&b, &m)),
+			out
+		);
+
+		let a = SeaMultivectorLowSparseCoefficents::<f32, u8>::from_str("1 + 2e1 + 1e12 + 2e3").unwrap();
+		let b = SeaMultivectorLowSparseCoefficents::<f32, u8>::from_str("  + 1e2 + 2e13 + 1e23").unwrap();
+
+		let out = SeaMultivectorLowSparseCoefficents::<f32, u8>::from_str("-3e1 - e2 + 2e12 + 4e3 + 3e13 -3e23 + 2e123").unwrap();
+		//7.542µs
+		assert_eq!(
+			a.geometric_product((&b, &m)),
+			out
+		);
+
+		let m = SeaMetric::new(4, 0, 0);
+
+		let a = SeaMultivectorLowSparseCoefficents::<f32, u16>::from_str(" + 1 + e1 + 2e12 + e13 + e234 ").unwrap();
+		let b = SeaMultivectorLowSparseCoefficents::<f32, u16>::from_str("  + 1e4 + 2e124 + 3e13 +4e34").unwrap();
+
+		let out = SeaMultivectorLowSparseCoefficents::<f32, u16>::from_str("-3 -4e2 + 3e3 -3e4 +e13 +5e14 -5e23 + 2e24 + 4e34 + 7e124 + 5e134 + 2e234 + 8e1234").unwrap();
+		//21.11µs
+		assert_eq!(
+			a.geometric_product((&b, &m)),
+			out
+		);
+	}
+
+	#[test]
+	fn geometric_product_projective() {
+		let m = SeaMetric::new(3, 0, 1);
+
+		let a = SeaMultivectorLowSparseCoefficents::<f32, u16>::from_str("1 + 2e1 + 1e12 + 2e3").unwrap();
+		let b = SeaMultivectorLowSparseCoefficents::<f32, u16>::from_str("  + 1e2 + 2e13 + 1e23").unwrap();
+
+		let out = SeaMultivectorLowSparseCoefficents::<f32, u16>::from_str("-3e1 - e2 + 2e12 + 4e3 + 3e13 -3e23 + 2e123").unwrap();
+		assert_eq!(
+			a.geometric_product((&b, &m)),
+			out
+		);
+
+		let a = SeaMultivectorLowSparseCoefficents::<f32, u16>::from_str(" + 2e3 + 2e14 + 1e124 ").unwrap();
+		let b = SeaMultivectorLowSparseCoefficents::<f32, u16>::from_str("  + 1e24 + 2e134").unwrap();
+
+		let out = SeaMultivectorLowSparseCoefficents::<f32, u16>::from_str("-4e14 -2e234").unwrap();
+		assert_eq!(
+			a.geometric_product((&b, &m)),
+			out
+		);
+
+		let a = SeaMultivectorLowSparseCoefficents::<f32, u16>::from_str(" + 1 + e1 + 2e12 + e13 + e234 ").unwrap();
+		let b = SeaMultivectorLowSparseCoefficents::<f32, u16>::from_str("  + 3e13 + 1e4 + 2e124  +4e34").unwrap();
+
+		let out = SeaMultivectorLowSparseCoefficents::<f32, u16>::from_str("-3 +3e3 + 3e13 -6e23 -3e4  + 5e14 +2e24 + 7e124 + 4e34  +5e134 + 2e234 + 8e1234").unwrap();
+		//12.67µs
+		assert_eq!(
+			a.geometric_product((&b, &m)),
+			out
+		);
+
+		let a = SeaMultivectorLowSparseCoefficents::<f32, u16>::from_str("  + e1 + 2e2 - e234 + e1234 ").unwrap();
+		let b = SeaMultivectorLowSparseCoefficents::<f32, u16>::from_str("  - 3e13 + 1e4 - 2e124  +4e34").unwrap();
+
+		let out = SeaMultivectorLowSparseCoefficents::<f32, u16>::from_str("-3e3 +6e123 + 5e14 - 3e24 +3e124 + 4e134 + 8e234 ").unwrap();
+		//8.403µs
+		assert_eq!(
+			a.geometric_product((&b, &m)),
+			out
+		);
+	}
+
+	#[test]
+	fn geometric_product_hyperbolic() {
+		let m = SeaMetric::new(3, 1, 0);
+
+		let a = SeaMultivectorLowSparseCoefficents::<f32, u16>::from_str("1 + 2e1 + 1e12 + 2e3").unwrap();
+		let b = SeaMultivectorLowSparseCoefficents::<f32, u16>::from_str("  + 1e2 + 2e13 + 1e23").unwrap();
+
+		let out = SeaMultivectorLowSparseCoefficents::<f32, u16>::from_str("-3e1 - e2 + 2e12 + 4e3 + 3e13 -3e23 + 2e123").unwrap();
+		assert_eq!(
+			a.geometric_product((&b, &m)),
+			out
+		);
+
+		let a = SeaMultivectorLowSparseCoefficents::<f32, u16>::from_str(" + e1 + 2e2 - e234 + e1234  ").unwrap();
+		let b = SeaMultivectorLowSparseCoefficents::<f32, u16>::from_str("  - 3e13 + 1e4 - 2e124  +4e34").unwrap();
+
+		let out = SeaMultivectorLowSparseCoefficents::<f32, u16>::from_str("-4e2 -5e3 + 4e12 + 2e13 + 5e14 + e23 -3e24 + 5e123 + 3e124 + 4e134 + 8e234").unwrap();
+		assert_eq!(
+			a.geometric_product((&b, &m)),
+			out
+		);
+
+		let a = SeaMultivectorLowSparseCoefficents::<f32, u16>::from_str(" + 1 + e1 + 2e2 + 3e12 + 4e3 + 5e13 + 6e23 + 7e123 + 8e4 + 9e14 + 10e24 + 11e124 + 12e34 + 13e134 + 14e234 + 15e1234").unwrap();
+		let b = SeaMultivectorLowSparseCoefficents::<f32, u16>::from_str("  + 3e13 + 1e4 + 2e124  +4e34").unwrap();
+
+		let out = SeaMultivectorLowSparseCoefficents::<f32, u16>::from_str("47 +51e1 + 49e2 + 53e3 - 28e4 + 51e12 + 54e13 - 19e14 - 9e23 + 73e24 + 21e34 - e123 + 75e124 + 21e134 -9e234 -3e1234").unwrap();
+		//21.547µs
+		assert_eq!(
+			a.geometric_product((&b, &m)),
+			out
+		);
+	}
+
+	#[test]
+	fn geometric_product_other() {
+		let m = SeaMetric::new(3, 2, 0);
+
+		let a = SeaMultivectorLowSparseCoefficents::<f32, u32>::from_str(" + 1 + e1 + 2e2 + 3e12 + 4e3 + 5e13 + 6e23 + 7e123 + 8e4 + 9e14 + 10e24 + 11e124 + 12e345 + 13e1345 + 14e2345 + 15e12345").unwrap();
+		let b = SeaMultivectorLowSparseCoefficents::<f32, u32>::from_str("  + 3e13 + 1e4 + 2e124  +4e345").unwrap();
+
+		let out = SeaMultivectorLowSparseCoefficents::<f32, u32>::from_str("-49 -53e1 -63e2 +3e3 -5e4 -69e12 + 3e13 - 3e14 - 9e23 + 4e24 + 17e34 + 14e35 -23e45 -6e123 + 5e124 +17e134 + 21e135 - 16e145 -17e234 + 80e235 + 69e245 + 4e345 - 15e1234 +83e1235 + 70e1245 + 4e1345 + 8e2345 + 12e12345").unwrap();
+		assert_eq!(
+			a.geometric_product((&b, &m)),
+			out
+		);
+
+		let m = SeaMetric::new(3, 1, 1);
+		
+		let a = SeaMultivectorLowSparseCoefficents::<f32, u32>::from_str(" + 1 + e1 + 2e2 + 3e12 + 4e3 + 5e13 + 6e23 + 7e123 + 8e4 + 9e14 + 10e24 + 11e124 + 12e345 + 13e1345 + 14e2345 + 15e12345").unwrap();
+		let b = SeaMultivectorLowSparseCoefficents::<f32, u32>::from_str("  + 3e13 + 1e4 + 2e124  +4e345").unwrap();
+
+		let out = SeaMultivectorLowSparseCoefficents::<f32, u32>::from_str("-1 -e1 -7e2 +3e3 - 5e4 +14e35 -23e45 -9e12 +3e13 - 3e14 -9e23 +4e24 +17e34 +21e135 - 16e145 +80e235 +69e245 + 4e345 -6e123 + 5e124 + 17e134 - 17e234 +83e1235 +70e1245 +4e1345 + 8e2345 -15e1234 +12e12345").unwrap();
+		// 45.752µs
+		assert_eq!(
+			a.geometric_product((&b, &m)),
+			out
+		);
+	}
+
+	#[test]
+	fn geometric_product_6d() {
+		let m = SeaMetric::new(3, 3, 0);
+
+		let a = SeaMultivectorLowSparseCoefficents::<f32, u64>::from_str(" + 1 + e1 + 2e2 + 3e12 + 4e3 + 5e13 + 6e23 + 7e123 + 8e4 + 9e14 + 10e24 + 11e124 + 12e345 + 13e1345 + 14e2345 + 15e12345 +e6 + 12e126 + 8e46").unwrap();
+		let b = SeaMultivectorLowSparseCoefficents::<f32, u64>::from_str("  + 3e13 + 1e4 + 2e124  +4e345 +83e1235 + 70e1245 + 4e1345 + 8e2345 + 12e123456").unwrap();
+
+		let out = SeaMultivectorLowSparseCoefficents::<f32, u64>::from_str("115+115e1-27e2+1053e3+1240e4+189e5+188e6-21e12+983e13+1159e14+202e15+168e16-919e23-1075e24-215e25-156e26+17e34-351e35-301e45+23e46-846e123-991e124-228e125-128e126+17e134-265e135+3e136-228e145-17e234+143e235-36e236+135e245+303e345-1160e356-924e456-15e1234+230e1235+124e1245-14e1246-560e1256+442e1345+24e1346-152e1356-72e1456-393e2345+44e2356+60e2456-40e3456-360e12345+179e12356+118e12456+76e13456-28e23456-700e123456​​").unwrap();
+		//171.677µs
+		assert_eq!(
+			a.geometric_product((&b, &m)),
+			out
+		);
+
+		let a = SeaMultivectorLowSparseCoefficents::<f32, u64>::from_str("1 + 2e1 + 1e12 + 2e3").unwrap();
+		let b = SeaMultivectorLowSparseCoefficents::<f32, u64>::from_str("  + 1e2 + 2e13 + 1e23").unwrap();
+
+		let out = SeaMultivectorLowSparseCoefficents::<f32, u64>::from_str("-3e1 - e2 + 2e12 + 4e3 + 3e13 -3e23 + 2e123").unwrap();
+		//13.991µs
+		assert_eq!(
+			a.geometric_product((&b, &m)),
+			out
+		);
+
+		// let now = Instant::now();
+		// let num_iters = 10_000;
+		// let mut t = a.clone();
+		// for _ in 0..num_iters {
+		// 	t = t.geometric_product((&b, &m));
+		// }
+		// let elapsed_time = now.elapsed();
+		// println!("time time time {:?}", elapsed_time/num_iters);
 	}
 }
