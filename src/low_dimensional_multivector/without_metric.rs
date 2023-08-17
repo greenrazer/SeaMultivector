@@ -204,8 +204,8 @@ impl<T:SeaCoefficient, I:SeaBasisBladeBitsInner> GeometricProduct<(&Self, &SeaMe
 		let output_num_coeffs = output_basis_blade_bits.count_ones() as usize;
 		let mut output_coefficients = vec![T::zero(); output_num_coeffs];
 
-		let metric_non_zeros = SeaBasisBladeIndexLow::basis_vectors_less_than(num_metric_non_zeros);
-		let metric_positive = SeaBasisBladeIndexLow::basis_vectors_less_than(metric.positive);
+		let metric_non_zeros = SeaBasisBladeIndexLow::basis_vectors_less_than_or_equal(num_metric_non_zeros);
+		let metric_positive = SeaBasisBladeIndexLow::basis_vectors_less_than_or_equal(metric.positive);
 		let metric_negs = &metric_non_zeros ^ &metric_positive;
 
 		let mut curr_rhs = rhs.clone();
@@ -260,7 +260,7 @@ impl<T:SeaCoefficient, I:SeaBasisBladeBitsInner> GeometricProduct<(&Self, &SeaMe
 mod tests{
 	use std::time::Instant;
 
-use super::*;
+	use super::*;
 
 	#[test]
 	fn from_str() {

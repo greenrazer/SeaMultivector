@@ -31,10 +31,27 @@ impl Iterator for BasisBladeIndexLowIter {
 pub struct SeaBasisBladeIndexLow(pub u8);
 impl SeaBasisBladeIndexLow {
 	pub const ZERO: Self = SeaBasisBladeIndexLow(0);
+	pub const ALL: Self = SeaBasisBladeIndexLow(255);
 
-	pub fn basis_vectors_less_than(n: u8) -> Self {
+	pub fn basis_vectors_less_than_or_equal(n: u8) -> Self {
 		let inner = 1_u8.checked_shl(n as u32).unwrap_or(0).overflowing_sub(1).0;
 		SeaBasisBladeIndexLow(inner)
+	}
+
+	pub fn basis_vectors_greater_than(n: u8) -> Self {
+		let all = Self::ALL;
+		let bvlt = Self::basis_vectors_less_than_or_equal(n);
+		&all ^ &bvlt
+	}
+
+	pub fn contains_basis_vectors_greater_than(&self, n: u8) -> bool {
+		let bvgt = Self::basis_vectors_greater_than(n);
+		let a = self & &bvgt;
+		a > Self::ZERO
+	}
+
+	pub fn has(&self, index: u8) -> bool {
+		(**self & (1 << (index-1))) > 0
 	}
 }
 
