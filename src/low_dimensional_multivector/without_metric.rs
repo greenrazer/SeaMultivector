@@ -24,6 +24,47 @@ pub struct SeaMultivectorLowSparseCoefficents<T:SeaCoefficient, I:SeaBasisBladeB
 	pub coefficients: Vec<T>
 }
 impl<T:SeaCoefficient, I:SeaBasisBladeBitsInner> SeaMultivectorLowSparseCoefficents<T, I> {
+	fn metric_product_constants(metric: &SeaMetric) -> (u8, SeaBasisBladeIndexLow, SeaBasisBladeIndexLow) {
+		let num_metric_non_zeros = metric.positive + metric.negitive;
+		let metric_non_zeros = SeaBasisBladeIndexLow::basis_vectors_less_than_or_equal(num_metric_non_zeros);
+		let metric_positive = SeaBasisBladeIndexLow::basis_vectors_less_than_or_equal(metric.positive);
+		let metric_negs = &metric_non_zeros ^ &metric_positive;
+		(num_metric_non_zeros, metric_non_zeros, metric_negs)
+	}
+
+	fn update_zero_cache(zero_cache: &mut (SeaBasisBladeIndexLow, SeaBasisBladeBits<I>), output_index: &SeaBasisBladeIndexLow, metric_non_zeros: &SeaBasisBladeIndexLow) {
+		let metric_zeros_lookup = output_index | metric_non_zeros;
+		if zero_cache.0 != metric_zeros_lookup {
+			let row = SeaBasisBladeBits::<I>::zero_mask_for_output_index(&metric_zeros_lookup);
+			zero_cache.0 = metric_zeros_lookup;
+			zero_cache.1 = row;
+		}
+	}
+	
+	fn total_neg_mask(output_index: &SeaBasisBladeIndexLow, metric_negs:&SeaBasisBladeIndexLow) -> SeaBasisBladeBits<I> {
+		let cannonical_neg_mask = SeaBasisBladeBits::<I>::cannonical_reordering_neg_mask(output_index);
+		let metric_neg_mask = SeaBasisBladeBits::<I>::metric_neg_mask(output_index, metric_negs);
+		&cannonical_neg_mask ^ &metric_neg_mask
+	}
+
+	fn special_dot_product(self_coeff: &Vec<T>, rhs_coeff: &Vec<T>, dot_mask: &SeaBasisBladeBits<I>, neg_mask: &SeaBasisBladeBits<I>, index_function: impl Fn(&SeaBasisBladeIndexLow) -> (usize, usize)) -> T {
+		let mut out = T::zero();
+		for i in dot_mask {
+			let (a_idx, b_idx) = index_function(&i);
+			let c_a = self_coeff[a_idx];
+			let c_b = rhs_coeff[b_idx];
+			let mut c = c_a * c_b;
+			
+			if neg_mask.has(&i){
+				c = -c; 
+			}
+
+			out += c;
+		}
+
+		out
+	}
+
 	fn negated_basis_blades(&self, blade_bits: &SeaBasisBladeBits<I>) -> Self{
 		let mut new_coeffs = self.coefficients.clone();
 		let negation_bits = &self.basis_blade_bits & blade_bits;
@@ -190,76 +231,11 @@ impl<T:SeaCoefficient, I:SeaBasisBladeBitsInner> MultivectorMut for SeaMultivect
 	}
 }
 
-impl<T:SeaCoefficient, I:SeaBasisBladeBitsInner> GeometricProduct<(&Self, &SeaMetric)> for SeaMultivectorLowSparseCoefficents<T, I>{ 
-	type Output = Self;
-
-	fn geometric_product(&self, (rhs, metric): (&Self, &SeaMetric)) -> Self::Output {
-		let num_metric_non_zeros = metric.positive + metric.negitive;
-		let output_basis_blade_bits = {
-			self.basis_blade_bits.geometric_product(
-				(&rhs.basis_blade_bits, num_metric_non_zeros)
-			)
-		};
-		let output_num_coeffs = output_basis_blade_bits.count_ones() as usize;
-		let mut output_coefficients = vec![T::zero(); output_num_coeffs];
-
-		let metric_non_zeros = SeaBasisBladeIndexLow::basis_vectors_less_than_or_equal(num_metric_non_zeros);
-		let metric_positive = SeaBasisBladeIndexLow::basis_vectors_less_than_or_equal(metric.positive);
-		let metric_negs = &metric_non_zeros ^ &metric_positive;
-
-		let mut curr_rhs = rhs.clone();
-		let mut curr_rhs_state = SeaBasisBladeIndexLow::ZERO;
-
-		let mut zero_cache: (SeaBasisBladeIndexLow, SeaBasisBladeBits<I>) = (SeaBasisBladeIndexLow::ZERO, SeaBasisBladeBits::<I>::ONE);
-		let mut out_idx = 0;
-		for o in &output_basis_blade_bits {
-			let metric_zeros_lookup = &o | &metric_non_zeros;
-			if zero_cache.0 != metric_zeros_lookup {
-				let row = SeaBasisBladeBits::<I>::zero_mask_for_output_index(&metric_zeros_lookup);
-				zero_cache = (metric_zeros_lookup, row);
-			}
-
-			let cannonical_neg_mask = SeaBasisBladeBits::<I>::cannonical_reordering_neg_mask(&o);
-			let metric_neg_mask = SeaBasisBladeBits::<I>::metric_neg_mask(&o, &metric_negs);
-			let total_neg_mask = &cannonical_neg_mask ^ &metric_neg_mask;
-
-			let swap_by = &curr_rhs_state ^ &o;
-			curr_rhs.geometric_product_swap(&swap_by);
-			curr_rhs_state  = o;
-
-			let mut dot_mask = &self.basis_blade_bits & &curr_rhs.basis_blade_bits;
-			dot_mask &= &zero_cache.1;
-
-			for i in &dot_mask {
-				let a_idx = self.basis_blade_bits.count_basis_blades_less_than(&i) as usize;
-				let b_idx = curr_rhs.basis_blade_bits.count_basis_blades_less_than(&i) as usize;
-				let c_a = self.coefficients[a_idx];
-				let c_b = curr_rhs.coefficients[b_idx];
-				let mut c = c_a * c_b;
-				
-				if total_neg_mask.has(&i){
-					c = -c; 
-				}
-
-				output_coefficients[out_idx] += c;
-			}
-
-			out_idx += 1;
-		}
-
-		Self {
-			basis_blade_bits: output_basis_blade_bits,
-			coefficients: output_coefficients
-		}
-	}
-
-}
-
 impl<T:SeaCoefficient, I:SeaBasisBladeBitsInner> LeftContration<(&Self, &SeaMetric)> for SeaMultivectorLowSparseCoefficents<T, I> {
 	type Output = Self;
 
 	fn left_contraction(&self, (rhs, metric): (&Self, &SeaMetric)) -> Self::Output {
-		let num_metric_non_zeros = metric.positive + metric.negitive;
+		let (num_metric_non_zeros, metric_non_zeros, metric_negs) = Self::metric_product_constants(metric);
 		let output_basis_blade_bits = {
 			self.basis_blade_bits.left_contraction(
 				(&rhs.basis_blade_bits, num_metric_non_zeros)
@@ -268,22 +244,12 @@ impl<T:SeaCoefficient, I:SeaBasisBladeBitsInner> LeftContration<(&Self, &SeaMetr
 		let output_num_coeffs = output_basis_blade_bits.count_ones() as usize;
 		let mut output_coefficients = vec![T::zero(); output_num_coeffs];
 
-		let metric_non_zeros = SeaBasisBladeIndexLow::basis_vectors_less_than_or_equal(num_metric_non_zeros);
-		let metric_positive = SeaBasisBladeIndexLow::basis_vectors_less_than_or_equal(metric.positive);
-		let metric_negs = &metric_non_zeros ^ &metric_positive;
-
 		let mut zero_cache: (SeaBasisBladeIndexLow, SeaBasisBladeBits<I>) = (SeaBasisBladeIndexLow::ZERO, SeaBasisBladeBits::<I>::ONE);
 		let mut out_idx = 0;
 		for o in &output_basis_blade_bits {
-			let metric_zeros_lookup = &o | &metric_non_zeros;
-			if zero_cache.0 != metric_zeros_lookup {
-				let row = SeaBasisBladeBits::<I>::zero_mask_for_output_index(&metric_zeros_lookup);
-				zero_cache = (metric_zeros_lookup, row);
-			}
+			Self::update_zero_cache(&mut zero_cache, &o, &metric_non_zeros);
 
-			let cannonical_neg_mask = SeaBasisBladeBits::<I>::cannonical_reordering_neg_mask(&o);
-			let metric_neg_mask = SeaBasisBladeBits::<I>::metric_neg_mask(&o, &metric_negs);
-			let total_neg_mask = &cannonical_neg_mask ^ &metric_neg_mask;
+			let total_neg_mask = Self::total_neg_mask(&o, &metric_negs);
 
 			let mut curr_rhs_bbb = &rhs.basis_blade_bits >> &o;
 			curr_rhs_bbb.remove_basis_blades_with_any(&o);
@@ -291,20 +257,18 @@ impl<T:SeaCoefficient, I:SeaBasisBladeBitsInner> LeftContration<(&Self, &SeaMetr
 			let mut dot_mask = &self.basis_blade_bits & &curr_rhs_bbb;
 			dot_mask &= &zero_cache.1;
 			
-			for i in &dot_mask {
-				let a_idx = self.basis_blade_bits.count_basis_blades_less_than(&i) as usize;
-				let b_look_at_idx_offset = &i + &o;
-				let b_idx = rhs.basis_blade_bits.count_basis_blades_less_than(&b_look_at_idx_offset) as usize;
-				let c_a = self.coefficients[a_idx];
-				let c_b = rhs.coefficients[b_idx];
-				let mut c = c_a * c_b;
-				
-				if total_neg_mask.has(&i){
-					c = -c; 
+			output_coefficients[out_idx] = Self::special_dot_product(
+				&self.coefficients,
+				&rhs.coefficients,
+				&dot_mask,
+				&total_neg_mask,
+				|i| {
+					let a_idx = self.basis_blade_bits.count_basis_blades_less_than(&i) as usize;
+					let b_look_at_idx_offset = i + &o;
+					let b_idx = rhs.basis_blade_bits.count_basis_blades_less_than(&b_look_at_idx_offset) as usize;
+					(a_idx, b_idx)
 				}
-
-				output_coefficients[out_idx] += c;
-			}
+			);
 
 			out_idx += 1;
 		}
@@ -320,31 +284,23 @@ impl<T:SeaCoefficient, I:SeaBasisBladeBitsInner> RightContraction<(&Self, &SeaMe
 	type Output = Self;
 
 	fn right_contraction(&self, (rhs, metric): (&Self, &SeaMetric)) -> Self::Output {
-		let num_metric_non_zeros = metric.positive + metric.negitive;
+		let (num_metric_non_zeros, metric_non_zeros, metric_negs) = Self::metric_product_constants(metric);
+
 		let output_basis_blade_bits = {
 			self.basis_blade_bits.right_contraction(
 				(&rhs.basis_blade_bits, num_metric_non_zeros)
 			)
 		};
+
 		let output_num_coeffs = output_basis_blade_bits.count_ones() as usize;
 		let mut output_coefficients = vec![T::zero(); output_num_coeffs];
-
-		let metric_non_zeros = SeaBasisBladeIndexLow::basis_vectors_less_than_or_equal(num_metric_non_zeros);
-		let metric_positive = SeaBasisBladeIndexLow::basis_vectors_less_than_or_equal(metric.positive);
-		let metric_negs = &metric_non_zeros ^ &metric_positive;
 
 		let mut zero_cache: (SeaBasisBladeIndexLow, SeaBasisBladeBits<I>) = (SeaBasisBladeIndexLow::ZERO, SeaBasisBladeBits::<I>::ONE);
 		let mut out_idx = 0;
 		for o in &output_basis_blade_bits {
-			let metric_zeros_lookup = &o | &metric_non_zeros;
-			if zero_cache.0 != metric_zeros_lookup {
-				let row = SeaBasisBladeBits::<I>::zero_mask_for_output_index(&metric_zeros_lookup);
-				zero_cache = (metric_zeros_lookup, row);
-			}
+			Self::update_zero_cache(&mut zero_cache, &o, &metric_non_zeros);
 
-			let cannonical_neg_mask = SeaBasisBladeBits::<I>::cannonical_reordering_neg_mask(&o);
-			let metric_neg_mask = SeaBasisBladeBits::<I>::metric_neg_mask(&o, &metric_negs);
-			let total_neg_mask = &cannonical_neg_mask ^ &metric_neg_mask;
+			let total_neg_mask = Self::total_neg_mask(&o, &metric_negs);
 
 			let mut curr_rhs_bbb = &rhs.basis_blade_bits << &o;
 			curr_rhs_bbb.remove_basis_blades_without_all(&o);
@@ -352,20 +308,18 @@ impl<T:SeaCoefficient, I:SeaBasisBladeBitsInner> RightContraction<(&Self, &SeaMe
 			let mut dot_mask = &self.basis_blade_bits & &curr_rhs_bbb;
 			dot_mask &= &zero_cache.1;
 			
-			for i in &dot_mask {
-				let a_idx = self.basis_blade_bits.count_basis_blades_less_than(&i) as usize;
-				let b_look_at_idx_offset = &i - &o;
-				let b_idx = rhs.basis_blade_bits.count_basis_blades_less_than(&b_look_at_idx_offset) as usize;
-				let c_a = self.coefficients[a_idx];
-				let c_b = rhs.coefficients[b_idx];
-				let mut c = c_a * c_b;
-				
-				if total_neg_mask.has(&i){
-					c = -c; 
+			output_coefficients[out_idx] = Self::special_dot_product(
+				&self.coefficients,
+				&rhs.coefficients,
+				&dot_mask,
+				&total_neg_mask,
+				|i| {
+					let a_idx = self.basis_blade_bits.count_basis_blades_less_than(&i) as usize;
+					let b_look_at_idx_offset = i - &o;
+					let b_idx = rhs.basis_blade_bits.count_basis_blades_less_than(&b_look_at_idx_offset) as usize;
+					(a_idx, b_idx)
 				}
-
-				output_coefficients[out_idx] += c;
-			}
+			);
 
 			out_idx += 1;
 		}
@@ -380,77 +334,62 @@ impl<T:SeaCoefficient, I:SeaBasisBladeBitsInner> RightContraction<(&Self, &SeaMe
 impl<T:SeaCoefficient, I:SeaBasisBladeBitsInner> InnerProduct<(&Self, &SeaMetric)> for SeaMultivectorLowSparseCoefficents<T, I> {
 	type Output = Self;
 	fn inner_product(&self, (rhs, metric): (&Self, &SeaMetric)) -> Self::Output {
-		let num_metric_non_zeros = metric.positive + metric.negitive;
+		let (num_metric_non_zeros, metric_non_zeros, metric_negs) = Self::metric_product_constants(metric);
+
 		let output_basis_blade_bits = {
 			self.basis_blade_bits.inner_product(
 				(&rhs.basis_blade_bits, num_metric_non_zeros)
 			)
 		};
+
 		let output_num_coeffs = output_basis_blade_bits.count_ones() as usize;
 		let mut output_coefficients = vec![T::zero(); output_num_coeffs];
-
-		let metric_non_zeros = SeaBasisBladeIndexLow::basis_vectors_less_than_or_equal(num_metric_non_zeros);
-		let metric_positive = SeaBasisBladeIndexLow::basis_vectors_less_than_or_equal(metric.positive);
-		let metric_negs = &metric_non_zeros ^ &metric_positive;
 
 		let mut zero_cache: (SeaBasisBladeIndexLow, SeaBasisBladeBits<I>) = (SeaBasisBladeIndexLow::ZERO, SeaBasisBladeBits::<I>::ONE);
 		let mut out_idx = 0;
 		for o in &output_basis_blade_bits {
-			let metric_zeros_lookup = &o | &metric_non_zeros;
-			if zero_cache.0 != metric_zeros_lookup {
-				let row = SeaBasisBladeBits::<I>::zero_mask_for_output_index(&metric_zeros_lookup);
-				zero_cache = (metric_zeros_lookup, row);
-			}
+			Self::update_zero_cache(&mut zero_cache, &o, &metric_non_zeros);
 
-			let cannonical_neg_mask = SeaBasisBladeBits::<I>::cannonical_reordering_neg_mask(&o);
-			let metric_neg_mask = SeaBasisBladeBits::<I>::metric_neg_mask(&o, &metric_negs);
-			let total_neg_mask = &cannonical_neg_mask ^ &metric_neg_mask;
+			let total_neg_mask = Self::total_neg_mask(&o, &metric_negs);
 
 			let mut left_contraction_rhs_bbb = &rhs.basis_blade_bits >> &o;
 			left_contraction_rhs_bbb.remove_basis_blades_with_any(&o);
 
-			let mut right_contraction_rhs_bbb = &rhs.basis_blade_bits << &o;
-			right_contraction_rhs_bbb.remove_basis_blades_without_all(&o);
-
 			let mut dot_mask_left = &self.basis_blade_bits & &left_contraction_rhs_bbb;
 			dot_mask_left &= &zero_cache.1;
 
-			let mut dot_mask_right = &self.basis_blade_bits & &right_contraction_rhs_bbb;
-			if o.is_zero() {
-				dot_mask_right &= &SeaBasisBladeBits::<I>::ZERO;
-			}
-			else {
+			output_coefficients[out_idx] = Self::special_dot_product(
+				&self.coefficients,
+				&rhs.coefficients,
+				&dot_mask_left,
+				&total_neg_mask,
+				|i| {
+					let a_idx = self.basis_blade_bits.count_basis_blades_less_than(&i) as usize;
+					let b_look_at_idx_offset = i + &o;
+					let b_idx = rhs.basis_blade_bits.count_basis_blades_less_than(&b_look_at_idx_offset) as usize;
+					(a_idx, b_idx)
+				}
+			);
+
+			if !o.is_zero() {
+				let mut right_contraction_rhs_bbb = &rhs.basis_blade_bits << &o;
+				right_contraction_rhs_bbb.remove_basis_blades_without_all(&o);
+
+				let mut dot_mask_right = &self.basis_blade_bits & &right_contraction_rhs_bbb;
 				dot_mask_right &= &zero_cache.1;
-			}
-			
-			for i in &dot_mask_left {
-				let a_idx = self.basis_blade_bits.count_basis_blades_less_than(&i) as usize;
-				let b_look_at_idx_offset = &i + &o;
-				let b_idx = rhs.basis_blade_bits.count_basis_blades_less_than(&b_look_at_idx_offset) as usize;
-				let c_a = self.coefficients[a_idx];
-				let c_b = rhs.coefficients[b_idx];
-				let mut c = c_a * c_b;
-				
-				if total_neg_mask.has(&i){
-					c = -c; 
-				}
 
-				output_coefficients[out_idx] += c;
-			}
-
-			for i in &dot_mask_right {
-				let a_idx = self.basis_blade_bits.count_basis_blades_less_than(&i) as usize;
-				let b_look_at_idx_offset = &i - &o;
-				let b_idx = rhs.basis_blade_bits.count_basis_blades_less_than(&b_look_at_idx_offset) as usize;
-				let c_a = self.coefficients[a_idx];
-				let c_b = rhs.coefficients[b_idx];
-				let mut c = c_a * c_b;
-				
-				if total_neg_mask.has(&i){
-					c = -c; 
-				}
-
-				output_coefficients[out_idx] += c;
+				output_coefficients[out_idx] += Self::special_dot_product(
+					&self.coefficients,
+					&rhs.coefficients,
+					&dot_mask_right,
+					&total_neg_mask,
+					|i| {
+						let a_idx = self.basis_blade_bits.count_basis_blades_less_than(&i) as usize;
+						let b_look_at_idx_offset = i - &o;
+						let b_idx = rhs.basis_blade_bits.count_basis_blades_less_than(&b_look_at_idx_offset) as usize;
+						(a_idx, b_idx)
+					}
+				);
 			}
 
 			
@@ -485,21 +424,18 @@ impl<T:SeaCoefficient, I:SeaBasisBladeBitsInner> OuterProduct<&Self> for SeaMult
 
 			let dot_mask = &self.basis_blade_bits & &curr_rhs_bbb;
 
-			for i in &dot_mask {
-				let a_idx = self.basis_blade_bits.count_basis_blades_less_than(&i) as usize;
-				let b_look_at_idx_offset = &o - &i;
-				let b_idx = rhs.basis_blade_bits.count_basis_blades_less_than(&b_look_at_idx_offset) as usize;
-				let c_a = self.coefficients[a_idx];
-				let c_b = rhs.coefficients[b_idx];
-				let mut c = c_a * c_b;
-				
-				if cannonical_neg_mask.has(&i){
-					c = -c; 
+			output_coefficients[out_idx] = Self::special_dot_product(
+				&self.coefficients,
+				&rhs.coefficients,
+				&dot_mask,
+				&cannonical_neg_mask,
+				|i| {
+					let a_idx = self.basis_blade_bits.count_basis_blades_less_than(&i) as usize;
+					let b_look_at_idx_offset = &o - &i;
+					let b_idx = rhs.basis_blade_bits.count_basis_blades_less_than(&b_look_at_idx_offset) as usize;
+					(a_idx, b_idx)
 				}
-
-				output_coefficients[out_idx] += c;
-			}
-
+			);
 			
 			out_idx += 1;
 		}
@@ -509,6 +445,61 @@ impl<T:SeaCoefficient, I:SeaBasisBladeBitsInner> OuterProduct<&Self> for SeaMult
 			coefficients: output_coefficients
 		}
 	}
+}
+
+impl<T:SeaCoefficient, I:SeaBasisBladeBitsInner> GeometricProduct<(&Self, &SeaMetric)> for SeaMultivectorLowSparseCoefficents<T, I>{ 
+	type Output = Self;
+
+	fn geometric_product(&self, (rhs, metric): (&Self, &SeaMetric)) -> Self::Output {
+		let (num_metric_non_zeros, metric_non_zeros, metric_negs) = Self::metric_product_constants(metric);
+
+		let output_basis_blade_bits = {
+			self.basis_blade_bits.geometric_product(
+				(&rhs.basis_blade_bits, num_metric_non_zeros)
+			)
+		};
+
+		let output_num_coeffs = output_basis_blade_bits.count_ones() as usize;
+		let mut output_coefficients = vec![T::zero(); output_num_coeffs];
+		
+		let mut curr_rhs = rhs.clone();
+		let mut curr_rhs_state = SeaBasisBladeIndexLow::ZERO;
+
+		let mut zero_cache: (SeaBasisBladeIndexLow, SeaBasisBladeBits<I>) = (SeaBasisBladeIndexLow::ZERO, SeaBasisBladeBits::<I>::ONE);
+		let mut out_idx = 0;
+		for o in &output_basis_blade_bits {
+			Self::update_zero_cache(&mut zero_cache, &o, &metric_non_zeros);
+
+			let total_neg_mask = Self::total_neg_mask(&o, &metric_negs);
+
+			let swap_by = &curr_rhs_state ^ &o;
+			curr_rhs.geometric_product_swap(&swap_by);
+			curr_rhs_state  = o;
+
+			let mut dot_mask = &self.basis_blade_bits & &curr_rhs.basis_blade_bits;
+			dot_mask &= &zero_cache.1;
+
+			output_coefficients[out_idx] = Self::special_dot_product(
+				&self.coefficients,
+				&curr_rhs.coefficients,
+				&dot_mask,
+				&total_neg_mask,
+				|i| {
+					let a_idx = self.basis_blade_bits.count_basis_blades_less_than(&i) as usize;
+					let b_idx = curr_rhs.basis_blade_bits.count_basis_blades_less_than(&i) as usize;
+					(a_idx, b_idx)
+				}
+			);
+
+			out_idx += 1;
+		}
+
+		Self {
+			basis_blade_bits: output_basis_blade_bits,
+			coefficients: output_coefficients
+		}
+	}
+
 }
 
 #[cfg(test)]
