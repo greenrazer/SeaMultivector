@@ -380,6 +380,15 @@ impl<I: SeaBasisBladeBitsInner> SeaBasisBladeBits<I> {
 	pub fn reverse_bits(&self) -> Self {
 		Self(self.deref().reverse_bits())
 	}
+
+	pub fn geometric_product_swap(&self, swap_by:&SeaBasisBladeIndexLow) -> Self{
+		let mut curr = self.0.clone();
+		for i in swap_by {
+			let bv_idx = i+1;
+			curr.swap_adjacent_pow2_n_bit_groups(bv_idx);
+		}
+		SeaBasisBladeBits(curr)
+	}
 }
 
 impl<I: SeaBasisBladeBitsInner> Deref for SeaBasisBladeBits<I> {

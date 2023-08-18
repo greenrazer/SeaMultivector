@@ -461,9 +461,6 @@ impl<T:SeaCoefficient, I:SeaBasisBladeBitsInner> GeometricProduct<(&Self, &SeaMe
 
 		let output_num_coeffs = output_basis_blade_bits.count_ones() as usize;
 		let mut output_coefficients = vec![T::zero(); output_num_coeffs];
-		
-		let mut curr_rhs = rhs.clone();
-		let mut curr_rhs_state = SeaBasisBladeIndexLow::ZERO;
 
 		let mut zero_cache: (SeaBasisBladeIndexLow, SeaBasisBladeBits<I>) = (SeaBasisBladeIndexLow::ZERO, SeaBasisBladeBits::<I>::ONE);
 		let mut out_idx = 0;
@@ -472,21 +469,20 @@ impl<T:SeaCoefficient, I:SeaBasisBladeBitsInner> GeometricProduct<(&Self, &SeaMe
 
 			let total_neg_mask = Self::total_neg_mask(&o, &metric_negs);
 
-			let swap_by = &curr_rhs_state ^ &o;
-			curr_rhs.geometric_product_swap(&swap_by);
-			curr_rhs_state  = o;
+			let curr_rhs_bbb = rhs.basis_blade_bits.geometric_product_swap(&o);
 
-			let mut dot_mask = &self.basis_blade_bits & &curr_rhs.basis_blade_bits;
+			let mut dot_mask = &self.basis_blade_bits & &curr_rhs_bbb;
 			dot_mask &= &zero_cache.1;
 
 			output_coefficients[out_idx] = Self::special_dot_product(
 				&self.coefficients,
-				&curr_rhs.coefficients,
+				&rhs.coefficients,
 				&dot_mask,
 				&total_neg_mask,
 				|i| {
 					let a_idx = self.basis_blade_bits.count_basis_blades_less_than(&i) as usize;
-					let b_idx = curr_rhs.basis_blade_bits.count_basis_blades_less_than(&i) as usize;
+					let b_look_at_idx_offset = i ^ &o;
+					let b_idx = rhs.basis_blade_bits.count_basis_blades_less_than(&b_look_at_idx_offset) as usize;
 					(a_idx, b_idx)
 				}
 			);
@@ -654,6 +650,7 @@ mod tests{
 	
 			let out = SeaMultivectorLowSparseCoefficents::<f32, u16>::from_str("-3 -4e2 + 3e3 -3e4 +e13 +5e14 -5e23 + 2e24 + 4e34 + 7e124 + 5e134 + 2e234 + 8e1234").unwrap();
 			//21.11µs
+			//10.495µs
 			assert_eq!(
 				a.geometric_product((&b, &m)),
 				out
@@ -756,6 +753,7 @@ mod tests{
 	
 			let out = SeaMultivectorLowSparseCoefficents::<f32, u32>::from_str("-1 -e1 -7e2 +3e3 - 5e4 +14e35 -23e45 -9e12 +3e13 - 3e14 -9e23 +4e24 +17e34 +21e135 - 16e145 +80e235 +69e245 + 4e345 -6e123 + 5e124 + 17e134 - 17e234 +83e1235 +70e1245 +4e1345 + 8e2345 -15e1234 +12e12345").unwrap();
 			// 45.752µs
+			// new 15.492µs
 			assert_eq!(
 				a.geometric_product((&b, &m)),
 				out
@@ -771,6 +769,7 @@ mod tests{
 	
 			let out = SeaMultivectorLowSparseCoefficents::<f32, u64>::from_str("115+115e1-27e2+1053e3+1240e4+189e5+188e6-21e12+983e13+1159e14+202e15+168e16-919e23-1075e24-215e25-156e26+17e34-351e35-301e45+23e46-846e123-991e124-228e125-128e126+17e134-265e135+3e136-228e145-17e234+143e235-36e236+135e245+303e345-1160e356-924e456-15e1234+230e1235+124e1245-14e1246-560e1256+442e1345+24e1346-152e1356-72e1456-393e2345+44e2356+60e2456-40e3456-360e12345+179e12356+118e12456+76e13456-28e23456-700e123456​​").unwrap();
 			//171.677µs
+			//new: 58.328µs
 			assert_eq!(
 				a.geometric_product((&b, &m)),
 				out
@@ -781,6 +780,7 @@ mod tests{
 	
 			let out = SeaMultivectorLowSparseCoefficents::<f32, u64>::from_str("-3e1 - e2 + 2e12 + 4e3 + 3e13 -3e23 + 2e123").unwrap();
 			//13.991µs
+			//3.334µs
 			assert_eq!(
 				a.geometric_product((&b, &m)),
 				out
