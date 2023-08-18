@@ -1,5 +1,5 @@
 use std::str::FromStr;
-use std::ops::{Deref, DerefMut, BitXor, BitOr, Not, BitAnd};
+use std::ops::{Deref, DerefMut, BitXor, BitOr, Not, BitAnd, Add, Sub};
 
 use crate::errors::ParseMultivectorError;
 
@@ -108,6 +108,13 @@ impl FromStr for SeaBasisBladeIndexLow {
 	}
 }
 
+impl Not for &SeaBasisBladeIndexLow {
+	type Output = SeaBasisBladeIndexLow;
+	fn not(self) -> Self::Output {
+		SeaBasisBladeIndexLow(!**self)
+	}
+}
+
 impl BitXor<Self> for &SeaBasisBladeIndexLow {
 	type Output = SeaBasisBladeIndexLow;
 
@@ -132,9 +139,18 @@ impl BitAnd<Self> for &SeaBasisBladeIndexLow {
 	}
 }
 
-impl Not for &SeaBasisBladeIndexLow {
+impl Add<Self> for &SeaBasisBladeIndexLow {
 	type Output = SeaBasisBladeIndexLow;
-	fn not(self) -> Self::Output {
-		SeaBasisBladeIndexLow(!**self)
+
+	fn add(self, rhs: Self) -> Self::Output {
+		SeaBasisBladeIndexLow(**self + **rhs)
+	}
+}
+
+impl Sub<Self> for &SeaBasisBladeIndexLow {
+	type Output = SeaBasisBladeIndexLow;
+
+	fn sub(self, rhs: Self) -> Self::Output {
+		SeaBasisBladeIndexLow(**self - **rhs)
 	}
 }

@@ -23,17 +23,17 @@ pub mod prelude {
 // Multivector core
 // conjugations
 // geometric product
+// BasisBlades LeftContration, RightContraction, Inner, Outer
+// LeftContration, RightContraction
 
 // not done:
 
-// Mul for geometric product
-// geometric product for mv with metric
+// Inner |, Outer ^
+
+// Mul for all products
+// all products for mv with metric
 //  just to see how fast implmentation goes
 // test our implementation in lib.rs
-
-// LeftContration <<, RightContraction >>, Inner |
-// Outer ^
-// do the above procedure for each of them and their symbols.
 
 // Dual !
 

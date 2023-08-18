@@ -1,4 +1,4 @@
-use std::ops::{Deref, DerefMut, AddAssign, BitOrAssign, Shl, Add, BitOr, BitAndAssign, BitAnd, Not, ShlAssign, ShrAssign, BitXor};
+use std::ops::{Deref, DerefMut, AddAssign, BitOrAssign, Shl, Add, BitOr, BitAndAssign, BitAnd, Not, ShlAssign, ShrAssign, BitXor, Shr};
 use std::str::FromStr;
 
 use funty::Unsigned;
@@ -18,6 +18,7 @@ pub trait SeaBasisBladeBitsInner: Unsigned{
 	const CONJUGATION_NEGATION_BITS: Self;
 	const GRADE_BITS: [Self; 7];
 	const CONTAINS_BASIS_VEC_BITS: [Self; 7];
+	const EXCLUDES_BASIS_VEC_BITS: [Self; 7];
 	const K: [Self; 7] = Self::CONTAINS_BASIS_VEC_BITS;
 	const OUTPUT_REVERSION_NEGATION_BITS: [Self; 7];
 
@@ -66,6 +67,15 @@ impl SeaBasisBladeBitsInner for u8 {
 		0,
 		0
 	];
+	const EXCLUDES_BASIS_VEC_BITS: [Self; 7] = [
+		!Self::CONTAINS_BASIS_VEC_BITS[0],
+		!Self::CONTAINS_BASIS_VEC_BITS[1],
+		!Self::CONTAINS_BASIS_VEC_BITS[2],
+		!Self::CONTAINS_BASIS_VEC_BITS[3],
+		!Self::CONTAINS_BASIS_VEC_BITS[4],
+		!Self::CONTAINS_BASIS_VEC_BITS[5],
+		!Self::CONTAINS_BASIS_VEC_BITS[6],
+	];
 	const OUTPUT_REVERSION_NEGATION_BITS: [Self; 7] = [
 		Self::K[1] ^ Self::K[2] ^ Self::K[3] ^ Self::K[4] ^ Self::K[5] ^ Self::K[6],
 					 Self::K[2] ^ Self::K[3] ^ Self::K[4] ^ Self::K[5] ^ Self::K[6],
@@ -109,6 +119,15 @@ impl SeaBasisBladeBitsInner for u16 {
 		0,
 		0
 	];
+	const EXCLUDES_BASIS_VEC_BITS: [Self; 7] = [
+		!Self::CONTAINS_BASIS_VEC_BITS[0],
+		!Self::CONTAINS_BASIS_VEC_BITS[1],
+		!Self::CONTAINS_BASIS_VEC_BITS[2],
+		!Self::CONTAINS_BASIS_VEC_BITS[3],
+		!Self::CONTAINS_BASIS_VEC_BITS[4],
+		!Self::CONTAINS_BASIS_VEC_BITS[5],
+		!Self::CONTAINS_BASIS_VEC_BITS[6],
+	];
 	const OUTPUT_REVERSION_NEGATION_BITS: [Self; 7] = [
 		Self::K[1] ^ Self::K[2] ^ Self::K[3] ^ Self::K[4] ^ Self::K[5] ^ Self::K[6],
 					 Self::K[2] ^ Self::K[3] ^ Self::K[4] ^ Self::K[5] ^ Self::K[6],
@@ -150,6 +169,15 @@ impl SeaBasisBladeBitsInner for u32 {
 		0xFF_00_FF_00,
 		0xFF_FF_00_00,
 		0
+	];
+	const EXCLUDES_BASIS_VEC_BITS: [Self; 7] = [
+		!Self::CONTAINS_BASIS_VEC_BITS[0],
+		!Self::CONTAINS_BASIS_VEC_BITS[1],
+		!Self::CONTAINS_BASIS_VEC_BITS[2],
+		!Self::CONTAINS_BASIS_VEC_BITS[3],
+		!Self::CONTAINS_BASIS_VEC_BITS[4],
+		!Self::CONTAINS_BASIS_VEC_BITS[5],
+		!Self::CONTAINS_BASIS_VEC_BITS[6],
 	];
 	const OUTPUT_REVERSION_NEGATION_BITS: [Self; 7] = [
 		Self::K[1] ^ Self::K[2] ^ Self::K[3] ^ Self::K[4] ^ Self::K[5] ^ Self::K[6],
@@ -194,6 +222,15 @@ impl SeaBasisBladeBitsInner for u64 {
 		0xFF_00_FF_00_FF_00_FF_00,
 		0xFF_FF_00_00_FF_FF_00_00,
 		0xFF_FF_FF_FF_00_00_00_00
+	];
+	const EXCLUDES_BASIS_VEC_BITS: [Self; 7] = [
+		!Self::CONTAINS_BASIS_VEC_BITS[0],
+		!Self::CONTAINS_BASIS_VEC_BITS[1],
+		!Self::CONTAINS_BASIS_VEC_BITS[2],
+		!Self::CONTAINS_BASIS_VEC_BITS[3],
+		!Self::CONTAINS_BASIS_VEC_BITS[4],
+		!Self::CONTAINS_BASIS_VEC_BITS[5],
+		!Self::CONTAINS_BASIS_VEC_BITS[6],
 	];
 	const OUTPUT_REVERSION_NEGATION_BITS: [Self; 7] = [
 		Self::K[1] ^ Self::K[2] ^ Self::K[3] ^ Self::K[4] ^ Self::K[5] ^ Self::K[6],
@@ -265,6 +302,15 @@ impl<I: SeaBasisBladeBitsInner> SeaBasisBladeBits<I> {
 		SeaBasisBladeBits(I::CONTAINS_BASIS_VEC_BITS[5]),
 		SeaBasisBladeBits(I::CONTAINS_BASIS_VEC_BITS[6]),
 	];
+	pub const EXCLUDE_BASIS_VECS: [Self; 7] = [
+		SeaBasisBladeBits(I::EXCLUDES_BASIS_VEC_BITS[0]),
+		SeaBasisBladeBits(I::EXCLUDES_BASIS_VEC_BITS[1]),
+		SeaBasisBladeBits(I::EXCLUDES_BASIS_VEC_BITS[2]),
+		SeaBasisBladeBits(I::EXCLUDES_BASIS_VEC_BITS[3]),
+		SeaBasisBladeBits(I::EXCLUDES_BASIS_VEC_BITS[4]),
+		SeaBasisBladeBits(I::EXCLUDES_BASIS_VEC_BITS[5]),
+		SeaBasisBladeBits(I::EXCLUDES_BASIS_VEC_BITS[6]),
+	];
 	pub const OUTPUT_REVERSION_NEGATIONS: [Self; 7] = [
 		SeaBasisBladeBits(I::OUTPUT_REVERSION_NEGATION_BITS[0]),
 		SeaBasisBladeBits(I::OUTPUT_REVERSION_NEGATION_BITS[1]),
@@ -287,7 +333,7 @@ impl<I: SeaBasisBladeBitsInner> SeaBasisBladeBits<I> {
 		Self(I::set_lsb_up_to_n(**index))
 	}
 
-	pub fn cannonical_neg_mask(index: &SeaBasisBladeIndexLow) -> Self {
+	pub fn cannonical_reordering_neg_mask(index: &SeaBasisBladeIndexLow) -> Self {
 		let mut out = I::REVERSION_NEGATION_BITS;
 		for i in index {
 			let temp = I::OUTPUT_REVERSION_NEGATION_BITS[(i+1) as usize];
@@ -304,6 +350,18 @@ impl<I: SeaBasisBladeBitsInner> SeaBasisBladeBits<I> {
 			out ^= temp;
 		}
 		Self(out)
+	}
+
+	pub fn remove_basis_blades_with_any(&mut self, index: &SeaBasisBladeIndexLow) {
+		for i in index {
+			*self &= &Self::EXCLUDE_BASIS_VECS[(i+1) as usize];
+		}
+	}
+
+	pub fn remove_basis_blades_without_all(&mut self, index: &SeaBasisBladeIndexLow) {
+		for i in index {
+			*self &= &Self::CONTAINS_BASIS_VECS[(i+1) as usize];
+		}
 	}
 	
 	pub fn is_zero(&self) -> bool {
@@ -413,10 +471,22 @@ impl<I: SeaBasisBladeBitsInner> Shl<u8> for &SeaBasisBladeBits<I>{
 		SeaBasisBladeBits(**self << rhs)
 	}
 }
+impl<I: SeaBasisBladeBitsInner> Shl<&SeaBasisBladeIndexLow> for &SeaBasisBladeBits<I>{
+	type Output = SeaBasisBladeBits<I>;
+	fn shl(self, rhs: &SeaBasisBladeIndexLow) -> Self::Output {
+		SeaBasisBladeBits(**self << **rhs)
+	}
+}
 
 impl<I: SeaBasisBladeBitsInner> ShrAssign<u8> for SeaBasisBladeBits<I>{
 	fn shr_assign(&mut self, rhs: u8) {
 		**self >>= rhs;
+	}
+}
+impl<I: SeaBasisBladeBitsInner> Shr<&SeaBasisBladeIndexLow> for &SeaBasisBladeBits<I>{
+	type Output = SeaBasisBladeBits<I>;
+	fn shr(self, rhs: &SeaBasisBladeIndexLow) -> Self::Output {
+		SeaBasisBladeBits(**self >> **rhs)
 	}
 }
 
