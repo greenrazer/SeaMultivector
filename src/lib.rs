@@ -25,10 +25,11 @@ pub mod prelude {
 // geometric product
 // BasisBlades LeftContration, RightContraction, Inner, Outer
 // LeftContration, RightContraction
+// Inner
 
 // not done:
 
-// Inner |, Outer ^
+//   Outer ^
 
 // Mul for all products
 // all products for mv with metric

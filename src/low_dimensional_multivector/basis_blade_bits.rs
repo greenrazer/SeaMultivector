@@ -277,7 +277,7 @@ impl<I:SeaBasisBladeBitsInner> Iterator for BasisBladeBitsIter<I> {
 pub struct SeaBasisBladeBits<I: SeaBasisBladeBitsInner>(pub I);
 impl<I: SeaBasisBladeBitsInner> SeaBasisBladeBits<I> {
 	pub const DIMENSIONS: u8 = I::DIMENSIONS;
-	pub const NUM_BASIS_BLADES: u8 = I::NUM_BASIS_BLADES;
+	pub const NUM_BASIS_BLADES: SeaBasisBladeIndexLow = SeaBasisBladeIndexLow(I::NUM_BASIS_BLADES);
 	pub const ZERO: Self = SeaBasisBladeBits(I::ZERO);
 	pub const ONE: Self = SeaBasisBladeBits(I::ONE);
 	pub const EVEN_GRADES: Self = SeaBasisBladeBits(I::EVEN_GRADE_BITS);
@@ -375,6 +375,10 @@ impl<I: SeaBasisBladeBitsInner> SeaBasisBladeBits<I> {
 	pub fn count_basis_blades_less_than(&self, idx:&SeaBasisBladeIndexLow) -> u32{
 		let mask = I::set_lsb_up_to_n(**idx);
 		(**self & &mask).count_ones()
+	}
+
+	pub fn reverse_bits(&self) -> Self {
+		Self(self.deref().reverse_bits())
 	}
 }
 

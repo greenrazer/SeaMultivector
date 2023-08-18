@@ -31,6 +31,7 @@ impl Iterator for BasisBladeIndexLowIter {
 pub struct SeaBasisBladeIndexLow(pub u8);
 impl SeaBasisBladeIndexLow {
 	pub const ZERO: Self = SeaBasisBladeIndexLow(0);
+	pub const ONE: Self = SeaBasisBladeIndexLow(1);
 	pub const ALL: Self = SeaBasisBladeIndexLow(255);
 
 	pub fn basis_vectors_less_than_or_equal(n: u8) -> Self {
