@@ -1,9 +1,11 @@
 use std::str::FromStr;
-use std::ops::{Deref, DerefMut};
+use std::ops::{Deref, DerefMut, Shl, Shr, BitOr, BitXor, Mul};
 
 use crate::errors::ParseMultivectorError;
 use crate::metric::SeaMetric;
 use crate::coefficient::SeaCoefficient;
+use crate::multivector_product_traits::{LeftContraction, RightContraction, InnerProduct, OuterProduct, GeometricProduct};
+use crate::multivector_traits::{Multivector, MultivectorMut};
 
 use super::without_metric::SeaMultivectorLowSparseCoefficents; 
 use super::basis_blade_bits::SeaBasisBladeBitsInner;
@@ -14,6 +16,14 @@ use super::basis_blade_bits::SeaBasisBladeBits;
 pub struct SeaMultivectorLowSparseCoefficentsWithMetric<T:SeaCoefficient, I:SeaBasisBladeBitsInner>{
 	metric: SeaMetric,
 	multivector:SeaMultivectorLowSparseCoefficents<T, I>
+}
+impl<T:SeaCoefficient, I:SeaBasisBladeBitsInner> SeaMultivectorLowSparseCoefficentsWithMetric<T, I> {
+	pub fn new(p:u8, n:u8, z:u8) -> Self {
+		Self {
+			metric: SeaMetric::new(p,n,z),
+			multivector: SeaMultivectorLowSparseCoefficents::<T, I>::new()
+		}
+	}
 }
 
 impl<T:SeaCoefficient, I:SeaBasisBladeBitsInner> Deref for SeaMultivectorLowSparseCoefficentsWithMetric<T, I> {
@@ -52,10 +62,138 @@ impl<T:SeaCoefficient, I:SeaBasisBladeBitsInner> FromStr for SeaMultivectorLowSp
 	}
 }
 
+impl<T:SeaCoefficient, I:SeaBasisBladeBitsInner> Multivector for SeaMultivectorLowSparseCoefficentsWithMetric<T, I> {
+	fn reversion_conjugated(&self) -> Self {
+		Self {
+			metric: self.metric.clone(),
+			multivector: self.multivector.reversion_conjugated()
+		}
+	}
+	
+	fn involution_conjugated(&self) -> Self {
+		Self {
+			metric: self.metric.clone(),
+			multivector: self.multivector.involution_conjugated()
+		}
+	}
+	
+	fn clifford_conjugated(&self) -> Self {
+		Self {
+			metric: self.metric.clone(),
+			multivector: self.multivector.clifford_conjugated()
+		}
+	}
+}
+impl<T:SeaCoefficient, I:SeaBasisBladeBitsInner> MultivectorMut for SeaMultivectorLowSparseCoefficentsWithMetric<T, I> {
+	fn reversion_conjugation(&mut self) {
+		self.multivector.reversion_conjugation()
+	}
+
+	fn involution_conjugation(&mut self) {
+		self.multivector.involution_conjugation()
+	}
+
+	fn clifford_conjugation(&mut self) {
+		self.multivector.clifford_conjugation()
+	}
+}
+
+impl<T:SeaCoefficient, I:SeaBasisBladeBitsInner> LeftContraction<&Self> for SeaMultivectorLowSparseCoefficentsWithMetric<T, I> {
+	type Output = Self;
+	fn left_contraction(&self, rhs: &Self) -> Self::Output {
+		assert_eq!(self.metric, rhs.metric);
+		Self {
+			metric: self.metric.clone(),
+			multivector: self.multivector.left_contraction((&rhs.multivector, &self.metric))
+		}
+	}
+}
+impl<T:SeaCoefficient, I:SeaBasisBladeBitsInner> Shl<Self> for &SeaMultivectorLowSparseCoefficentsWithMetric<T, I> {
+	type Output = SeaMultivectorLowSparseCoefficentsWithMetric<T, I>;
+	fn shl(self, rhs: Self) -> Self::Output {
+		self.left_contraction(rhs)
+	}
+}
+
+impl<T:SeaCoefficient, I:SeaBasisBladeBitsInner> RightContraction<&Self> for SeaMultivectorLowSparseCoefficentsWithMetric<T, I> {
+	type Output = Self;
+	fn right_contraction(&self, rhs: &Self) -> Self::Output {
+		assert_eq!(self.metric, rhs.metric);
+		Self {
+			metric: self.metric.clone(),
+			multivector: self.multivector.right_contraction((&rhs.multivector, &self.metric))
+		}
+	}
+}
+impl<T:SeaCoefficient, I:SeaBasisBladeBitsInner> Shr<Self> for &SeaMultivectorLowSparseCoefficentsWithMetric<T, I> {
+	type Output = SeaMultivectorLowSparseCoefficentsWithMetric<T, I>;
+	fn shr(self, rhs: Self) -> Self::Output {
+		self.right_contraction(rhs)
+	}
+}
+
+impl<T:SeaCoefficient, I:SeaBasisBladeBitsInner> InnerProduct<&Self> for SeaMultivectorLowSparseCoefficentsWithMetric<T, I> {
+	type Output = Self;
+	fn inner_product(&self, rhs: &Self) -> Self::Output {
+		assert_eq!(self.metric, rhs.metric);
+		Self {
+			metric: self.metric.clone(),
+			multivector: self.multivector.inner_product((&rhs.multivector, &self.metric))
+		}
+	}
+}
+impl<T:SeaCoefficient, I:SeaBasisBladeBitsInner> BitOr<Self> for &SeaMultivectorLowSparseCoefficentsWithMetric<T, I> {
+	type Output = SeaMultivectorLowSparseCoefficentsWithMetric<T, I>;
+	fn bitor(self, rhs: Self) -> Self::Output {
+		self.inner_product(rhs)
+	}
+}
+
+impl<T:SeaCoefficient, I:SeaBasisBladeBitsInner> OuterProduct<&Self> for SeaMultivectorLowSparseCoefficentsWithMetric<T, I> {
+	type Output = Self;
+	fn outer_product(&self, rhs: &Self) -> Self::Output {
+		assert_eq!(self.metric.dimensions, rhs.metric.dimensions);
+		Self {
+			metric: self.metric.clone(),
+			multivector: self.multivector.outer_product(&rhs.multivector)
+		}
+	}
+}
+impl<T:SeaCoefficient, I:SeaBasisBladeBitsInner> BitXor<Self> for &SeaMultivectorLowSparseCoefficentsWithMetric<T, I> {
+	type Output = SeaMultivectorLowSparseCoefficentsWithMetric<T, I>;
+	fn bitxor(self, rhs: Self) -> Self::Output {
+		self.outer_product(rhs)
+	}
+}
+
+impl<T:SeaCoefficient, I:SeaBasisBladeBitsInner> GeometricProduct<&Self> for SeaMultivectorLowSparseCoefficentsWithMetric<T, I> {
+	type Output = Self;
+	fn geometric_product(&self, rhs: &Self) -> Self::Output {
+		assert_eq!(self.metric, rhs.metric);
+		Self {
+			metric: self.metric.clone(),
+			multivector: self.multivector.geometric_product((&rhs.multivector, &self.metric))
+		}
+	}
+}
+impl<T:SeaCoefficient, I:SeaBasisBladeBitsInner> Mul<Self> for &SeaMultivectorLowSparseCoefficentsWithMetric<T, I> {
+	type Output = SeaMultivectorLowSparseCoefficentsWithMetric<T, I>;
+	fn mul(self, rhs: Self) -> Self::Output {
+		self.geometric_product(rhs)
+	}
+}
 
 #[cfg(test)]
 mod tests {
     use super::*;
+
+	fn catch_unwind_silent<F: FnOnce() -> R + std::panic::UnwindSafe, R>(f: F) -> std::thread::Result<R> {
+		let prev_hook = std::panic::take_hook();
+		std::panic::set_hook(Box::new(|_| {}));
+		let result = std::panic::catch_unwind(f);
+		std::panic::set_hook(prev_hook);
+		result
+	}
 
     #[test]
     fn from_str() {
@@ -98,5 +236,121 @@ mod tests {
 		assert_eq!(SeaMultivectorLowSparseCoefficentsWithMetric::<f32, u8>::from_str("e3").unwrap_err(), ParseMultivectorError::MissingMetric);
 		assert_eq!(SeaMultivectorLowSparseCoefficentsWithMetric::<f32, u8>::from_str("a>e3").unwrap_err(), ParseMultivectorError::InvalidMetric(crate::errors::ParseMetricError::InvalidNumPositive));
 		assert_eq!(SeaMultivectorLowSparseCoefficentsWithMetric::<f32, u8>::from_str("3,4,5>e1").unwrap_err(), ParseMultivectorError::InvalidMetricDimensions);
+	}
+
+	mod left_contraction {
+		use super::*;
+
+		#[test]
+		fn works() {
+			let a = SeaMultivectorLowSparseCoefficentsWithMetric::<f32, u64>::from_str("3,3> + 1 + e1 + 2e2 + 3e12 + 4e3 + 5e13 + 6e23 + 7e123 + 8e4 + 9e14 + 10e24 + 11e124 + 12e345 + 13e1345 + 14e2345 + 15e12345 +e6 + 12e126 + 8e46").unwrap();
+			let b = SeaMultivectorLowSparseCoefficentsWithMetric::<f32, u64>::from_str("3,3>  + 3e13 + 1e4 + 2e124  +4e345 +83e1235 + 70e1245 + 4e1345 + 8e2345 + 12e123456").unwrap();
+
+			let out = SeaMultivectorLowSparseCoefficentsWithMetric::<f32, u64>::from_str("3,3>115+56e1+78e2+3e3-5e4+189e5+180e6-16e12+3e13-4e14+202e15+168e16+2e24-215e25-156e26-333e35-262e45+2e124-228e125-144e126-198e135-156e145+19e235+38e245-120e345-132e356-84e456+179e1235+70e1245+4e1345-120e1356-72e1456+8e2345+108e2356+60e2456-36e3456+12e12345+96e12356+48e12456-24e13456+12e23456+12e123456").unwrap();
+			assert_eq!(
+				a.left_contraction(&b),
+				out
+			);
+		}
+	
+		#[test]
+		fn panics_on_mismatched_metrics() {
+			let a = SeaMultivectorLowSparseCoefficentsWithMetric::<f32, u64>::from_str("1,2,3> + 1 + e1 + 2e2 + 3e12 + 4e3 + 5e13 + 6e23 + 7e123 + 8e4 + 9e14 + 10e24 + 11e124 + 12e345 + 13e1345 + 14e2345 + 15e12345 +e6 + 12e126 + 8e46").unwrap();
+			let b = SeaMultivectorLowSparseCoefficentsWithMetric::<f32, u64>::from_str("3,2,1>  + 3e13 + 1e4 + 2e124  +4e345 +83e1235 + 70e1245 + 4e1345 + 8e2345 + 12e123456").unwrap();
+	
+			let result = catch_unwind_silent(|| a.left_contraction(&b));
+			assert!(result.is_err());
+		}
+	}
+
+	mod right_contraction {
+		use super::*;
+
+		#[test]
+		fn works() {
+			let a = SeaMultivectorLowSparseCoefficentsWithMetric::<f32, u64>::from_str("3,3> + 1 + e1 + 2e2 + 3e12 + 4e3 + 5e13 + 6e23 + 7e123 + 8e4 + 9e14 + 10e24 + 11e124 + 12e345 + 13e1345 + 14e2345 + 15e12345 +e6 + 12e126 + 8e46").unwrap();
+			let b = SeaMultivectorLowSparseCoefficentsWithMetric::<f32, u64>::from_str("3,3>  + 3e13 + 1e4 + 2e124  +4e345 +83e1235 + 70e1245 + 4e1345 + 8e2345 + 12e123456").unwrap();
+
+			let out = SeaMultivectorLowSparseCoefficentsWithMetric::<f32, u64>::from_str("3,3>115+59e1-105e2+1050e3+1245e4+8e6-71e12-18e35-39e45+13e135+14e235+45e245+15e1235").unwrap();
+			assert_eq!(
+				a.right_contraction(&b),
+				out
+			);
+		}
+	
+		#[test]
+		fn panics_on_mismatched_metrics() {
+			let a = SeaMultivectorLowSparseCoefficentsWithMetric::<f32, u64>::from_str("1,2,3> + 1 + e1 + 2e2 + 3e12 + 4e3 + 5e13 + 6e23 + 7e123 + 8e4 + 9e14 + 10e24 + 11e124 + 12e345 + 13e1345 + 14e2345 + 15e12345 +e6 + 12e126 + 8e46").unwrap();
+			let b = SeaMultivectorLowSparseCoefficentsWithMetric::<f32, u64>::from_str("3,2,1>  + 3e13 + 1e4 + 2e124  +4e345 +83e1235 + 70e1245 + 4e1345 + 8e2345 + 12e123456").unwrap();
+	
+			let result = catch_unwind_silent(|| a.right_contraction(&b));
+			assert!(result.is_err());
+		}
+	}
+
+	mod inner_product {
+		use super::*;
+
+		#[test]
+		fn works() {
+			let a = SeaMultivectorLowSparseCoefficentsWithMetric::<f32, u64>::from_str("3,3> + 1 + e1 + 2e2 + 3e12 + 4e3 + 5e13 + 6e23 + 7e123 + 8e4 + 9e14 + 10e24 + 11e124 + 12e345 + 13e1345 + 14e2345 + 15e12345 +e6 + 12e126 + 8e46").unwrap();
+			let b = SeaMultivectorLowSparseCoefficentsWithMetric::<f32, u64>::from_str("3,3>  + 3e13 + 1e4 + 2e124  +4e345 +83e1235 + 70e1245 + 4e1345 + 8e2345 + 12e123456").unwrap();
+
+			let out = SeaMultivectorLowSparseCoefficentsWithMetric::<f32, u64>::from_str("3,3>115+115e1 -27e2 +1053e3 +1240e4 +189e5 +188e6 -87e12 +3e13 -4e14 +202e15 +168e16 +2e24 -215e25 -156e26 -351e35 -301e45 +2e124 -228e125 -144e126 -185e135 -156e145 +33e235 +83e245 -120e345 -132e356 -84e456 +194e1235 +70e1245 +4e1345 -120e1356 -72e1456 +8e2345 +108e2356 +60e2456 -36e3456 +12e12345 +96e12356 +48e12456 -24e13456 +12e23456 +12e123456​").unwrap();
+			assert_eq!(
+				a.inner_product(&b),
+				out
+			);
+		}
+	
+		#[test]
+		fn panics_on_mismatched_metrics() {
+			let a = SeaMultivectorLowSparseCoefficentsWithMetric::<f32, u64>::from_str("1,2,3> + 1 + e1 + 2e2 + 3e12 + 4e3 + 5e13 + 6e23 + 7e123 + 8e4 + 9e14 + 10e24 + 11e124 + 12e345 + 13e1345 + 14e2345 + 15e12345 +e6 + 12e126 + 8e46").unwrap();
+			let b = SeaMultivectorLowSparseCoefficentsWithMetric::<f32, u64>::from_str("3,2,1>  + 3e13 + 1e4 + 2e124  +4e345 +83e1235 + 70e1245 + 4e1345 + 8e2345 + 12e123456").unwrap();
+	
+			let result = catch_unwind_silent(|| a.inner_product(&b));
+			assert!(result.is_err());
+		}
+	}
+
+	mod outer_product {
+		use super::*;
+
+		#[test]
+		fn works() {
+			let a = SeaMultivectorLowSparseCoefficentsWithMetric::<f32, u64>::from_str("3,3> + 1 + e1 + 2e2 + 3e12 + 4e3 + 5e13 + 6e23 + 7e123 + 8e4 + 9e14 + 10e24 + 11e124 + 12e345 + 13e1345 + 14e2345 + 15e12345 +e6 + 12e126 + 8e46").unwrap();
+			let b = SeaMultivectorLowSparseCoefficentsWithMetric::<f32, u64>::from_str("3,3>  + 3e13 + 1e4 + 2e124  +4e345 +83e1235 + 70e1245 + 4e1345 + 8e2345 + 12e123456").unwrap();
+
+			let out = SeaMultivectorLowSparseCoefficentsWithMetric::<f32, u64>::from_str("3,3>e4 +3e13 +e14 +2e24 +4e34 -e46 -6e123 +5e124 +29e134 +3e136 +6e234 +4e345 -15e1234 +83e1235 +70e1245 -14e1246 +8e1345 +24e1346 +16e2345 -4e3456 -372e12345 +83e12356 +70e12456 +4e13456 +8e23456 -700e123456").unwrap();
+			assert_eq!(
+				a.outer_product(&b),
+				out
+			);
+		}
+	}
+
+	mod geometric_product {
+		use super::*;
+
+		#[test]
+		fn works() {
+			let a = SeaMultivectorLowSparseCoefficentsWithMetric::<f32, u64>::from_str("3,3> + 1 + e1 + 2e2 + 3e12 + 4e3 + 5e13 + 6e23 + 7e123 + 8e4 + 9e14 + 10e24 + 11e124 + 12e345 + 13e1345 + 14e2345 + 15e12345 +e6 + 12e126 + 8e46").unwrap();
+			let b = SeaMultivectorLowSparseCoefficentsWithMetric::<f32, u64>::from_str("3,3>  + 3e13 + 1e4 + 2e124  +4e345 +83e1235 + 70e1245 + 4e1345 + 8e2345 + 12e123456").unwrap();
+	
+			let out = SeaMultivectorLowSparseCoefficentsWithMetric::<f32, u64>::from_str("3,3>115+115e1-27e2+1053e3+1240e4+189e5+188e6-21e12+983e13+1159e14+202e15+168e16-919e23-1075e24-215e25-156e26+17e34-351e35-301e45+23e46-846e123-991e124-228e125-128e126+17e134-265e135+3e136-228e145-17e234+143e235-36e236+135e245+303e345-1160e356-924e456-15e1234+230e1235+124e1245-14e1246-560e1256+442e1345+24e1346-152e1356-72e1456-393e2345+44e2356+60e2456-40e3456-360e12345+179e12356+118e12456+76e13456-28e23456-700e123456").unwrap();
+			assert_eq!(
+				a.geometric_product(&b),
+				out
+			);
+		}
+	
+		#[test]
+		fn panics_on_mismatched_metrics() {
+			let a = SeaMultivectorLowSparseCoefficentsWithMetric::<f32, u64>::from_str("1,2,3> + 1 + e1 + 2e2 + 3e12 + 4e3 + 5e13 + 6e23 + 7e123 + 8e4 + 9e14 + 10e24 + 11e124 + 12e345 + 13e1345 + 14e2345 + 15e12345 +e6 + 12e126 + 8e46").unwrap();
+			let b = SeaMultivectorLowSparseCoefficentsWithMetric::<f32, u64>::from_str("3,2,1>  + 3e13 + 1e4 + 2e124  +4e345 +83e1235 + 70e1245 + 4e1345 + 8e2345 + 12e123456").unwrap();
+	
+			let result = catch_unwind_silent(|| a.geometric_product(&b));
+			assert!(result.is_err());
+		}
 	}
 }

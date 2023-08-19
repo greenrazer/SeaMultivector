@@ -2,7 +2,7 @@ use std::str::FromStr;
 use crate::errors::ParseMetricError;
 
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct SeaMetric {
 	pub positive: u8,
 	pub negitive: u8,

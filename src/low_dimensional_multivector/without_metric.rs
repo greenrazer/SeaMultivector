@@ -1,5 +1,5 @@
 use std::iter::repeat;
-use std::ops::{Add, AddAssign};
+use std::ops::{Add, AddAssign, BitXor};
 use std::str::FromStr;
 
 use lazy_static::lazy_static;
@@ -10,7 +10,7 @@ use crate::coefficient::SeaCoefficient;
 use crate::errors::ParseMultivectorError;
 use crate::metric::SeaMetric;
 use crate::multivector_traits::{Multivector, MultivectorMut};
-use crate::multivector_product_traits::{LeftContration, RightContraction, InnerProduct, OuterProduct, GeometricProduct};
+use crate::multivector_product_traits::{LeftContraction, RightContraction, InnerProduct, OuterProduct, GeometricProduct};
 
 use super::basis_blade_bits::SeaBasisBladeBitsInner;
 use super::basis_blade_bits::SeaBasisBladeBits;
@@ -24,6 +24,13 @@ pub struct SeaMultivectorLowSparseCoefficents<T:SeaCoefficient, I:SeaBasisBladeB
 	pub coefficients: Vec<T>
 }
 impl<T:SeaCoefficient, I:SeaBasisBladeBitsInner> SeaMultivectorLowSparseCoefficents<T, I> {
+	pub fn new() -> Self {
+		Self { 
+			basis_blade_bits: SeaBasisBladeBits::ZERO, 
+			coefficients: vec![]
+		}
+	}
+	
 	fn metric_product_constants(metric: &SeaMetric) -> (u8, SeaBasisBladeIndexLow, SeaBasisBladeIndexLow) {
 		let num_metric_non_zeros = metric.positive + metric.negitive;
 		let metric_non_zeros = SeaBasisBladeIndexLow::basis_vectors_less_than_or_equal(num_metric_non_zeros);
@@ -47,6 +54,9 @@ impl<T:SeaCoefficient, I:SeaBasisBladeBitsInner> SeaMultivectorLowSparseCoeffice
 		&cannonical_neg_mask ^ &metric_neg_mask
 	}
 
+	/// dot two multivectors with their coefficients together
+	/// based on a product mask and a neg mask telling what to negate
+	/// allong with the current output coefficent index
 	fn special_dot_product(self: &Self, rhs: &Self, dot_mask: &SeaBasisBladeBits<I>, neg_mask: &SeaBasisBladeBits<I>, output_index: &SeaBasisBladeIndexLow) -> T {
 		let mut out = T::zero();
 		for i in dot_mask {
@@ -66,7 +76,8 @@ impl<T:SeaCoefficient, I:SeaBasisBladeBitsInner> SeaMultivectorLowSparseCoeffice
 
 		out
 	}
-
+	
+	#[allow(clippy::uninit_vec)]
 	unsafe fn create_coefficients_array(output_basis_blade_bits: &SeaBasisBladeBits<I>) -> Vec<T> {
 		let output_num_coeffs = output_basis_blade_bits.count_ones() as usize;
 		let mut output_coefficients = Vec::<T>::with_capacity(output_num_coeffs);
@@ -207,13 +218,6 @@ impl<T:SeaCoefficient, I:SeaBasisBladeBitsInner> Add<Self> for &SeaMultivectorLo
 }
 
 impl<T:SeaCoefficient, I:SeaBasisBladeBitsInner> Multivector for SeaMultivectorLowSparseCoefficents<T, I>{
-	fn new() -> Self {
-		Self { 
-			basis_blade_bits: SeaBasisBladeBits::ZERO, 
-			coefficients: vec![]
-		}
-	}
-
 	fn reversion_conjugated(&self) -> Self {
 		self.negated_basis_blades(&SeaBasisBladeBits::<I>::REVERSION_NEGATIONS)
 	}
@@ -240,7 +244,7 @@ impl<T:SeaCoefficient, I:SeaBasisBladeBitsInner> MultivectorMut for SeaMultivect
 	}
 }
 
-impl<T:SeaCoefficient, I:SeaBasisBladeBitsInner> LeftContration<(&Self, &SeaMetric)> for SeaMultivectorLowSparseCoefficents<T, I> {
+impl<T:SeaCoefficient, I:SeaBasisBladeBitsInner> LeftContraction<(&Self, &SeaMetric)> for SeaMultivectorLowSparseCoefficents<T, I> {
 	type Output = Self;
 
 	fn left_contraction(&self, (rhs, metric): (&Self, &SeaMetric)) -> Self::Output {
@@ -434,6 +438,12 @@ impl<T:SeaCoefficient, I:SeaBasisBladeBitsInner> OuterProduct<&Self> for SeaMult
 			basis_blade_bits: output_basis_blade_bits,
 			coefficients: output_coefficients
 		}
+	}
+}
+impl<T:SeaCoefficient, I:SeaBasisBladeBitsInner> BitXor<Self> for &SeaMultivectorLowSparseCoefficents<T, I> {
+	type Output = SeaMultivectorLowSparseCoefficents<T, I>;
+	fn bitxor(self, rhs: Self) -> Self::Output {
+		self.outer_product(rhs)
 	}
 }
 
@@ -753,7 +763,7 @@ mod tests{
 			let a = SeaMultivectorLowSparseCoefficents::<f32, u64>::from_str(" + 1 + e1 + 2e2 + 3e12 + 4e3 + 5e13 + 6e23 + 7e123 + 8e4 + 9e14 + 10e24 + 11e124 + 12e345 + 13e1345 + 14e2345 + 15e12345 +e6 + 12e126 + 8e46").unwrap();
 			let b = SeaMultivectorLowSparseCoefficents::<f32, u64>::from_str("  + 3e13 + 1e4 + 2e124  +4e345 +83e1235 + 70e1245 + 4e1345 + 8e2345 + 12e123456").unwrap();
 	
-			let out = SeaMultivectorLowSparseCoefficents::<f32, u64>::from_str("115+115e1-27e2+1053e3+1240e4+189e5+188e6-21e12+983e13+1159e14+202e15+168e16-919e23-1075e24-215e25-156e26+17e34-351e35-301e45+23e46-846e123-991e124-228e125-128e126+17e134-265e135+3e136-228e145-17e234+143e235-36e236+135e245+303e345-1160e356-924e456-15e1234+230e1235+124e1245-14e1246-560e1256+442e1345+24e1346-152e1356-72e1456-393e2345+44e2356+60e2456-40e3456-360e12345+179e12356+118e12456+76e13456-28e23456-700e123456​​").unwrap();
+			let out = SeaMultivectorLowSparseCoefficents::<f32, u64>::from_str("115+115e1-27e2+1053e3+1240e4+189e5+188e6-21e12+983e13+1159e14+202e15+168e16-919e23-1075e24-215e25-156e26+17e34-351e35-301e45+23e46-846e123-991e124-228e125-128e126+17e134-265e135+3e136-228e145-17e234+143e235-36e236+135e245+303e345-1160e356-924e456-15e1234+230e1235+124e1245-14e1246-560e1256+442e1345+24e1346-152e1356-72e1456-393e2345+44e2356+60e2456-40e3456-360e12345+179e12356+118e12456+76e13456-28e23456-700e123456").unwrap();
 			// 171.677µs
 			// new: 58.328µs
 			// with unsafe: 56.79µs
@@ -1107,7 +1117,6 @@ mod tests{
 			let b = SeaMultivectorLowSparseCoefficents::<f32, u64>::from_str("  + 3e13 + 1e4 + 2e124  +4e345 +83e1235 + 70e1245 + 4e1345 + 8e2345 + 12e123456").unwrap();
 	
 			let out = SeaMultivectorLowSparseCoefficents::<f32, u64>::from_str("115+59e1-105e2+1050e3+1245e4+8e6-71e12-18e35-39e45+13e135+14e235+45e245+15e1235​").unwrap();
-			//40ns
 			assert_eq!(
 				a.right_contraction((&b, &m)),
 				out

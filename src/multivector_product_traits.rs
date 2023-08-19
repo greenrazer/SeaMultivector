@@ -1,6 +1,6 @@
 use crate::coefficient::SeaCoefficient;
 
-pub trait LeftContration<Rhs=Self> {
+pub trait LeftContraction<Rhs=Self> {
 	type Output;
 
 	fn left_contraction(&self, rhs: Rhs) -> Self::Output;

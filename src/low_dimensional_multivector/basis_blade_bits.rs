@@ -4,31 +4,99 @@ use std::str::FromStr;
 use funty::Unsigned;
 
 use crate::errors::ParseMultivectorError;
-use crate::multivector_product_traits::{GeometricProduct, LeftContration, RightContraction, InnerProduct, OuterProduct};
+use crate::multivector_product_traits::{GeometricProduct, LeftContraction, RightContraction, InnerProduct, OuterProduct};
 
 use super::basis_blade_index::SeaBasisBladeIndexLow;
 
 
-pub trait SeaBasisBladeBitsInner: Unsigned{
+pub trait SeaBasisBladeBitsInner: Unsigned{ 
 	const DIMENSIONS: u8;
 	const NUM_BASIS_BLADES: u8 = Self::BITS as u8;
+	
+	/// All bits of an even grade,
+	/// or all bits with an index with an even number of bits set
+	/// or even binary weight.
+	/// 
+	/// e.g 10010110
+	/// because for each index
+	/// 0 -> 0 bits set -> even
+	/// 1 -> 1 bits set -> odd
+	/// 2 -> 1 bits set -> odd
+	/// 3 -> 2 bits set -> even
+	/// 4 -> 1 bits set -> odd
+	/// 5 -> 2 bits set -> odd
+	/// 6 -> 2 bits set -> odd
+	/// 7 -> 3 bits set -> odd
 	const EVEN_GRADE_BITS: Self;
+
+	/// All bits of an odd grade,
+	/// or all bits with an index with an odd number of bits set
+	/// or odd binary weight.
 	const ODD_GRADE_BITS: Self;
+
+	/// All indexes that would be negitive after
+	/// being cannonically reordered with themselves,
+	/// or all indexes that would be negitive after reversing all
+	/// it's basis vectors.
+	/// 
+	/// if 1/2 * binary weight of index * (binary weight of index-1) is even -> 0
+	/// if odd -> 1
 	const REVERSION_NEGATION_BITS: Self;
+
+	/// xor between reversion_negation_bits and odd_grade_bits
 	const CONJUGATION_NEGATION_BITS: Self;
+	
+	/// for each grade, the bits in that grade
+	/// for example for grade 0 the only bit set is always in the 0's place
+	/// for grade 1 every index with a binary weight of 1 is 1
+	/// for grade 2 every index with a binary weight of 2 is 1
+	/// ...
 	const GRADE_BITS: [Self; 7];
+	
+	/// for each basis_vector(1->0, e1->1, e2->2, e3->3)
+	/// 1 at each index that contains that basis vector
+	/// e.g. 
+	/// basis vector 1
+	/// 01010101
+	/// basis vector 2
+	/// 00110011
 	const CONTAINS_BASIS_VEC_BITS: [Self; 7];
+	
+	/// opposite of contains basis vector bits
 	const EXCLUDES_BASIS_VEC_BITS: [Self; 7];
+
+	/// a shorter name for CONTAINS_BASIS_VEC_BITS
 	const K: [Self; 7] = Self::CONTAINS_BASIS_VEC_BITS;
+
+	/// for each basis vector in an output index after some product
+	/// this negates the reversion grade bits to get the current
+	/// cannonical reordering sign bits
+	/// for example for each product output index
+	/// the cannonical reordering sign mask is
+	/// 1 -> Reversion bits
+	/// e1 -> Reversion bits ^ output reversion negation bits[1]
+	/// e2 -> Reversion bits ^ output reversion negation bits[2]
+	/// e12 -> Reversion bits ^ output reversion negation bits[1] ^ output reversion negation bits[2]
 	const OUTPUT_REVERSION_NEGATION_BITS: [Self; 7];
 
 	fn from_u8(other: u8) -> Self;
 
+	/// sets all least signifigant bits up to n
+	/// e.g. 5
+	/// ...0011111
+	/// 3
+	/// ...0000111
 	fn set_lsb_up_to_n(n: u8) -> Self {
 		let one = Self::ONE;
 		one.checked_shl(n as u32).unwrap_or(Self::ZERO).overflowing_sub(one).0
 	}
 
+	/// swaps adjacent bit groups with length 2^n
+	/// e.g. 2 1111011001111001
+	/// 2^2 = 4
+	/// 1111 0110 0111 1001
+	/// 0110 1111 1001 0111
+	/// 0110111110010111
 	fn swap_adjacent_pow2_n_bit_groups(&mut self, n:u8) {
 		assert_ne!(n, 0);
 		let bitmask = Self::CONTAINS_BASIS_VEC_BITS[n as usize];
@@ -101,6 +169,7 @@ impl SeaBasisBladeBitsInner for u16 {
 	// 0001 0111  0111 1110
 	const CONJUGATION_NEGATION_BITS: Self = 0x17_7E;
 
+	#[allow(clippy::mistyped_literal_suffixes)]
 	const GRADE_BITS: [Self;7] = [
 		0x00_01,
 		0x01_16,
@@ -152,6 +221,7 @@ impl SeaBasisBladeBitsInner for u32 {
 	const REVERSION_NEGATION_BITS: Self = 0x177E7EE8;
 	// 1000 0001  0001 0111  0001 0111  0111 1110
 	const CONJUGATION_NEGATION_BITS: Self = 0x8117177E;
+	#[allow(clippy::mistyped_literal_suffixes)]
 	const GRADE_BITS: [Self; 7] = [
 		0x00_00_00_01,
 		0x00_01_01_16,
@@ -503,7 +573,7 @@ impl<I: SeaBasisBladeBitsInner> Shr<&SeaBasisBladeIndexLow> for &SeaBasisBladeBi
 	}
 }
 
-impl<I: SeaBasisBladeBitsInner> LeftContration<(&SeaBasisBladeIndexLow, u8)> for SeaBasisBladeBits<I> {
+impl<I: SeaBasisBladeBitsInner> LeftContraction<(&SeaBasisBladeIndexLow, u8)> for SeaBasisBladeBits<I> {
 	type Output = Self;
 	fn left_contraction(&self, (index, num_metric_non_zeros): (&SeaBasisBladeIndexLow, u8)) -> Self::Output {
 		if index.contains_basis_vectors_greater_than(num_metric_non_zeros) {
@@ -517,7 +587,7 @@ impl<I: SeaBasisBladeBitsInner> LeftContration<(&SeaBasisBladeIndexLow, u8)> for
 		SeaBasisBladeBits(curr)
 	}
 }
-impl<I: SeaBasisBladeBitsInner> LeftContration<(&Self, u8)> for SeaBasisBladeBits<I> {
+impl<I: SeaBasisBladeBitsInner> LeftContraction<(&Self, u8)> for SeaBasisBladeBits<I> {
 	type Output = Self;
 	fn left_contraction(&self, (rhs, num_metric_non_zeros): (&Self, u8)) -> Self::Output {
 		let mut curr = Self::ZERO;

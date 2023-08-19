@@ -27,14 +27,11 @@ pub mod prelude {
 // LeftContration, RightContraction
 // Inner
 // Outer ^
+// Mul for all products
 
 // not done:
 
-
-// Mul for all products
-// all products for mv with metric
-//  just to see how fast implmentation goes
-// test our implementation in lib.rs
+// Documentation
 
 // Dual !
 
@@ -63,8 +60,53 @@ mod tests {
     fn multivector_type_wrapper_works() {
 		let mv = Multivector4D::<f32>::from_str("3,1,0>e1 + e12");
 		assert!(mv.is_ok());
+	}
 
-		let mv = Multivector4D::<f32>::from_str("3,1,0>e1 + e12");
-		assert!(mv.is_ok());
+    #[test]
+    fn multivector_products_works() {
+		let mv_a = Multivector4D::<f32>::from_str("3,1,0>e1 + e12").unwrap();
+		let mv_b = Multivector4D::<f32>::from_str("3,1,0>e3 + e123 + e4").unwrap();
+
+        let out = Multivector4D::<f32>::from_str("3,1,0>-e3 +e13 +e14 +e23 +e123 +e124").unwrap();
+		assert_eq!(
+            &mv_a * &mv_b,
+            out
+        );
+
+        let mv_a = Multivector4D::<f32>::from_str("3,1,0>e1 + e12").unwrap();
+		let mv_b = Multivector4D::<f32>::from_str("3,1,0>e3 + e123 + e4").unwrap();
+
+        let out = Multivector4D::<f32>::from_str("3,1,0>-e3 +e23").unwrap();
+		assert_eq!(
+            &mv_a | &mv_b,
+            out
+        );
+
+        let mv_a = Multivector4D::<f32>::from_str("3,1,0>e1 + e12").unwrap();
+		let mv_b = Multivector4D::<f32>::from_str("3,1,0>e3 + e123 + e4").unwrap();
+
+        let out = Multivector4D::<f32>::from_str("3,1,0>e13 +e14 +e123 +e124").unwrap();
+		assert_eq!(
+            &mv_a ^ &mv_b,
+            out
+        );
+
+        let mv_a = Multivector4D::<f32>::from_str("3,1,0>e1 + e12").unwrap();
+		let mv_b = Multivector4D::<f32>::from_str("3,1,0>e3 + e123 + e4").unwrap();
+
+        let out = Multivector4D::<f32>::from_str("3,1,0>-e3 +e23").unwrap();
+		assert_eq!(
+            &mv_a << &mv_b,
+            out
+        );
+
+        let mv_a = Multivector4D::<f32>::from_str("3,1,0>e1 + e12").unwrap();
+		let mv_b = Multivector4D::<f32>::from_str("3,1,0>e3 + e123 + e4").unwrap();
+
+        let out = Multivector4D::<f32>::from_str("3,1,0>").unwrap();
+		assert_eq!(
+            &mv_a >> &mv_b,
+            out
+        );
 	}
 }

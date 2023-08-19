@@ -2,8 +2,6 @@ use crate::coefficient::SeaCoefficient;
 
 
 pub trait Multivector{
-	fn new() -> Self;
-
 	fn reversion_conjugated(&self) -> Self;
 	fn involution_conjugated(&self) -> Self;
 	fn clifford_conjugated(&self) -> Self;
