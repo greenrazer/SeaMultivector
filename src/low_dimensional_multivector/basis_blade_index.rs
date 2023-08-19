@@ -13,7 +13,7 @@ impl Iterator for BasisBladeIndexLowIter {
 		}
 		let out = self.0.trailing_zeros();
 		self.0 ^= 1 << out;
-		return Some(out as u8);
+		Some(out as u8)
 	}
 
 	fn size_hint(&self) -> (usize, Option<usize>) {

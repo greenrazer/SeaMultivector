@@ -155,7 +155,7 @@ impl SeaBasisBladeBitsInner for u8 {
 	];
 
 	fn from_u8(other: u8) -> Self{
-		return other as Self;
+		other as Self
 	}
 }
 impl SeaBasisBladeBitsInner for u16 {
@@ -208,7 +208,7 @@ impl SeaBasisBladeBitsInner for u16 {
 	];
 
 	fn from_u8(other: u8) -> Self{
-		return other as Self;
+		other as Self
 	}
 }
 impl SeaBasisBladeBitsInner for u32 {
@@ -260,7 +260,7 @@ impl SeaBasisBladeBitsInner for u32 {
 	];
 
 	fn from_u8(other: u8) -> Self{
-		return other as Self;
+		other as Self
 	}
 }
 impl SeaBasisBladeBitsInner for u64 {
@@ -313,7 +313,7 @@ impl SeaBasisBladeBitsInner for u64 {
 	];
 
 	fn from_u8(other: u8) -> Self{
-		return other as Self;
+		other as Self
 	}
 }
 
@@ -328,7 +328,7 @@ impl<I:SeaBasisBladeBitsInner> Iterator for BasisBladeBitsIter<I> {
 		}
 		let out = self.0.trailing_zeros();
 		self.0 ^= I::ONE << out;
-		return Some(SeaBasisBladeIndexLow(out as u8));
+		Some(SeaBasisBladeIndexLow(out as u8))
 	}
 
 	fn size_hint(&self) -> (usize, Option<usize>) {
@@ -444,7 +444,7 @@ impl<I: SeaBasisBladeBitsInner> SeaBasisBladeBits<I> {
 
 	pub fn count_basis_blades_less_than(&self, idx:&SeaBasisBladeIndexLow) -> u32{
 		let mask = I::set_lsb_up_to_n(**idx);
-		(**self & &mask).count_ones()
+		(**self & mask).count_ones()
 	}
 
 	pub fn reverse_bits(&self) -> Self {
@@ -452,7 +452,7 @@ impl<I: SeaBasisBladeBitsInner> SeaBasisBladeBits<I> {
 	}
 
 	pub fn geometric_product_swap(&self, swap_by:&SeaBasisBladeIndexLow) -> Self{
-		let mut curr = self.0.clone();
+		let mut curr = self.0;
 		for i in swap_by {
 			let bv_idx = i+1;
 			curr.swap_adjacent_pow2_n_bit_groups(bv_idx);
@@ -477,7 +477,7 @@ impl<I: SeaBasisBladeBitsInner> IntoIterator for &SeaBasisBladeBits<I> {
 	type IntoIter = BasisBladeBitsIter<I>;
 	type Item = SeaBasisBladeIndexLow;
 	fn into_iter(self) -> Self::IntoIter {
-		BasisBladeBitsIter(self.0.clone())
+		BasisBladeBitsIter(self.0)
 	}
 }
 
@@ -579,7 +579,7 @@ impl<I: SeaBasisBladeBitsInner> LeftContraction<(&SeaBasisBladeIndexLow, u8)> fo
 		if index.contains_basis_vectors_greater_than(num_metric_non_zeros) {
 			return SeaBasisBladeBits::<I>::ZERO;
 		}
-		let mut curr = self.0.clone() >> index.0;
+		let mut curr = self.0 >> index.0;
 		for i in index {
 			let bv_idx = i+1;
 			curr &= !I::CONTAINS_BASIS_VEC_BITS[bv_idx as usize];
@@ -601,7 +601,7 @@ impl<I: SeaBasisBladeBitsInner> LeftContraction<(&Self, u8)> for SeaBasisBladeBi
 impl<I: SeaBasisBladeBitsInner> RightContraction<(&SeaBasisBladeIndexLow, u8)> for SeaBasisBladeBits<I> {
 	type Output = Self;
 	fn right_contraction(&self, (index, num_metric_non_zeros): (&SeaBasisBladeIndexLow, u8)) -> Self::Output {
-		let mut curr = self.0.clone().reverse_bits() >> (I::NUM_BASIS_BLADES - 1 - index.0);
+		let mut curr = self.0.reverse_bits() >> (I::NUM_BASIS_BLADES - 1 - index.0);
 		for i in 0..I::DIMENSIONS {
 			let bv_idx = i+1;
 			if index.has(bv_idx) {
@@ -639,7 +639,7 @@ impl<I: SeaBasisBladeBitsInner> InnerProduct<(&Self, u8)> for SeaBasisBladeBits<
 impl<I: SeaBasisBladeBitsInner> OuterProduct<&SeaBasisBladeIndexLow> for SeaBasisBladeBits<I> {
 	type Output = Self;
 	fn outer_product(&self, index: &SeaBasisBladeIndexLow) -> Self::Output {
-		let mut curr = self.0.clone() << index.0;
+		let mut curr = self.0 << index.0;
 		for i in index {
 			let bv_idx = i+1;
 			curr &= I::CONTAINS_BASIS_VEC_BITS[bv_idx as usize];
@@ -661,7 +661,7 @@ impl<I: SeaBasisBladeBitsInner> OuterProduct<&Self> for SeaBasisBladeBits<I> {
 impl<I: SeaBasisBladeBitsInner> GeometricProduct<(&SeaBasisBladeIndexLow, u8)> for SeaBasisBladeBits<I> {
 	type Output = Self;
 	fn geometric_product(&self, (index, num_metric_non_zeros): (&SeaBasisBladeIndexLow, u8)) -> Self::Output {
-		let mut curr = self.0.clone();
+		let mut curr = self.0;
 		for i in index {
 			let bv_idx = i+1;
 			curr.swap_adjacent_pow2_n_bit_groups(bv_idx);

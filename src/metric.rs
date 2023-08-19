@@ -52,10 +52,9 @@ impl FromStr for SeaMetric {
 			Err(_) => return Err(ParseMetricError::InvalidNumZero)
 		};
 
-		match split_iter.next() {
-			Some(_) => return Err(ParseMetricError::InvalidMetricLength),
-			None => {}
-		};
+		if split_iter.next().is_some() { 
+			return Err(ParseMetricError::InvalidMetricLength) 
+		}
 
 		Ok(Self::new(p, n, z))
 	}

@@ -42,7 +42,7 @@ impl<T:SeaCoefficient, I:SeaBasisBladeBitsInner> FromStr for SeaMultivectorLowSp
 	type Err = ParseMultivectorError;
 	
 	fn from_str(s: &str) -> Result<Self, Self::Err> {
-		let (metric_str, mv_str) = match s.split_once(">") {
+		let (metric_str, mv_str) = match s.split_once('>') {
 			Some(r) => r,
 			None => return Err(ParseMultivectorError::MissingMetric)
 		};
@@ -56,7 +56,7 @@ impl<T:SeaCoefficient, I:SeaBasisBladeBitsInner> FromStr for SeaMultivectorLowSp
 		let mv = SeaMultivectorLowSparseCoefficents::from_str(mv_str)?;
 
 		Ok(Self {
-			metric: metric,
+			metric,
 			multivector: mv 
 		})
 	}

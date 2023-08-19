@@ -44,10 +44,10 @@ impl<T: SeaCoefficient> FromStr for SeaBasisBladeLow<T> {
 			Ok(a) => a,
 			Err(e) => return Err(e)
 		};
-		return Ok( Self {
+		Ok( Self {
 			index: parsed_index,
 			coefficient: parsed_coefficient
-		});
+		})
 	}
 }
 
