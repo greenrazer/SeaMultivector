@@ -83,6 +83,27 @@ impl<T:SeaCoefficient, I:SeaBasisBladeBitsInner> Multivector for SeaMultivectorL
 			multivector: self.multivector.clifford_conjugated()
 		}
 	}
+
+	fn poincare_dual(&self) -> Self {
+		Self {
+			metric: self.metric.clone(),
+			multivector: self.multivector.poincare_dual()
+		}
+	}
+
+	fn right_complimented(&self) -> Self {
+		Self {
+			metric: self.metric.clone(),
+			multivector: self.multivector.right_complimented()
+		}
+	}
+
+	fn left_complimented(&self) -> Self {
+		Self {
+			metric: self.metric.clone(),
+			multivector: self.multivector.left_complimented()
+		}
+	}
 }
 impl<T:SeaCoefficient, I:SeaBasisBladeBitsInner> MultivectorMut for SeaMultivectorLowSparseCoefficentsWithMetric<T, I> {
 	fn reversion_conjugation(&mut self) {
@@ -95,6 +116,18 @@ impl<T:SeaCoefficient, I:SeaBasisBladeBitsInner> MultivectorMut for SeaMultivect
 
 	fn clifford_conjugation(&mut self) {
 		self.multivector.clifford_conjugation()
+	}
+
+	fn poincare_dualization(&mut self) {
+		self.multivector.poincare_dualization()
+	}
+
+	fn right_compliment(&mut self) {
+		self.multivector.right_compliment()
+	}
+
+	fn left_compliment(&mut self) {
+		self.multivector.left_compliment()
 	}
 }
 

@@ -45,6 +45,16 @@ pub trait SeaBasisBladeBitsInner: Unsigned{
 
 	/// xor between reversion_negation_bits and odd_grade_bits
 	const CONJUGATION_NEGATION_BITS: Self;
+
+	/// right compliment negation bits
+	/// such that x * compliment(x) = I(pseudo scalar)
+	/// complement = reverse(x)*these_bits
+	const RIGHT_COMPLIMENT_NEGATION_BITS: Self;
+
+	/// left compliment negation bits
+	/// such that compliment(x) * x  = I(pseudo scalar)
+	/// complement = reverse(x)*these_bits
+	const LEFT_COMPLIMENT_NEGATION_BITS: Self;
 	
 	/// for each grade, the bits in that grade
 	/// for example for grade 0 the only bit set is always in the 0's place
@@ -117,6 +127,11 @@ impl SeaBasisBladeBitsInner for u8 {
 	const REVERSION_NEGATION_BITS: Self = 0xE8;
 	// 0111 1110
 	const CONJUGATION_NEGATION_BITS: Self = 0x7E;
+	// 0010 0100
+	const RIGHT_COMPLIMENT_NEGATION_BITS: Self = 0x24;
+	// 0010 0100
+	const LEFT_COMPLIMENT_NEGATION_BITS: Self = 0x24;
+
 	const GRADE_BITS: [Self;7] = [
 		0x01,
 		0x16,
@@ -168,6 +183,10 @@ impl SeaBasisBladeBitsInner for u16 {
 	const REVERSION_NEGATION_BITS: Self = 0x7E_E8;
 	// 0001 0111  0111 1110
 	const CONJUGATION_NEGATION_BITS: Self = 0x17_7E;
+	// 0100 1101 0010 0100
+	const RIGHT_COMPLIMENT_NEGATION_BITS: Self = 0x4D_24;
+	// 0010 0100 1011 0010
+	const LEFT_COMPLIMENT_NEGATION_BITS: Self = 0x24_B2;
 
 	#[allow(clippy::mistyped_literal_suffixes)]
 	const GRADE_BITS: [Self;7] = [
@@ -221,6 +240,10 @@ impl SeaBasisBladeBitsInner for u32 {
 	const REVERSION_NEGATION_BITS: Self = 0x177E7EE8;
 	// 1000 0001  0001 0111  0001 0111  0111 1110
 	const CONJUGATION_NEGATION_BITS: Self = 0x8117177E;
+	// 0010 0100 1011 0010 0100 1101 0010 0100
+	const RIGHT_COMPLIMENT_NEGATION_BITS: Self = 0x24_B2_4D_24;
+	// 0010 0100 1011 0010 0100 1101 0010 0100
+	const LEFT_COMPLIMENT_NEGATION_BITS: Self = 0x24_B2_4D_24;
 	#[allow(clippy::mistyped_literal_suffixes)]
 	const GRADE_BITS: [Self; 7] = [
 		0x00_00_00_01,
@@ -273,7 +296,10 @@ impl SeaBasisBladeBitsInner for u64 {
 	const REVERSION_NEGATION_BITS: Self = 0x81_17_17_7E_17_7E_7E_E8;
 	// 1110 1000  1000 0001  1000 0001  0001 0111  1000 0001  0001 0111  0001 0111  0111 1110
 	const CONJUGATION_NEGATION_BITS: Self = 0xE8_81_81_17_81_17_17_7E;
-
+	// 0100 1011 0010 0100 1101 1011 0100 1101 0010 0100 1011 0010 0100 1101 0010 0100
+	const RIGHT_COMPLIMENT_NEGATION_BITS: Self = 0x4D_24_DB_4D_24_B2_4D_24;
+	// 0010 0100 1011 0010 0100 1101 0010 0100 1011 0010 1101 1011 0010 0100 1101 0010
+	const LEFT_COMPLIMENT_NEGATION_BITS: Self = 0x24_D2_4D_24_B2_DB_24_D2;
 	const GRADE_BITS: [Self; 7] = [
 		0x00_00_00_00_00_00_00_01,
 		0x00_00_00_01_00_01_01_16,
@@ -354,6 +380,8 @@ impl<I: SeaBasisBladeBitsInner> SeaBasisBladeBits<I> {
 	pub const ODD_GRADES: Self = SeaBasisBladeBits(I::ODD_GRADE_BITS);
 	pub const REVERSION_NEGATIONS: Self = SeaBasisBladeBits(I::REVERSION_NEGATION_BITS);
 	pub const CONJUGATION_NEGATIONS: Self = SeaBasisBladeBits(I::CONJUGATION_NEGATION_BITS);
+	pub const RIGHT_COMPLIMENT_NEGATIONS: Self = SeaBasisBladeBits(I::RIGHT_COMPLIMENT_NEGATION_BITS);
+	pub const LEFT_COMPLIMENT_NEGATIONS: Self = SeaBasisBladeBits(I::LEFT_COMPLIMENT_NEGATION_BITS);
 	pub const GRADES: [Self; 7] = [
 		SeaBasisBladeBits(I::GRADE_BITS[0]),
 		SeaBasisBladeBits(I::GRADE_BITS[1]),
@@ -458,6 +486,10 @@ impl<I: SeaBasisBladeBitsInner> SeaBasisBladeBits<I> {
 			curr.swap_adjacent_pow2_n_bit_groups(bv_idx);
 		}
 		SeaBasisBladeBits(curr)
+	}
+
+	pub fn dual(&self) -> Self {
+		Self(self.0.reverse_bits())
 	}
 }
 
@@ -1058,5 +1090,4 @@ mod tests {
 			out
 		);
 	}
-
 }

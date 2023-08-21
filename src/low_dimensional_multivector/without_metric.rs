@@ -3,7 +3,7 @@ use std::ops::{Add, AddAssign, BitXor};
 use std::str::FromStr;
 
 use lazy_static::lazy_static;
-use num_traits::Zero;
+use num_traits::{Zero, ToPrimitive};
 use regex::Regex;
 
 use crate::coefficient::SeaCoefficient;
@@ -235,6 +235,25 @@ impl<T:SeaCoefficient, I:SeaBasisBladeBitsInner> Multivector for SeaMultivectorL
 	fn clifford_conjugated(&self) -> Self {
 		self.negated_basis_blades(&SeaBasisBladeBits::<I>::CONJUGATION_NEGATIONS)
 	}
+	
+	fn poincare_dual(&self) -> Self {
+		Self { 
+			basis_blade_bits: self.basis_blade_bits.reverse_bits(), 
+			coefficients: self.coefficients.iter().copied().rev().collect()
+		}
+	}
+
+	fn right_complimented(&self) -> Self {
+		let mut out = self.poincare_dual();
+		out.negate_basis_blades(&SeaBasisBladeBits::<I>::RIGHT_COMPLIMENT_NEGATIONS);
+		out
+	}
+
+	fn left_complimented(&self) -> Self {
+		let mut out = self.poincare_dual();
+		out.negate_basis_blades(&SeaBasisBladeBits::<I>::LEFT_COMPLIMENT_NEGATIONS);
+		out
+	}
 }
 impl<T:SeaCoefficient, I:SeaBasisBladeBitsInner> MultivectorMut for SeaMultivectorLowSparseCoefficents<T, I>{
 	fn reversion_conjugation(&mut self) {
@@ -247,6 +266,21 @@ impl<T:SeaCoefficient, I:SeaBasisBladeBitsInner> MultivectorMut for SeaMultivect
 
 	fn clifford_conjugation(&mut self) {
 		self.negate_basis_blades(&SeaBasisBladeBits::<I>::CONJUGATION_NEGATIONS)
+	}
+
+	fn poincare_dualization(&mut self){
+		self.basis_blade_bits = self.basis_blade_bits.reverse_bits();
+		self.coefficients.reverse();
+	}
+
+	fn right_compliment(&mut self) {
+		self.poincare_dualization();
+		self.negate_basis_blades(&SeaBasisBladeBits::<I>::RIGHT_COMPLIMENT_NEGATIONS);
+	}
+
+	fn left_compliment(&mut self) {
+		self.poincare_dualization();
+		self.negate_basis_blades(&SeaBasisBladeBits::<I>::LEFT_COMPLIMENT_NEGATIONS);
 	}
 }
 
@@ -554,6 +588,34 @@ mod tests{
 			a.clifford_conjugated(),
 			out
 		);
+
+		let a = SeaMultivectorLowSparseCoefficents::<f32, u8>::from_str("1 + e1 + 2e2 + 3e12 + 4e3 + 5e13 + 6e23 + 7e123").unwrap();
+		let out = SeaMultivectorLowSparseCoefficents::<f32, u8>::from_str("7 + 6e1 + 5e2 + 4e12 + 3e3 + 2e13 + 1e23 + 1e123").unwrap();
+		assert_eq!(
+			a.poincare_dual(),
+			out
+		);
+
+		let a = SeaMultivectorLowSparseCoefficents::<f32, u8>::from_str("1 + e1 + 2e2 + 3e12 + 4e3 + 5e13 + 6e23 + 7e123").unwrap();
+		let out = SeaMultivectorLowSparseCoefficents::<f32, u8>::from_str("7 + 6e1 - 5e2 + 4e12 + 3e3 - 2e13 + 1e23 + 1e123").unwrap();
+		assert_eq!(
+			a.right_complimented(),
+			out
+		);
+
+		let a = SeaMultivectorLowSparseCoefficents::<f32, u16>::from_str("1 + e1 + 2e2 + 3e12 + 4e3 + 5e13 + 6e23 + 7e123 + 8e4 + 9e14 + 10e24 + 11e124 + 12e34 + 13e134 + 14e234 + 15e1234").unwrap();
+		let out = SeaMultivectorLowSparseCoefficents::<f32, u16>::from_str("15 + 14e1 - 13e2 + 12e12 + 11e3 - 10e13 + 9e23 + 8e123 - 7e4 + 6e14 - 5e24 - 4e124 + 3e34 + 2e134 - 1e234 + 1e1234").unwrap();
+		assert_eq!(
+			a.right_complimented(),
+			out
+		);
+
+		let a = SeaMultivectorLowSparseCoefficents::<f32, u16>::from_str("1 + e1 + 2e2 + 3e12 + 4e3 + 5e13 + 6e23 + 7e123 + 8e4 + 9e14 + 10e24 + 11e124 + 12e34 + 13e134 + 14e234 + 15e1234").unwrap();
+		let out = SeaMultivectorLowSparseCoefficents::<f32, u16>::from_str("15 - 14e1 + 13e2 + 12e12 - 11e3 - 10e13 + 9e23 - 8e123 + 7e4 + 6e14 - 5e24 + 4e124 + 3e34 - 2e134 + 1e234 + 1e1234").unwrap();
+		assert_eq!(
+			a.left_complimented(),
+			out
+		);
 	}
 
 	#[test]
@@ -577,6 +639,46 @@ mod tests{
 		let mut a = SeaMultivectorLowSparseCoefficents::<f32, u8>::from_str("1 + e1 + 2e2 + 3e12 + 4e3 + 5e13 + 6e23 + 7e123").unwrap();
 		let out = SeaMultivectorLowSparseCoefficents::<f32, u8>::from_str("1 - e1 - 2e2 - 3e12 - 4e3 - 5e13 - 6e23 + 7e123").unwrap();
 		a.clifford_conjugation();
+		assert_eq!(
+			a,
+			out
+		);
+
+		let mut a = SeaMultivectorLowSparseCoefficents::<f32, u8>::from_str("1 + e1 + 2e2 + 3e12 + 4e3 + 5e13 + 6e23 + 7e123").unwrap();
+		let out = SeaMultivectorLowSparseCoefficents::<f32, u8>::from_str("7 + 6e1 + 5e2 + 4e12 + 3e3 + 2e13 + 1e23 + 1e123").unwrap();
+		a.poincare_dualization();
+		assert_eq!(
+			a,
+			out
+		);
+
+		let mut a = SeaMultivectorLowSparseCoefficents::<f32, u8>::from_str("1 + e1 + 2e2 + 3e12 + 4e3 + 5e13 + 6e23 + 7e123").unwrap();
+		let out = SeaMultivectorLowSparseCoefficents::<f32, u8>::from_str("7 + 6e1 - 5e2 + 4e12 + 3e3 - 2e13 + 1e23 + 1e123").unwrap();
+		a.right_compliment();
+		assert_eq!(
+			a,
+			out
+		);
+
+		let mut a = SeaMultivectorLowSparseCoefficents::<f32, u8>::from_str("1 + e1 + 2e2 + 3e12 + 4e3 + 5e13 + 6e23 + 7e123").unwrap();
+		let out = SeaMultivectorLowSparseCoefficents::<f32, u8>::from_str("7 + 6e1 - 5e2 + 4e12 + 3e3 - 2e13 + 1e23 + 1e123").unwrap();
+		a.left_compliment();
+		assert_eq!(
+			a,
+			out
+		);
+
+		let mut a = SeaMultivectorLowSparseCoefficents::<f32, u16>::from_str("1 + e1 + 2e2 + 3e12 + 4e3 + 5e13 + 6e23 + 7e123 + 8e4 + 9e14 + 10e24 + 11e124 + 12e34 + 13e134 + 14e234 + 15e1234").unwrap();
+		let out = SeaMultivectorLowSparseCoefficents::<f32, u16>::from_str("15 + 14e1 - 13e2 + 12e12 + 11e3 - 10e13 + 9e23 + 8e123 - 7e4 + 6e14 - 5e24 - 4e124 + 3e34 + 2e134 - 1e234 + 1e1234").unwrap();
+		a.right_compliment();
+		assert_eq!(
+			a,
+			out
+		);
+
+		let mut a = SeaMultivectorLowSparseCoefficents::<f32, u16>::from_str("1 + e1 + 2e2 + 3e12 + 4e3 + 5e13 + 6e23 + 7e123 + 8e4 + 9e14 + 10e24 + 11e124 + 12e34 + 13e134 + 14e234 + 15e1234").unwrap();
+		let out = SeaMultivectorLowSparseCoefficents::<f32, u16>::from_str("15 - 14e1 + 13e2 + 12e12 - 11e3 - 10e13 + 9e23 - 8e123 + 7e4 + 6e14 - 5e24 + 4e124 + 3e34 - 2e134 + 1e234 + 1e1234").unwrap();
+		a.left_compliment();
 		assert_eq!(
 			a,
 			out

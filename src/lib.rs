@@ -28,21 +28,23 @@ pub mod prelude {
 // Inner
 // Outer ^
 // Mul for all products
+// Some Documentation
+// Sorta Dual !
 
 // not done:
 
-// Documentation
-
-// Dual !
-
 // Add basisblade for multivector
+
+// grade iterator
+// collect into graded multivector (grade, array<T>) dense
+
+// dual again
+
 
 // Regressive Product
 // Norm
 
 
-// grade iterator
-// collect into graded multivector (grade, array<T>) dense
 
 //scalar is T
 // vector is always just array<T>
