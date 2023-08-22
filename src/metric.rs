@@ -18,6 +18,31 @@ impl SeaMetric {
 			dimensions: p+n+z
 		}
 	}
+
+	pub fn has_zero(&self) -> bool {
+		self.zero > 0
+	}
+
+	pub fn has_negitive(&self) -> bool {
+		self.negitive > 0
+	}
+
+	pub fn pseudoscalar_reversion_negitive(&self) -> bool {
+		(self.dimensions*(self.dimensions - 1) >> 1) % 2 == 1
+	}
+
+	pub fn pseudoscalar_involution_negitive(&self) -> bool {
+		self.dimensions % 2 == 1
+	}
+
+	pub fn pseudoscalar_clifford_negitive(&self) -> bool {
+		(self.dimensions*(self.dimensions + 1) >> 1) % 2 == 1
+	}
+
+	pub fn pseudoscalar_inverse_negitive(&self) -> bool {
+		let reversion_swaps = self.dimensions*(self.dimensions - 1) >> 1;
+		(reversion_swaps + self.negitive) % 2 == 1
+	}
 }
 
 impl FromStr for SeaMetric {

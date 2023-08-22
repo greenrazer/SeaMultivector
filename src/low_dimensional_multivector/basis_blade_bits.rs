@@ -1,4 +1,4 @@
-use std::ops::{Deref, DerefMut, AddAssign, BitOrAssign, Shl, Add, BitOr, BitAndAssign, BitAnd, Not, ShlAssign, ShrAssign, BitXor, Shr};
+use std::ops::{Deref, DerefMut, AddAssign, BitOrAssign, Shl, Add, BitOr, BitAndAssign, BitAnd, Not, ShlAssign, ShrAssign, BitXor, Shr, BitXorAssign};
 use std::str::FromStr;
 
 use funty::Unsigned;
@@ -55,6 +55,11 @@ pub trait SeaBasisBladeBitsInner: Unsigned{
 	/// such that compliment(x) * x  = I(pseudo scalar)
 	/// complement = reverse(x)*these_bits
 	const LEFT_COMPLIMENT_NEGATION_BITS: Self;
+
+	/// negation bits corresponding to the sign of
+	/// sign(x << I(pseudo scalar))
+	/// for positive-only metrics
+	const DUAL_NEGATION_BITS: Self;
 	
 	/// for each grade, the bits in that grade
 	/// for example for grade 0 the only bit set is always in the 0's place
@@ -131,6 +136,8 @@ impl SeaBasisBladeBitsInner for u8 {
 	const RIGHT_COMPLIMENT_NEGATION_BITS: Self = 0x24;
 	// 0010 0100
 	const LEFT_COMPLIMENT_NEGATION_BITS: Self = 0x24;
+	// 0011 0011
+	const DUAL_NEGATION_BITS: Self = 0x33;
 
 	const GRADE_BITS: [Self;7] = [
 		0x01,
@@ -187,6 +194,8 @@ impl SeaBasisBladeBitsInner for u16 {
 	const RIGHT_COMPLIMENT_NEGATION_BITS: Self = 0x4D_24;
 	// 0010 0100 1011 0010
 	const LEFT_COMPLIMENT_NEGATION_BITS: Self = 0x24_B2;
+	// 0011 0011 1100 1100
+	const DUAL_NEGATION_BITS: Self = 0x33_CC;
 
 	#[allow(clippy::mistyped_literal_suffixes)]
 	const GRADE_BITS: [Self;7] = [
@@ -244,6 +253,9 @@ impl SeaBasisBladeBitsInner for u32 {
 	const RIGHT_COMPLIMENT_NEGATION_BITS: Self = 0x24_B2_4D_24;
 	// 0010 0100 1011 0010 0100 1101 0010 0100
 	const LEFT_COMPLIMENT_NEGATION_BITS: Self = 0x24_B2_4D_24;
+	// 0011 0011 1100 1100 0011 0011 1100 1100
+	const DUAL_NEGATION_BITS: Self = 0x33_CC_33_CC;
+
 	#[allow(clippy::mistyped_literal_suffixes)]
 	const GRADE_BITS: [Self; 7] = [
 		0x00_00_00_01,
@@ -300,6 +312,9 @@ impl SeaBasisBladeBitsInner for u64 {
 	const RIGHT_COMPLIMENT_NEGATION_BITS: Self = 0x4D_24_DB_4D_24_B2_4D_24;
 	// 0010 0100 1011 0010 0100 1101 0010 0100 1011 0010 1101 1011 0010 0100 1101 0010
 	const LEFT_COMPLIMENT_NEGATION_BITS: Self = 0x24_D2_4D_24_B2_DB_24_D2;
+	// 0011 0011 1100 1100 0011 0011 1100 1100 1100 1100 0011 0011 1100 1100 0011 0011
+	const DUAL_NEGATION_BITS: Self = 0x33_CC_33_CC_CC_33_CC_33;
+
 	const GRADE_BITS: [Self; 7] = [
 		0x00_00_00_00_00_00_00_01,
 		0x00_00_00_01_00_01_01_16,
@@ -382,6 +397,7 @@ impl<I: SeaBasisBladeBitsInner> SeaBasisBladeBits<I> {
 	pub const CONJUGATION_NEGATIONS: Self = SeaBasisBladeBits(I::CONJUGATION_NEGATION_BITS);
 	pub const RIGHT_COMPLIMENT_NEGATIONS: Self = SeaBasisBladeBits(I::RIGHT_COMPLIMENT_NEGATION_BITS);
 	pub const LEFT_COMPLIMENT_NEGATIONS: Self = SeaBasisBladeBits(I::LEFT_COMPLIMENT_NEGATION_BITS);
+	pub const DUAL_NEGATIONS: Self = SeaBasisBladeBits(I::DUAL_NEGATION_BITS);
 	pub const GRADES: [Self; 7] = [
 		SeaBasisBladeBits(I::GRADE_BITS[0]),
 		SeaBasisBladeBits(I::GRADE_BITS[1]),
@@ -445,6 +461,15 @@ impl<I: SeaBasisBladeBitsInner> SeaBasisBladeBits<I> {
 		let mut out = I::ZERO;
 		for i in &curr_met_negs {
 			let temp = I::CONTAINS_BASIS_VEC_BITS[(i+1) as usize];
+			out ^= temp;
+		}
+		Self(out)
+	}
+
+	pub fn dual_metric_neg_mask(index: &SeaBasisBladeIndexLow) -> Self {
+		let mut out = I::ZERO;
+		for i in index {
+			let temp = !I::CONTAINS_BASIS_VEC_BITS[(i+1) as usize];
 			out ^= temp;
 		}
 		Self(out)
@@ -568,6 +593,12 @@ impl<I: SeaBasisBladeBitsInner> BitAnd<&SeaBasisBladeBits<I>> for &SeaBasisBlade
 	}
 }
 
+impl<I: SeaBasisBladeBitsInner> BitXorAssign<&SeaBasisBladeBits<I>> for SeaBasisBladeBits<I> {
+	fn bitxor_assign(&mut self, rhs: &SeaBasisBladeBits<I>) {
+		**self ^= **rhs;
+		
+	}
+}
 impl<I: SeaBasisBladeBitsInner> BitXor<&SeaBasisBladeBits<I>> for &SeaBasisBladeBits<I> {
 	type Output = SeaBasisBladeBits<I>;
 	fn bitxor(self, rhs: &SeaBasisBladeBits<I>) -> Self::Output {

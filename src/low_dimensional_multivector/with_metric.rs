@@ -1,5 +1,5 @@
 use std::str::FromStr;
-use std::ops::{Deref, DerefMut, Shl, Shr, BitOr, BitXor, Mul};
+use std::ops::{Deref, DerefMut, Shl, Shr, BitOr, BitXor, Mul, Not};
 
 use crate::errors::ParseMultivectorError;
 use crate::metric::SeaMetric;
@@ -23,6 +23,28 @@ impl<T:SeaCoefficient, I:SeaBasisBladeBitsInner> SeaMultivectorLowSparseCoeffice
 			metric: SeaMetric::new(p,n,z),
 			multivector: SeaMultivectorLowSparseCoefficents::<T, I>::new()
 		}
+	}
+
+	pub fn dual(&self) -> Self {
+		Self {
+			metric: self.metric.clone(),
+			multivector: self.multivector.dual(&self.metric)
+		}
+	}
+
+	pub fn undual(&self) -> Self {
+		Self {
+			metric: self.metric.clone(),
+			multivector: self.multivector.undual(&self.metric)
+		}
+	}
+
+	pub fn dualization(&mut self) {
+		self.multivector.dualization(&self.metric);
+	}
+
+	pub fn undualization(&mut self) {
+		self.multivector.undualization(&self.metric);
 	}
 }
 
@@ -131,6 +153,14 @@ impl<T:SeaCoefficient, I:SeaBasisBladeBitsInner> MultivectorMut for SeaMultivect
 	}
 }
 
+impl<T:SeaCoefficient, I:SeaBasisBladeBitsInner> Not for &SeaMultivectorLowSparseCoefficentsWithMetric<T, I> {
+	type Output = SeaMultivectorLowSparseCoefficentsWithMetric<T, I>;
+
+	fn not(self) -> Self::Output {
+		self.dual()
+	}
+}
+
 impl<T:SeaCoefficient, I:SeaBasisBladeBitsInner> LeftContraction<&Self> for SeaMultivectorLowSparseCoefficentsWithMetric<T, I> {
 	type Output = Self;
 	fn left_contraction(&self, rhs: &Self) -> Self::Output {
@@ -218,15 +248,9 @@ impl<T:SeaCoefficient, I:SeaBasisBladeBitsInner> Mul<Self> for &SeaMultivectorLo
 
 #[cfg(test)]
 mod tests {
-    use super::*;
+	use crate::tests::catch_unwind_silent;
 
-	fn catch_unwind_silent<F: FnOnce() -> R + std::panic::UnwindSafe, R>(f: F) -> std::thread::Result<R> {
-		let prev_hook = std::panic::take_hook();
-		std::panic::set_hook(Box::new(|_| {}));
-		let result = std::panic::catch_unwind(f);
-		std::panic::set_hook(prev_hook);
-		result
-	}
+    use super::*;
 
     #[test]
     fn from_str() {
@@ -269,6 +293,16 @@ mod tests {
 		assert_eq!(SeaMultivectorLowSparseCoefficentsWithMetric::<f32, u8>::from_str("e3").unwrap_err(), ParseMultivectorError::MissingMetric);
 		assert_eq!(SeaMultivectorLowSparseCoefficentsWithMetric::<f32, u8>::from_str("a>e3").unwrap_err(), ParseMultivectorError::InvalidMetric(crate::errors::ParseMetricError::InvalidNumPositive));
 		assert_eq!(SeaMultivectorLowSparseCoefficentsWithMetric::<f32, u8>::from_str("3,4,5>e1").unwrap_err(), ParseMultivectorError::InvalidMetricDimensions);
+	}
+
+	#[test]
+	fn dual() {
+		let a = SeaMultivectorLowSparseCoefficentsWithMetric::<f32, u32>::from_str("2,3>1 + e1 + 2e2 + 3e12 + 4e3 + 5e13 + 6e23 + 7e123 + 8e4 + 9e14 + 10e24 + 11e124 + 12e34 + 13e134 + 14e234 + 15e1234 + e5 + e15 + 2e25 + 3e125 + 4e35 + 5e135 + 6e235 + 7e1235 + 8e45 + 9e145 + 10e245 + 11e1245 + 12e345 + 13e1345 + 14e2345 + 15e12345").unwrap();
+		let out_dual = SeaMultivectorLowSparseCoefficentsWithMetric::<f32, u32>::from_str("2,3>15 +14e1 -13e2 -11e3 +7e4 -15e5 -12e12 -10e13 +6e14 -14e15 +9e23 -5e24 +13e25 -3e34 +11e35 -7e45 +8e123 -4e124 +12e125 -2e134 +10e135 -6e145 +e234 -9e235 +5e245 +3e345 +e1234 -8e1235 +4e1245 +2e1345 -e2345 -e12345").unwrap();
+		assert_eq!(
+			!&a,
+			out_dual
+		);
 	}
 
 	mod left_contraction {
