@@ -7,7 +7,7 @@ mod coefficient;
 mod low_dimensional_multivector;
 mod multivector_traits;
 mod multivector_product_traits;
-
+mod grade;
 
 pub mod prelude {
     pub use std::str::FromStr;
@@ -33,16 +33,15 @@ pub mod prelude {
 
 // not done:
 
-// Add basisblade for multivector
-
 // grade iterator
+
 // collect into graded multivector (grade, array<T>) dense
 
-// dual again
+// Add basisblade for multivector
 
 
-// Regressive Product
 // Norm
+// Regressive Product
 
 
 

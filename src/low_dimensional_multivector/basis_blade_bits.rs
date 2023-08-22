@@ -341,8 +341,8 @@ impl SeaBasisBladeBitsInner for u64 {
 }
 
 
-pub struct BasisBladeBitsIter<I:SeaBasisBladeBitsInner>(I);
-impl<I:SeaBasisBladeBitsInner> Iterator for BasisBladeBitsIter<I> {
+pub struct SeaBasisBladeBitsIter<I:SeaBasisBladeBitsInner>(I);
+impl<I:SeaBasisBladeBitsInner> Iterator for SeaBasisBladeBitsIter<I> {
 	type Item = SeaBasisBladeIndexLow;
 
 	fn next(&mut self) -> Option<Self::Item> {
@@ -513,10 +513,10 @@ impl<I: SeaBasisBladeBitsInner> DerefMut for SeaBasisBladeBits<I> {
 }
 
 impl<I: SeaBasisBladeBitsInner> IntoIterator for &SeaBasisBladeBits<I> {
-	type IntoIter = BasisBladeBitsIter<I>;
+	type IntoIter = SeaBasisBladeBitsIter<I>;
 	type Item = SeaBasisBladeIndexLow;
 	fn into_iter(self) -> Self::IntoIter {
-		BasisBladeBitsIter(self.0)
+		SeaBasisBladeBitsIter(self.0)
 	}
 }
 
