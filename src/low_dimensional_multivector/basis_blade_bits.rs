@@ -94,8 +94,6 @@ pub trait SeaBasisBladeBitsInner: Unsigned{
 	/// e12 -> Reversion bits ^ output reversion negation bits[1] ^ output reversion negation bits[2]
 	const OUTPUT_REVERSION_NEGATION_BITS: [Self; 7];
 
-	fn from_u8(other: u8) -> Self;
-
 	/// sets all least signifigant bits up to n
 	/// e.g. 5
 	/// ...0011111
@@ -175,10 +173,6 @@ impl SeaBasisBladeBitsInner for u8 {
 					 			  			                			 Self::K[6],
 					 			  			                			 0,
 	];
-
-	fn from_u8(other: u8) -> Self{
-		other as Self
-	}
 }
 impl SeaBasisBladeBitsInner for u16 {
 	const DIMENSIONS: u8 = 4;
@@ -234,10 +228,6 @@ impl SeaBasisBladeBitsInner for u16 {
 					 			  			                			 Self::K[6],
 					 			  			                			 0,
 	];
-
-	fn from_u8(other: u8) -> Self{
-		other as Self
-	}
 }
 impl SeaBasisBladeBitsInner for u32 {
 	const DIMENSIONS: u8 = 5;
@@ -293,10 +283,6 @@ impl SeaBasisBladeBitsInner for u32 {
 					 			  			                			 Self::K[6],
 					 			  			                			 0,
 	];
-
-	fn from_u8(other: u8) -> Self{
-		other as Self
-	}
 }
 impl SeaBasisBladeBitsInner for u64 {
 	const DIMENSIONS: u8 = 6;
@@ -352,10 +338,6 @@ impl SeaBasisBladeBitsInner for u64 {
 																			Self::K[6],
 																			0,
 	];
-
-	fn from_u8(other: u8) -> Self{
-		other as Self
-	}
 }
 
 
