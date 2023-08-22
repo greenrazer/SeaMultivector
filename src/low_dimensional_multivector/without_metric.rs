@@ -736,6 +736,13 @@ mod tests{
 			a
 		);
 
+		catch_unwind_silent(|| {
+			let m = SeaMetric::new(2, 0, 1);
+
+			let a = SeaMultivectorLowSparseCoefficents::<f32, u8>::from_str("1 + e1 + 2e2 + 3e12 + 4e3 + 5e13 + 6e23 + 7e123").unwrap();
+			a.dual(&m)
+		}).unwrap_err();
+
 
 		// let now = Instant::now();
 		// let num_iters = 10_000;
