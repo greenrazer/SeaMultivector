@@ -1,5 +1,5 @@
 use std::iter::repeat;
-use std::ops::{Add, AddAssign, BitXor, Neg, Index, IndexMut};
+use std::ops::{Add, AddAssign, BitXor, Neg, Index, Mul, MulAssign};
 use std::str::FromStr;
 
 use lazy_static::lazy_static;
@@ -129,6 +129,55 @@ impl<T:SeaCoefficient, I:SeaBasisBladeBitsInner> SeaMultivectorLowSparseCoeffice
 	pub fn undualization(&mut self, metric: &SeaMetric) {
 		self.poincare_dualization();
 		self.dualization_helper(metric, true)
+	}
+
+	pub fn norm(&self, metric: &SeaMetric) -> T {
+		let (_, metric_non_zeros, metric_negs) = Self::metric_product_constants(metric);
+
+		
+		let mut total_neg_mask = Self::total_neg_mask(&SeaBasisBladeIndexLow::ZERO, &metric_negs);
+		total_neg_mask ^= &SeaBasisBladeBits::<I>::CONJUGATION_NEGATIONS;
+		
+		let zeros = SeaBasisBladeBits::<I>::zero_mask_for_output_index(&metric_non_zeros);
+		let dot_mask = &self.basis_blade_bits & &zeros;
+
+		let mut out = T::zero();
+		for i in &dot_mask {
+			let idx = self.basis_blade_bits.count_basis_blades_less_than(&i) as usize;
+			let mut c = self.coefficients[idx];
+			c *= c;
+			out += if total_neg_mask.has(&i) {c} else {-c};
+		}
+
+		out.abs().sqrt()
+	}
+
+	pub fn normalized(&self, metric: &SeaMetric) -> Self {
+		let n = T::one()/self.norm(metric);
+		self * n
+	}
+
+	pub fn normalize(&mut self, metric: &SeaMetric) {
+		let n = T::one()/self.norm(metric);
+		*self *= n;
+	}
+
+	pub fn vector_norm(&self) -> T {
+		let mut out = T::zero();
+		for c in &self.coefficients {
+			out += *c * *c;
+		}
+		out
+	}
+
+	pub fn vector_normalized(&self) -> Self {
+		let n = T::one()/self.vector_norm();
+		self * n
+	}
+
+	pub fn vector_normalize(&mut self) {
+		let n = T::one()/self.vector_norm();
+		*self *= n;
 	}
 
 	fn dualization_helper(&mut self, metric: &SeaMetric, inverse: bool) {
@@ -381,6 +430,23 @@ impl<T:SeaCoefficient, I:SeaBasisBladeBitsInner> Neg for &SeaMultivectorLowSpars
 		let mut out = self.clone();
 		out.negate();
 		out
+	}
+}
+
+impl<T:SeaCoefficient, I:SeaBasisBladeBitsInner> MulAssign<T> for SeaMultivectorLowSparseCoefficents<T, I> {
+	fn mul_assign(&mut self, rhs: T) {
+		for i in self.coefficients.iter_mut() {
+            *i *= rhs;
+        }
+	}
+}
+impl<T:SeaCoefficient, I:SeaBasisBladeBitsInner> Mul<T> for &SeaMultivectorLowSparseCoefficents<T, I> {
+	type Output = SeaMultivectorLowSparseCoefficents<T, I>;
+	fn mul(self, rhs: T) -> Self::Output {
+		SeaMultivectorLowSparseCoefficents {
+			basis_blade_bits: self.basis_blade_bits.clone(),
+			coefficients: self.coefficients.iter().map(|x| *x*rhs).collect()
+		}
 	}
 }
 
@@ -953,6 +1019,53 @@ mod tests{
 		);
 	}
 	
+	mod norm {
+		use super::*;
+
+		#[test]
+		fn works() {
+			let m = SeaMetric::new(3, 0, 0);
+			let a = SeaMultivectorLowSparseCoefficents::<f32, u8>::from_str("1 + e1 + 2e2 + 3e12 + 4e3 + 5e13 + 6e23 + 7e123").unwrap();
+			assert_eq!(
+				a.norm(&m),
+				1.0
+			);
+	
+			let m = SeaMetric::new(3, 0, 0);
+			let a = SeaMultivectorLowSparseCoefficents::<f32, u8>::from_str("1 + e1 + 2e2 + 3e12 + 4e3 + 5e13 + 6e23 + 7e123").unwrap();
+			let out = SeaMultivectorLowSparseCoefficents::<f32, u8>::from_str("1 + e1 + 2e2 + 3e12 + 4e3 + 5e13 + 6e23 + 7e123").unwrap();
+			assert_eq!(
+				a.normalized(&m),
+				out
+			);
+			
+			let m = SeaMetric::new(4, 0, 0);
+			let a = SeaMultivectorLowSparseCoefficents::<f32, u16>::from_str("1 + e1 + 2e2 + 3e12 + 4e3 + 5e13 + 6e23 + 7e123 + 8e4 + 9e14 + 10e24 + 11e124 + 12e34 + 13e134 + 14e234 + 15e1234").unwrap();
+			let out = SeaMultivectorLowSparseCoefficents::<f32, u16>::from_str("1 + e1 + 2e2 + 3e12 + 4e3 + 5e13 + 6e23 + 7e123 + 8e4 + 9e14 + 10e24 + 11e124 + 12e34 + 13e134 + 14e234 + 15e1234").unwrap();
+			assert_eq!(
+				a.normalized(&m),
+				out
+			);
+	
+			let m = SeaMetric::new(3, 0, 0);
+			let a = SeaMultivectorLowSparseCoefficents::<f32, u8>::from_str("1 + e1 + 2e2 + 3e12 + 4e3 + 5e13 + 6e23 + 1e123").unwrap();
+			let out = SeaMultivectorLowSparseCoefficents::<f32, u8>::from_str("0.1428571492 +0.1428571492e1 +0.2857142985e2 +0.571428597e3 +0.4285714328e12 +0.7142857313e13 +0.8571428657e23 +0.1428571492e123").unwrap();
+			for (a_bb, o_bb) in a.normalized(&m).iter().zip(out.iter()) {
+				assert_eq!(a_bb.index, o_bb.index);
+				let abs_diff = (a_bb.coefficient - o_bb.coefficient).abs();
+				assert!(abs_diff < 1e-7);
+			}
+	
+			let m = SeaMetric::new(3, 0, 1);
+			let a = SeaMultivectorLowSparseCoefficents::<f32, u16>::from_str("1 + e1 + 2e2 + 3e12 + 4e3 + 5e13 + 6e23 + 7e123 + 8e4 + 9e14 + 10e24 + 11e124 + 12e34 + 13e134 + 14e234 + 15e1234").unwrap();
+			let out = SeaMultivectorLowSparseCoefficents::<f32, u16>::from_str("1 + e1 + 2e2 + 3e12 + 4e3 + 5e13 + 6e23 + 7e123 + 8e4 + 9e14 + 10e24 + 11e124 + 12e34 + 13e134 + 14e234 + 15e1234").unwrap();
+			assert_eq!(
+				a.normalized(&m),
+				out
+			);
+		}
+	}
+
 	mod dual {
 		use super::*;
 
