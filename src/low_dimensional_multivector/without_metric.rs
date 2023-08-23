@@ -25,7 +25,7 @@ pub struct SparseMultivectorIter<'a, T:SeaCoefficient, I:SeaBasisBladeBitsInner>
 impl<'a, T:SeaCoefficient, I:SeaBasisBladeBitsInner> SparseMultivectorIter<'a, T, I> {
 	pub fn new(multivector: &'a SeaMultivectorLowSparseCoefficents<T,I>) -> Self{
 		SparseMultivectorIter {
-			multivector: multivector,
+			multivector,
 			curr_iter: multivector.basis_blade_bits.into_iter()
 		}
 	}
@@ -60,7 +60,7 @@ impl<'a, T:SeaCoefficient, I:SeaBasisBladeBitsInner> SparseMultivectorGradeIter<
 	pub fn new(multivector: &'a SeaMultivectorLowSparseCoefficents<T,I>, grade: &SeaGrade) -> Self{
 		let iter_bits =  &multivector.basis_blade_bits & &SeaBasisBladeBits::<I>::GRADES[**grade as usize];
 		SparseMultivectorGradeIter {
-			multivector: multivector,
+			multivector,
 			curr_iter: iter_bits.into_iter()
 		}
 	}
@@ -101,7 +101,7 @@ impl<T:SeaCoefficient, I:SeaBasisBladeBitsInner> SeaMultivectorLowSparseCoeffice
 		}
 	}
 	
-	pub fn iter<'a>(&'a self) -> SparseMultivectorIter<'a, T, I> {
+	pub fn iter(&self) -> SparseMultivectorIter<'_, T, I> {
 		SparseMultivectorIter::new(self)
 	}
 
@@ -333,6 +333,7 @@ impl<T:SeaCoefficient, I:SeaBasisBladeBitsInner> Index<&SeaBasisBladeIndexLow> f
 }
 
 impl<T:SeaCoefficient, I:SeaBasisBladeBitsInner> AddAssign<&SeaBasisBladeLow<T>> for SeaMultivectorLowSparseCoefficents<T, I> {
+	#[allow(clippy::suspicious_op_assign_impl)]
 	fn add_assign(&mut self, rhs: &SeaBasisBladeLow<T>) {
 		self.basis_blade_bits |= &rhs.index;
 		let new_idx = self.basis_blade_bits.count_basis_blades_less_than(&rhs.index);

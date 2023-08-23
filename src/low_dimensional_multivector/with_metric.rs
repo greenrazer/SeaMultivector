@@ -28,11 +28,11 @@ impl<T:SeaCoefficient, I:SeaBasisBladeBitsInner> SeaMultivectorLowSparseCoeffice
 		}
 	}
 
-	pub fn iter<'a>(&'a self) -> SparseMultivectorIter<'a, T, I> {
+	pub fn iter(&self) -> SparseMultivectorIter<'_, T, I> {
 		self.multivector.iter()
 	}
 
-	pub fn grade_iter<'a>(&'a self, grade: &SeaGrade) -> SparseMultivectorGradeIter<'a, T, I> {
+	pub fn grade_iter(&self, grade: &SeaGrade) -> SparseMultivectorGradeIter<'_, T, I> {
 		self.multivector.grade_iter(grade)
 	}
 

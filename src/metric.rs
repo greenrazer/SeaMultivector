@@ -28,7 +28,7 @@ impl SeaMetric {
 	}
 
 	pub fn pseudoscalar_reversion_negitive(&self) -> bool {
-		(self.dimensions*(self.dimensions - 1) >> 1) % 2 == 1
+		((self.dimensions*(self.dimensions - 1)) >> 1) % 2 == 1
 	}
 
 	pub fn pseudoscalar_involution_negitive(&self) -> bool {
@@ -36,11 +36,11 @@ impl SeaMetric {
 	}
 
 	pub fn pseudoscalar_clifford_negitive(&self) -> bool {
-		(self.dimensions*(self.dimensions + 1) >> 1) % 2 == 1
+		((self.dimensions*(self.dimensions + 1)) >> 1) % 2 == 1
 	}
 
 	pub fn pseudoscalar_inverse_negitive(&self) -> bool {
-		let reversion_swaps = self.dimensions*(self.dimensions - 1) >> 1;
+		let reversion_swaps = (self.dimensions*(self.dimensions - 1)) >> 1;
 		(reversion_swaps + self.negitive) % 2 == 1
 	}
 }

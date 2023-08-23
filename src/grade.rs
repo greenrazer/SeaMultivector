@@ -9,34 +9,34 @@ impl SeaGrade {
 		if self.0 == 0{
 			return false;
 		}
-		(self.0*(self.0-1) >> 1)% 2 == 1
+		((self.0*(self.0-1)) >> 1)% 2 == 1
 	}
 	pub fn is_involution_negitive(&self) -> bool {
 		self.0 % 2 == 1
 	}
 	pub fn is_conjugation_negitive(&self) -> bool {
-		(self.0*(self.0+1) >> 1) % 2 == 1
+		((self.0*(self.0+1)) >> 1) % 2 == 1
 	}
 
 	pub fn sign_reversion<T:SeaCoefficient>(&self) -> T {
 		if self.is_reversion_negitive() {
 			return -T::one();
 		}
-		return T::one();
+		T::one()
 	}
 
 	pub fn sign_involution<T:SeaCoefficient>(&self) -> T {
 		if self.is_involution_negitive() {
 			return -T::one();
 		}
-		return T::one();
+		T::one()
 	}
 
 	pub fn sign_conjugation<T:SeaCoefficient>(&self) -> T {
 		if self.is_conjugation_negitive() {
 			return -T::one();
 		}
-		return T::one();
+		T::one()
 	}
 }
 
