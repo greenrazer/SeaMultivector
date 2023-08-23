@@ -58,34 +58,19 @@ impl<T:SeaCoefficient, I:SeaBasisBladeBitsInner> SeaMultivectorLowSparseCoeffice
 		self.multivector.undualization(&self.metric);
 	}
 
-	pub fn norm(&self) -> T {
-		self.multivector.norm(&self.metric)
+	pub fn scalar_norm(&self) -> T {
+		self.multivector.scalar_norm(&self.metric)
 	}
 
-	pub fn normalized(&self) -> Self {
+	pub fn scalar_normalized(&self) -> Self {
 		Self { 
 			metric: self.metric.clone(), 
-			multivector: self.multivector.normalized(&self.metric) 
+			multivector: self.multivector.scalar_normalized(&self.metric) 
 		}
 	}
 
-	pub fn normalize(&mut self) {
-		self.multivector.normalize(&self.metric);
-	}
-	
-	pub fn vector_norm(&self) -> T {
-		self.multivector.vector_norm()
-	}
-
-	pub fn vector_normalized(&self) -> Self {
-		Self { 
-			metric: self.metric.clone(), 
-			multivector: self.multivector.vector_normalized() 
-		}
-	}
-
-	pub fn vector_normalize(&mut self) {
-		self.multivector.vector_normalize();
+	pub fn scalar_normalize(&mut self) {
+		self.multivector.scalar_normalize(&self.metric);
 	}
 }
 
@@ -504,6 +489,13 @@ mod tests {
 			a,
 			SeaMultivectorLowSparseCoefficentsWithMetric::<f32, u8>::from_str("3>-1 + e1 + 2e2 + 3e12 + 4e3 + 5e13 + 6e23 + 7e123").unwrap()
 		);
+	}
+
+	#[test]
+	fn norm () {
+		let a = SeaMultivectorLowSparseCoefficentsWithMetric::<f32, u16>::from_str("3,0,1>1 + e1 + 2e2 + 3e12 + 4e3 + 5e13 + 6e23 + 7e123 + 8e4 + 9e14 + 10e24 + 11e124 + 12e34 + 13e134 + 14e234 + 15e1234").unwrap();
+		let out = SeaMultivectorLowSparseCoefficentsWithMetric::<f32, u16>::from_str("3,0,1>0.084215194 +0.67372155e4 +0.084215194e1 +0.168430388e2 +0.3368607759e3 +0.7579367e14 +0.84215194e24 +1.0105823e34 +0.252645582e12 +0.4210759699e13 +0.5052911639e23 +0.92636716e124 +1.0947975e134 +1.1790128e234 +0.5895064e123 +1.2632279e1234").unwrap();
+		assert_eq!(a.scalar_normalized(), out);
 	}
 
 	mod left_contraction {
