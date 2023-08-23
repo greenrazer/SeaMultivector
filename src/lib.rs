@@ -33,17 +33,10 @@ pub mod prelude {
 // grade iterator
 // Add basisblade for multivector
 // Regressive Product
+// Norm
 
 // not done:
 
-// Norm
-
-
-
-//scalar is T
-// vector is always just array<T>
-//pseudovector needs a wrapper<array<T>>
-//pseudoscalar needs a wrapper<T>
 //Versor/ Motor/Glide Wrappers
 //invere sandwich exponential logarithm
 

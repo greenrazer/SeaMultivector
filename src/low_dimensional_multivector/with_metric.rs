@@ -5,7 +5,7 @@ use crate::errors::ParseMultivectorError;
 use crate::grade::SeaGrade;
 use crate::metric::SeaMetric;
 use crate::coefficient::SeaCoefficient;
-use crate::multivector_product_traits::{LeftContraction, RightContraction, InnerProduct, OuterProduct, GeometricProduct, RegressiveProduct};
+use crate::multivector_product_traits::{LeftContraction, RightContraction, InnerProduct, OuterProduct, GeometricProduct, RegressiveProduct, ScalarProduct};
 use crate::multivector_traits::{Multivector, MultivectorMut};
 
 use super::basis_blade::SeaBasisBladeLow;
@@ -56,6 +56,36 @@ impl<T:SeaCoefficient, I:SeaBasisBladeBitsInner> SeaMultivectorLowSparseCoeffice
 
 	pub fn undualization(&mut self) {
 		self.multivector.undualization(&self.metric);
+	}
+
+	pub fn norm(&self) -> T {
+		self.multivector.norm(&self.metric)
+	}
+
+	pub fn normalized(&self) -> Self {
+		Self { 
+			metric: self.metric.clone(), 
+			multivector: self.multivector.normalized(&self.metric) 
+		}
+	}
+
+	pub fn normalize(&mut self) {
+		self.multivector.normalize(&self.metric);
+	}
+	
+	pub fn vector_norm(&self) -> T {
+		self.multivector.vector_norm()
+	}
+
+	pub fn vector_normalized(&self) -> Self {
+		Self { 
+			metric: self.metric.clone(), 
+			multivector: self.multivector.vector_normalized() 
+		}
+	}
+
+	pub fn vector_normalize(&mut self) {
+		self.multivector.vector_normalize();
 	}
 }
 
@@ -261,6 +291,14 @@ impl<T:SeaCoefficient, I:SeaBasisBladeBitsInner> BitOr<Self> for &SeaMultivector
 	type Output = SeaMultivectorLowSparseCoefficentsWithMetric<T, I>;
 	fn bitor(self, rhs: Self) -> Self::Output {
 		self.inner_product(rhs)
+	}
+}
+
+impl<T:SeaCoefficient, I:SeaBasisBladeBitsInner> ScalarProduct<&Self> for SeaMultivectorLowSparseCoefficentsWithMetric<T, I> {
+	type Output = T;
+	fn scalar_product(&self, rhs: &Self) -> Self::Output {
+		assert_eq!(self.metric, rhs.metric);
+		self.multivector.scalar_product((&rhs.multivector, &self.metric))
 	}
 }
 
@@ -540,6 +578,21 @@ mod tests {
 	
 			let result = catch_unwind_silent(|| a.inner_product(&b));
 			assert!(result.is_err());
+		}
+	}
+
+	mod scalar_product {
+		use super::*;
+
+		#[test]
+		fn works() {	
+			let a = SeaMultivectorLowSparseCoefficentsWithMetric::<f32, u32>::from_str("3,1,1> + 1 + e1 + 2e2 + 3e12 + 4e3 + 5e13 + 6e23 + 7e123 + 8e4 + 9e14 + 10e24 + 11e124 + 12e345 + 13e1345 + 14e2345 + 15e12345").unwrap();
+			let b = SeaMultivectorLowSparseCoefficentsWithMetric::<f32, u32>::from_str("3,1,1> + 3e13 + 1e4 + 2e124  +4e345").unwrap();
+	
+			assert_eq!(
+				a.scalar_product(&b),
+				-1.0
+			);
 		}
 	}
 

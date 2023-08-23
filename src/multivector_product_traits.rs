@@ -18,6 +18,12 @@ pub trait InnerProduct<Rhs=Self> {
 	fn inner_product(&self, rhs: Rhs) -> Self::Output;
 }
 
+pub trait ScalarProduct<Rhs=Self> {
+	type Output;
+
+	fn scalar_product(&self, rhs: Rhs) -> Self::Output;
+}
+
 pub trait OuterProduct<Rhs=Self> {
 	type Output;
 
