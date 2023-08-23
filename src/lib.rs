@@ -30,18 +30,13 @@ pub mod prelude {
 // Mul for all products
 // Some Documentation
 // Dual !
+// grade iterator
+// Add basisblade for multivector
+// Regressive Product
 
 // not done:
 
-// grade iterator
-
-// collect into graded multivector (grade, array<T>) dense
-
-// Add basisblade for multivector
-
-
 // Norm
-// Regressive Product
 
 
 

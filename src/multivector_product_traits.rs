@@ -24,6 +24,12 @@ pub trait OuterProduct<Rhs=Self> {
 	fn outer_product(&self, rhs: Rhs) -> Self::Output;
 }
 
+pub trait RegressiveProduct<Rhs=Self> {
+	type Output;
+
+	fn regressive_product(&self, rhs: Rhs) -> Self::Output;
+}
+
 pub trait GeometricProduct<Rhs=Self> {
 	type Output;
 

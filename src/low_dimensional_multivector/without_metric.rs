@@ -1,5 +1,5 @@
 use std::iter::repeat;
-use std::ops::{Add, AddAssign, BitXor, Neg, Index};
+use std::ops::{Add, AddAssign, BitXor, Neg, Index, IndexMut};
 use std::str::FromStr;
 
 use lazy_static::lazy_static;
@@ -10,7 +10,7 @@ use crate::coefficient::SeaCoefficient;
 use crate::errors::ParseMultivectorError;
 use crate::metric::SeaMetric;
 use crate::multivector_traits::{Multivector, MultivectorMut};
-use crate::multivector_product_traits::{LeftContraction, RightContraction, InnerProduct, OuterProduct, GeometricProduct};
+use crate::multivector_product_traits::{LeftContraction, RightContraction, InnerProduct, OuterProduct, GeometricProduct, RegressiveProduct};
 use crate::grade::SeaGrade;
 
 use super::basis_blade_bits::{SeaBasisBladeBitsInner, SeaBasisBladeBitsIter};
@@ -23,7 +23,7 @@ pub struct SparseMultivectorIter<'a, T:SeaCoefficient, I:SeaBasisBladeBitsInner>
 	curr_iter: SeaBasisBladeBitsIter<I>
 }
 impl<'a, T:SeaCoefficient, I:SeaBasisBladeBitsInner> SparseMultivectorIter<'a, T, I> {
-	fn new(multivector: &'a SeaMultivectorLowSparseCoefficents<T,I>) -> Self{
+	pub fn new(multivector: &'a SeaMultivectorLowSparseCoefficents<T,I>) -> Self{
 		SparseMultivectorIter {
 			multivector: multivector,
 			curr_iter: multivector.basis_blade_bits.into_iter()
@@ -57,7 +57,7 @@ pub struct SparseMultivectorGradeIter<'a, T:SeaCoefficient, I:SeaBasisBladeBitsI
 	curr_iter: SeaBasisBladeBitsIter<I>
 }
 impl<'a, T:SeaCoefficient, I:SeaBasisBladeBitsInner> SparseMultivectorGradeIter<'a, T, I> {
-	fn new(multivector: &'a SeaMultivectorLowSparseCoefficents<T,I>, grade: &SeaGrade) -> Self{
+	pub fn new(multivector: &'a SeaMultivectorLowSparseCoefficents<T,I>, grade: &SeaGrade) -> Self{
 		let iter_bits =  &multivector.basis_blade_bits & &SeaBasisBladeBits::<I>::GRADES[**grade as usize];
 		SparseMultivectorGradeIter {
 			multivector: multivector,
@@ -133,7 +133,14 @@ impl<T:SeaCoefficient, I:SeaBasisBladeBitsInner> SeaMultivectorLowSparseCoeffice
 
 	fn dualization_helper(&mut self, metric: &SeaMetric, inverse: bool) {
 		if metric.has_zero() {
-			panic!("cannot call dual on degenerate metric, use compliments or poincare dual")
+			let negations = if inverse {
+				SeaBasisBladeBits::<I>::LEFT_COMPLIMENT_NEGATIONS
+			}
+			else {
+				SeaBasisBladeBits::<I>::RIGHT_COMPLIMENT_NEGATIONS
+			};
+			self.negate_basis_blades(&negations);
+			return;
 		}
 		let mut negations = SeaBasisBladeBits::<I>::DUAL_NEGATIONS;
 
@@ -317,11 +324,21 @@ impl<T:SeaCoefficient, I:SeaBasisBladeBitsInner> FromStr for SeaMultivectorLowSp
 impl<T:SeaCoefficient, I:SeaBasisBladeBitsInner> Index<&SeaBasisBladeIndexLow> for SeaMultivectorLowSparseCoefficents<T, I> {
 	type Output = T;
 	fn index(&self, index: &SeaBasisBladeIndexLow) -> &Self::Output {
+		if !self.basis_blade_bits.has(index) {
+			panic!("{:?} doesn't exist inside of multivector", index)
+		}
 		let coeff_idx = self.basis_blade_bits.count_basis_blades_less_than(index);
 		&self.coefficients[coeff_idx as usize]
 	}
 }
 
+impl<T:SeaCoefficient, I:SeaBasisBladeBitsInner> AddAssign<&SeaBasisBladeLow<T>> for SeaMultivectorLowSparseCoefficents<T, I> {
+	fn add_assign(&mut self, rhs: &SeaBasisBladeLow<T>) {
+		self.basis_blade_bits |= &rhs.index;
+		let new_idx = self.basis_blade_bits.count_basis_blades_less_than(&rhs.index);
+		self.coefficients.insert(new_idx as usize, rhs.coefficient);
+	}
+}
 impl<T:SeaCoefficient, I:SeaBasisBladeBitsInner> AddAssign<&Self> for SeaMultivectorLowSparseCoefficents<T, I> {
 	fn add_assign(&mut self, rhs: &Self) {
 		let bb_out = &self.basis_blade_bits | &rhs.basis_blade_bits;
@@ -617,6 +634,20 @@ impl<T:SeaCoefficient, I:SeaBasisBladeBitsInner> BitXor<Self> for &SeaMultivecto
 	}
 }
 
+impl<T:SeaCoefficient, I:SeaBasisBladeBitsInner> RegressiveProduct<(&Self, &SeaMetric)> for SeaMultivectorLowSparseCoefficents<T, I> {
+	type Output = Self;
+
+	fn regressive_product(&self, (rhs, metric): (&Self, &SeaMetric)) -> Self::Output {
+		let (a_dual, b_dual) = (self.dual(metric), rhs.dual(metric));
+
+		let mut out_dual = &a_dual ^ &b_dual;
+		
+		out_dual.undualization(metric);
+		
+		out_dual
+	}
+}
+
 impl<T:SeaCoefficient, I:SeaBasisBladeBitsInner> GeometricProduct<(&Self, &SeaMetric)> for SeaMultivectorLowSparseCoefficents<T, I>{ 
 	type Output = Self;
 
@@ -777,135 +808,22 @@ mod tests{
 			a,
 			SeaMultivectorLowSparseCoefficents::<f32, u8>::from_str("-2 + 2e1 + 4e2 + 6e12 + 8e3 + 10e13 + 12e23 + 14e123").unwrap()
 		);
-	}
 
-	#[test]
-	fn dual_undual() {
-
-		let m = SeaMetric::new(3, 0, 0);
-
-		let a = SeaMultivectorLowSparseCoefficents::<f32, u8>::from_str("1 + e1 + 2e2 + 3e12 + 4e3 + 5e13 + 6e23 + 7e123").unwrap();
-		let out_dual = SeaMultivectorLowSparseCoefficents::<f32, u8>::from_str("7 + 6e1 - 5e2 - 4e12 + 3e3 + 2e13 - 1e23 - 1e123").unwrap();
+		let mut a = SeaMultivectorLowSparseCoefficents::<f32, u8>::from_str("-1 + e1 + 2e2 + 3e12 + 5e13 + 6e23 + 7e123").unwrap();
+		a += &SeaBasisBladeLow::from_str("4e3").unwrap();
 		assert_eq!(
-			a.dual(&m),
-			out_dual
-		);
-		let out_undual = SeaMultivectorLowSparseCoefficents::<f32, u8>::from_str("-7 - 6e1 + 5e2 + 4e12 - 3e3 - 2e13 + 1e23 + 1e123").unwrap();
-		assert_eq!(
-			a.undual(&m),
-			out_undual
-		);
-		assert_eq!(
-			a.undual(&m).dual(&m),
-			a
+			a,
+			SeaMultivectorLowSparseCoefficents::<f32, u8>::from_str("-1 + e1 + 2e2 + 3e12 + 4e3 + 5e13 + 6e23 + 7e123").unwrap()
 		);
 
-		let m = SeaMetric::new(4, 0, 0);
-
-		let a = SeaMultivectorLowSparseCoefficents::<f32, u16>::from_str("1 + e1 + 2e2 + 3e12 + 4e3 + 5e13 + 6e23 + 7e123 + 8e4 + 9e14 + 10e24 + 11e124 + 12e34 + 13e134 + 14e234 + 15e1234").unwrap();
-		let out_dual = SeaMultivectorLowSparseCoefficents::<f32, u16>::from_str("15 +14e1 -13e2 +11e3 -7e4 -12e12 +10e13 -6e14 -9e23 +5e24 -3e34 -8e123 +4e124 -2e134 +e234 +e1234").unwrap();
+		let mut a = SeaMultivectorLowSparseCoefficents::<f32, u8>::from_str("-1 + e1 + 2e2 + 3e12 + 5e13").unwrap();
+		a += &SeaBasisBladeLow::from_str("4e3").unwrap();
+		a += &SeaBasisBladeLow::from_str("7e123").unwrap();
+		a += &SeaBasisBladeLow::from_str("6e23").unwrap();
 		assert_eq!(
-			a.dual(&m),
-			out_dual
+			a,
+			SeaMultivectorLowSparseCoefficents::<f32, u8>::from_str("-1 + e1 + 2e2 + 3e12 + 4e3 + 5e13 + 6e23 + 7e123").unwrap()
 		);
-		let out_undual = SeaMultivectorLowSparseCoefficents::<f32, u16>::from_str("15 +14e1 -13e2 +11e3 -7e4 -12e12 +10e13 -6e14 -9e23 +5e24 -3e34 -8e123 +4e124 -2e134 +e234 +e1234").unwrap();
-		assert_eq!(
-			a.undual(&m),
-			out_undual
-		);
-		assert_eq!(
-			a.dual(&m).undual(&m),
-			a
-		);
-
-		let m = SeaMetric::new(3, 1, 0);
-		let a = SeaMultivectorLowSparseCoefficents::<f32, u16>::from_str("1 + e1 + 2e2 + 3e12 + 4e3 + 5e13 + 6e23 + 7e123 + 8e4 + 9e14 + 10e24 + 11e124 + 12e34 + 13e134 + 14e234 + 15e1234").unwrap();
-		let out_dual = SeaMultivectorLowSparseCoefficents::<f32, u16>::from_str("15 +14e1 -13e2 +11e3 +7e4 -12e12 +10e13 +6e14 -9e23 -5e24 +3e34 -8e123 -4e124 +2e134 -e234 -e1234").unwrap();
-		assert_eq!(
-			a.dual(&m),
-			out_dual
-		);
-		let out_undual = SeaMultivectorLowSparseCoefficents::<f32, u16>::from_str(" -15 -14e1 +13e2 -11e3 -7e4 +12e12 -10e13 -6e14 +9e23 +5e24 -3e34 +8e123 +4e124 -2e134 +e234 +e1234").unwrap();
-		assert_eq!(
-			a.undual(&m),
-			out_undual
-		);
-		assert_eq!(
-			a.undual(&m).dual(&m),
-			a
-		);
-
-		let m = SeaMetric::new(2, 2, 0);
-		let a = SeaMultivectorLowSparseCoefficents::<f32, u16>::from_str("1 + e1 + 2e2 + 3e12 + 4e3 + 5e13 + 6e23 + 7e123 + 8e4 + 9e14 + 10e24 + 11e124 + 12e34 + 13e134 + 14e234 + 15e1234").unwrap();
-		let out_dual = SeaMultivectorLowSparseCoefficents::<f32, u16>::from_str("15 +14e1 -13e2 -11e3 +7e4 -12e12 -10e13 +6e14 +9e23 -5e24 -3e34 +8e123 -4e124 -2e134 +e234 +e1234").unwrap();
-		//846 ns
-		assert_eq!(
-			a.dual(&m),
-			out_dual
-		);
-		let out_undual = SeaMultivectorLowSparseCoefficents::<f32, u16>::from_str("15 +14e1 -13e2 -11e3 +7e4 -12e12 -10e13 +6e14 +9e23 -5e24 -3e34 +8e123 -4e124 -2e134 +e234 +e1234").unwrap();
-		//835 ns
-		assert_eq!(
-			a.undual(&m),
-			out_undual
-		);
-		assert_eq!(
-			a.dual(&m).undual(&m),
-			a
-		);
-
-		let m = SeaMetric::new(5, 0, 0);
-
-		let a = SeaMultivectorLowSparseCoefficents::<f32, u32>::from_str("1 + e1 + 2e2 + 3e12 + 4e3 + 5e13 + 6e23 + 7e123 + 8e4 + 9e14 + 10e24 + 11e124 + 12e34 + 13e134 + 14e234 + 15e1234 + e5 + e15 + 2e25 + 3e125 + 4e35 + 5e135 + 6e235 + 7e1235 + 8e45 + 9e145 + 10e245 + 11e1245 + 12e345 + 13e1345 + 14e2345 + 15e12345").unwrap();
-		let out_dual = SeaMultivectorLowSparseCoefficents::<f32, u32>::from_str("15 +14e1 -13e2 +11e3 -7e4 +15e5 -12e12 +10e13 -6e14 +14e15 -9e23 +5e24 -13e25 -3e34 +11e35 -7e45 -8e123 +4e124 -12e125 -2e134 +10e135 -6e145 +e234 -9e235 +5e245 -3e345 +e1234 -8e1235 +4e1245 -2e1345 +e2345 +e12345").unwrap();
-		assert_eq!(
-			a.dual(&m),
-			out_dual
-		);
-		let out_undual = SeaMultivectorLowSparseCoefficents::<f32, u32>::from_str("15 +14e1 -13e2 +11e3 -7e4 +15e5 -12e12 +10e13 -6e14 +14e15 -9e23 +5e24 -13e25 -3e34 +11e35 -7e45 -8e123 +4e124 -12e125 -2e134 +10e135 -6e145 +e234 -9e235 +5e245 -3e345 +e1234 -8e1235 +4e1245 -2e1345 +e2345 +e12345").unwrap();
-		assert_eq!(
-			a.undual(&m),
-			out_undual
-		);
-		assert_eq!(
-			a.dual(&m).undual(&m),
-			a
-		);
-
-		let m = SeaMetric::new(2, 3, 0);
-
-		let a = SeaMultivectorLowSparseCoefficents::<f32, u32>::from_str("1 + e1 + 2e2 + 3e12 + 4e3 + 5e13 + 6e23 + 7e123 + 8e4 + 9e14 + 10e24 + 11e124 + 12e34 + 13e134 + 14e234 + 15e1234 + e5 + e15 + 2e25 + 3e125 + 4e35 + 5e135 + 6e235 + 7e1235 + 8e45 + 9e145 + 10e245 + 11e1245 + 12e345 + 13e1345 + 14e2345 + 15e12345").unwrap();
-		let out_dual = SeaMultivectorLowSparseCoefficents::<f32, u32>::from_str("15 +14e1 -13e2 -11e3 +7e4 -15e5 -12e12 -10e13 +6e14 -14e15 +9e23 -5e24 +13e25 -3e34 +11e35 -7e45 +8e123 -4e124 +12e125 -2e134 +10e135 -6e145 +e234 -9e235 +5e245 +3e345 +e1234 -8e1235 +4e1245 +2e1345 -e2345 -e12345").unwrap();
-		assert_eq!(
-			a.dual(&m),
-			out_dual
-		);
-		let out_undual = SeaMultivectorLowSparseCoefficents::<f32, u32>::from_str(" -15 -14e1 +13e2 +11e3 -7e4 +15e5 +12e12 +10e13 -6e14 +14e15 -9e23 +5e24 -13e25 +3e34 -11e35 +7e45 -8e123 +4e124 -12e125 +2e134 -10e135 +6e145 -e234 +9e235 -5e245 -3e345 -e1234 +8e1235 -4e1245 -2e1345 +e2345 +e12345").unwrap();
-		assert_eq!(
-			a.undual(&m),
-			out_undual
-		);
-		assert_eq!(
-			a.dual(&m).undual(&m),
-			a
-		);
-
-		catch_unwind_silent(|| {
-			let m = SeaMetric::new(2, 0, 1);
-
-			let a = SeaMultivectorLowSparseCoefficents::<f32, u8>::from_str("1 + e1 + 2e2 + 3e12 + 4e3 + 5e13 + 6e23 + 7e123").unwrap();
-			a.dual(&m)
-		}).unwrap_err();
-
-
-		// let now = Instant::now();
-		// let num_iters = 10_000;
-		// let mut t = a.clone();
-		// for _ in 0..num_iters {
-		// 	t = a.undual(&m);
-		// }
-		// let elapsed_time = now.elapsed();
-		// println!("time time time {:?}", elapsed_time/num_iters);
 	}
 
 	#[test]
@@ -1034,6 +952,226 @@ mod tests{
 		);
 	}
 	
+	mod dual {
+		use super::*;
+
+		#[test]
+		fn positive_metric() {
+			let m = SeaMetric::new(3, 0, 0);
+
+			let a = SeaMultivectorLowSparseCoefficents::<f32, u8>::from_str("1 + e1 + 2e2 + 3e12 + 4e3 + 5e13 + 6e23 + 7e123").unwrap();
+			let out_dual = SeaMultivectorLowSparseCoefficents::<f32, u8>::from_str("7 + 6e1 - 5e2 - 4e12 + 3e3 + 2e13 - 1e23 - 1e123").unwrap();
+			assert_eq!(
+				a.dual(&m),
+				out_dual
+			);
+			let out_undual = SeaMultivectorLowSparseCoefficents::<f32, u8>::from_str("-7 - 6e1 + 5e2 + 4e12 - 3e3 - 2e13 + 1e23 + 1e123").unwrap();
+			assert_eq!(
+				a.undual(&m),
+				out_undual
+			);
+			assert_eq!(
+				a.undual(&m).dual(&m),
+				a
+			);
+	
+			let m = SeaMetric::new(4, 0, 0);
+	
+			let a = SeaMultivectorLowSparseCoefficents::<f32, u16>::from_str("1 + e1 + 2e2 + 3e12 + 4e3 + 5e13 + 6e23 + 7e123 + 8e4 + 9e14 + 10e24 + 11e124 + 12e34 + 13e134 + 14e234 + 15e1234").unwrap();
+			let out_dual = SeaMultivectorLowSparseCoefficents::<f32, u16>::from_str("15 +14e1 -13e2 +11e3 -7e4 -12e12 +10e13 -6e14 -9e23 +5e24 -3e34 -8e123 +4e124 -2e134 +e234 +e1234").unwrap();
+			assert_eq!(
+				a.dual(&m),
+				out_dual
+			);
+			let out_undual = SeaMultivectorLowSparseCoefficents::<f32, u16>::from_str("15 +14e1 -13e2 +11e3 -7e4 -12e12 +10e13 -6e14 -9e23 +5e24 -3e34 -8e123 +4e124 -2e134 +e234 +e1234").unwrap();
+			assert_eq!(
+				a.undual(&m),
+				out_undual
+			);
+			assert_eq!(
+				a.dual(&m).undual(&m),
+				a
+			);
+
+			let m = SeaMetric::new(5, 0, 0);
+	
+			let a = SeaMultivectorLowSparseCoefficents::<f32, u32>::from_str("1 + e1 + 2e2 + 3e12 + 4e3 + 5e13 + 6e23 + 7e123 + 8e4 + 9e14 + 10e24 + 11e124 + 12e34 + 13e134 + 14e234 + 15e1234 + e5 + e15 + 2e25 + 3e125 + 4e35 + 5e135 + 6e235 + 7e1235 + 8e45 + 9e145 + 10e245 + 11e1245 + 12e345 + 13e1345 + 14e2345 + 15e12345").unwrap();
+			let out_dual = SeaMultivectorLowSparseCoefficents::<f32, u32>::from_str("15 +14e1 -13e2 +11e3 -7e4 +15e5 -12e12 +10e13 -6e14 +14e15 -9e23 +5e24 -13e25 -3e34 +11e35 -7e45 -8e123 +4e124 -12e125 -2e134 +10e135 -6e145 +e234 -9e235 +5e245 -3e345 +e1234 -8e1235 +4e1245 -2e1345 +e2345 +e12345").unwrap();
+			assert_eq!(
+				a.dual(&m),
+				out_dual
+			);
+			let out_undual = SeaMultivectorLowSparseCoefficents::<f32, u32>::from_str("15 +14e1 -13e2 +11e3 -7e4 +15e5 -12e12 +10e13 -6e14 +14e15 -9e23 +5e24 -13e25 -3e34 +11e35 -7e45 -8e123 +4e124 -12e125 -2e134 +10e135 -6e145 +e234 -9e235 +5e245 -3e345 +e1234 -8e1235 +4e1245 -2e1345 +e2345 +e12345").unwrap();
+			assert_eq!(
+				a.undual(&m),
+				out_undual
+			);
+			assert_eq!(
+				a.dual(&m).undual(&m),
+				a
+			);
+		}
+		
+		#[test]
+		fn negitive_metric() {
+			let m = SeaMetric::new(3, 1, 0);
+			let a = SeaMultivectorLowSparseCoefficents::<f32, u16>::from_str("1 + e1 + 2e2 + 3e12 + 4e3 + 5e13 + 6e23 + 7e123 + 8e4 + 9e14 + 10e24 + 11e124 + 12e34 + 13e134 + 14e234 + 15e1234").unwrap();
+			let out_dual = SeaMultivectorLowSparseCoefficents::<f32, u16>::from_str("15 +14e1 -13e2 +11e3 +7e4 -12e12 +10e13 +6e14 -9e23 -5e24 +3e34 -8e123 -4e124 +2e134 -e234 -e1234").unwrap();
+			assert_eq!(
+				a.dual(&m),
+				out_dual
+			);
+			let out_undual = SeaMultivectorLowSparseCoefficents::<f32, u16>::from_str(" -15 -14e1 +13e2 -11e3 -7e4 +12e12 -10e13 -6e14 +9e23 +5e24 -3e34 +8e123 +4e124 -2e134 +e234 +e1234").unwrap();
+			assert_eq!(
+				a.undual(&m),
+				out_undual
+			);
+			assert_eq!(
+				a.undual(&m).dual(&m),
+				a
+			);
+	
+			let m = SeaMetric::new(2, 2, 0);
+			let a = SeaMultivectorLowSparseCoefficents::<f32, u16>::from_str("1 + e1 + 2e2 + 3e12 + 4e3 + 5e13 + 6e23 + 7e123 + 8e4 + 9e14 + 10e24 + 11e124 + 12e34 + 13e134 + 14e234 + 15e1234").unwrap();
+			let out_dual = SeaMultivectorLowSparseCoefficents::<f32, u16>::from_str("15 +14e1 -13e2 -11e3 +7e4 -12e12 -10e13 +6e14 +9e23 -5e24 -3e34 +8e123 -4e124 -2e134 +e234 +e1234").unwrap();
+			//846 ns
+			assert_eq!(
+				a.dual(&m),
+				out_dual
+			);
+			let out_undual = SeaMultivectorLowSparseCoefficents::<f32, u16>::from_str("15 +14e1 -13e2 -11e3 +7e4 -12e12 -10e13 +6e14 +9e23 -5e24 -3e34 +8e123 -4e124 -2e134 +e234 +e1234").unwrap();
+			//835 ns
+			assert_eq!(
+				a.undual(&m),
+				out_undual
+			);
+			assert_eq!(
+				a.dual(&m).undual(&m),
+				a
+			);
+	
+			let m = SeaMetric::new(2, 3, 0);
+	
+			let a = SeaMultivectorLowSparseCoefficents::<f32, u32>::from_str("1 + e1 + 2e2 + 3e12 + 4e3 + 5e13 + 6e23 + 7e123 + 8e4 + 9e14 + 10e24 + 11e124 + 12e34 + 13e134 + 14e234 + 15e1234 + e5 + e15 + 2e25 + 3e125 + 4e35 + 5e135 + 6e235 + 7e1235 + 8e45 + 9e145 + 10e245 + 11e1245 + 12e345 + 13e1345 + 14e2345 + 15e12345").unwrap();
+			let out_dual = SeaMultivectorLowSparseCoefficents::<f32, u32>::from_str("15 +14e1 -13e2 -11e3 +7e4 -15e5 -12e12 -10e13 +6e14 -14e15 +9e23 -5e24 +13e25 -3e34 +11e35 -7e45 +8e123 -4e124 +12e125 -2e134 +10e135 -6e145 +e234 -9e235 +5e245 +3e345 +e1234 -8e1235 +4e1245 +2e1345 -e2345 -e12345").unwrap();
+			assert_eq!(
+				a.dual(&m),
+				out_dual
+			);
+			let out_undual = SeaMultivectorLowSparseCoefficents::<f32, u32>::from_str(" -15 -14e1 +13e2 +11e3 -7e4 +15e5 +12e12 +10e13 -6e14 +14e15 -9e23 +5e24 -13e25 +3e34 -11e35 +7e45 -8e123 +4e124 -12e125 +2e134 -10e135 +6e145 -e234 +9e235 -5e245 -3e345 -e1234 +8e1235 -4e1245 -2e1345 +e2345 +e12345").unwrap();
+			assert_eq!(
+				a.undual(&m),
+				out_undual
+			);
+			assert_eq!(
+				a.dual(&m).undual(&m),
+				a
+			);
+		}
+
+		#[test]
+		fn zero_metric() {
+			let m = SeaMetric::new(2, 0, 1);
+
+			let a = SeaMultivectorLowSparseCoefficents::<f32, u8>::from_str("1 + e1 + 2e2 + 3e12 + 4e3 + 5e13 + 6e23 + 7e123").unwrap();
+			let out = SeaMultivectorLowSparseCoefficents::<f32, u8>::from_str("7 +3e3 +6e1 -5e2 -2e13 +e23 +4e12 +e123").unwrap();
+			assert_eq!(
+				a.dual(&m),
+				out
+			);
+			assert_eq!(
+				a.dual(&m).undual(&m),
+				a
+			);
+	
+			let m = SeaMetric::new(1, 0, 2);
+	
+			let a = SeaMultivectorLowSparseCoefficents::<f32, u8>::from_str("1 + e1 + 2e2 + 3e12 + 4e3 + 5e13 + 6e23 + 7e123").unwrap();
+			let out = SeaMultivectorLowSparseCoefficents::<f32, u8>::from_str("7 -5e2 +3e3 +6e1 +e23 +4e12 -2e13 +e123").unwrap();
+			assert_eq!(
+				a.dual(&m),
+				out
+			);
+			assert_eq!(
+				a.dual(&m).undual(&m),
+				a
+			);
+	
+			let m = SeaMetric::new(3, 0, 1);
+	
+			let a = SeaMultivectorLowSparseCoefficents::<f32, u16>::from_str("1 + e1 + 2e2 + 3e12 + 4e3 + 5e13 + 6e23 + 7e123 + 8e4 + 9e14 + 10e24 + 11e124 + 12e34 + 13e134 + 14e234 + 15e1234").unwrap();
+			let out = SeaMultivectorLowSparseCoefficents::<f32, u16>::from_str("15 + 14e1 - 13e2 + 12e12 + 11e3 - 10e13 + 9e23 + 8e123 - 7e4 + 6e14 - 5e24 - 4e124 + 3e34 + 2e134 - 1e234 + 1e1234").unwrap();
+			assert_eq!(
+				a.dual(&m),
+				out
+			);
+			assert_eq!(
+				a.dual(&m).undual(&m),
+				a
+			);
+	
+			let m = SeaMetric::new(4, 0, 1);
+	
+			let a = SeaMultivectorLowSparseCoefficents::<f32, u32>::from_str("1 + e1 + 2e2 + 3e12 + 4e3 + 5e13 + 6e23 + 7e123 + 8e4 + 9e14 + 10e24 + 11e124 + 12e34 + 13e134 + 14e234 + 15e1234 + e5 + e15 + 2e25 + 3e125 + 4e35 + 5e135 + 6e235 + 7e1235 + 8e45 + 9e145 + 10e245 + 11e1245 + 12e345 + 13e1345 + 14e2345 + 15e12345").unwrap();
+			let out = SeaMultivectorLowSparseCoefficents::<f32, u32>::from_str("15 +15e5 +14e1 -13e2 +11e3 -7e4 -14e15 +13e25 -11e35 +7e45 +12e12 -10e13 +6e14 +9e23 -5e24 +3e34 +12e125 -10e135 +6e145 +9e235 -5e245 +3e345 +8e123 -4e124 +2e134 -e234 -8e1235 +4e1245 -2e1345 +e2345 +e1234 +e12345").unwrap();
+			assert_eq!(
+				a.dual(&m),
+				out
+			);
+			assert_eq!(
+				a.dual(&m).undual(&m),
+				a
+			);
+
+			let m = SeaMetric::new(3, 0, 2);
+	
+			let a = SeaMultivectorLowSparseCoefficents::<f32, u32>::from_str(" + 1 + e1 + 2e2 + 3e12 + 4e3 + 5e13 + 6e23 + 7e123 + 8e4 + 9e14 + 10e24 + 11e124 + 12e345 + 13e1345 + 14e2345 + 15e12345").unwrap();
+			let out = SeaMultivectorLowSparseCoefficents::<f32, u32>::from_str("15 +14e1 -13e2 +7e45 -11e35 +12e12 +6e145 -5e245 +3e345 -10e135 +9e235 +4e1245 -2e1345 +e2345 -8e1235 +e12345").unwrap();
+			assert_eq!(
+				a.dual(&m),
+				out
+			);
+			assert_eq!(
+				a.dual(&m).undual(&m),
+				a
+			);
+
+			let a = SeaMultivectorLowSparseCoefficents::<f32, u32>::from_str("  + 3e13 + 1e4 + 2e124  +4e345").unwrap();
+			let out = SeaMultivectorLowSparseCoefficents::<f32, u32>::from_str("+4e12 -2e35 -3e245 -e1235").unwrap();
+			assert_eq!(
+				a.dual(&m),
+				out
+			);
+			assert_eq!(
+				a.dual(&m).undual(&m),
+				a
+			);
+
+			let a = SeaMultivectorLowSparseCoefficents::<f32, u32>::from_str(" + 1 + e1 + 2e2 + 3e12 + 4e3 + 5e13 + 6e23 + 7e123 + 8e4 + 9e14 + 10e24 + 11e124 + 12e345 + 13e1345 + 14e2345 + 15e12345").unwrap();
+			let out = SeaMultivectorLowSparseCoefficents::<f32, u32>::from_str("15 +14e1 -13e2 +7e45 -11e35 +12e12 +6e145 -5e245 +3e345 -10e135 +9e235 +4e1245 -2e1345 +e2345 -8e1235 +e12345").unwrap();
+			assert_eq!(
+				a.dual(&m),
+				out
+			);
+			assert_eq!(
+				a.dual(&m).undual(&m),
+				a
+			);
+
+			let a = SeaMultivectorLowSparseCoefficents::<f32, u32>::from_str("  + 3e12 + 1e4 + 2e124  +4e345").unwrap();
+			let out = SeaMultivectorLowSparseCoefficents::<f32, u32>::from_str("+4e12 -2e35 -e1235 + 3e345").unwrap();
+			assert_eq!(
+				a.dual(&m),
+				out
+			);
+			assert_eq!(
+				a.dual(&m).undual(&m),
+				a
+			);
+		
+		}
+	}
+
 	mod geometric_product {
 		use super::*;
 
@@ -1817,6 +1955,15 @@ mod tests{
 				out
 			);
 
+			let a = SeaMultivectorLowSparseCoefficents::<f32, u32>::from_str("15 +14e1 -13e2 +7e45 -11e35 +12e12 +6e145 -5e245 +3e345 -10e135 +9e235 +4e1245 -2e1345 +e2345 -8e1235 +e12345").unwrap();
+			let b = SeaMultivectorLowSparseCoefficents::<f32, u32>::from_str("-2e35 +4e12 +3e345 -e1235").unwrap();
+	
+			let out = SeaMultivectorLowSparseCoefficents::<f32, u32>::from_str("-30e35 +60e12 +45e345 -28e135 +26e235 +28e1245 +42e1345 -39e2345 -83e1235 +48e12345").unwrap();
+			assert_eq!(
+				a.outer_product(&b),
+				out
+			);
+
 			let a = SeaMultivectorLowSparseCoefficents::<f32, u64>::from_str(" + 1 + e1 + 2e2 + 3e12 + 4e3 + 5e13 + 6e23 + 7e123 + 8e4 + 9e14 + 10e24 + 11e124 + 12e345 + 13e1345 + 14e2345 + 15e12345 +e6 + 12e126 + 8e46").unwrap();
 			let b = SeaMultivectorLowSparseCoefficents::<f32, u64>::from_str("  + 3e13 + 1e4 + 2e124  +4e345 +83e1235 + 70e1245 + 4e1345 + 8e2345 + 12e123456").unwrap();
 	
@@ -1838,4 +1985,201 @@ mod tests{
 		}
 	}
 
+	mod regressive_product{
+		use super::*;
+
+		#[test]
+		fn euclidean() {
+			let m = SeaMetric::new(3, 0, 0);
+			
+			let a = SeaMultivectorLowSparseCoefficents::<f32, u8>::from_str("1").unwrap();
+			let b = SeaMultivectorLowSparseCoefficents::<f32, u8>::from_str("3e12").unwrap();
+	
+			let out = SeaMultivectorLowSparseCoefficents::<f32, u8>::from_str("").unwrap();
+			assert_eq!(
+				a.regressive_product((&b, &m)),
+				out
+			);
+	
+			let a = SeaMultivectorLowSparseCoefficents::<f32, u8>::from_str("e1 + e2").unwrap();
+			let b = SeaMultivectorLowSparseCoefficents::<f32, u8>::from_str("e2 + e3").unwrap();
+	
+			let out = SeaMultivectorLowSparseCoefficents::<f32, u8>::from_str("").unwrap();
+			assert_eq!(
+				a.regressive_product((&b, &m)),
+				out
+			);
+	
+			let a = SeaMultivectorLowSparseCoefficents::<f32, u8>::from_str("1 + e1 + e3").unwrap();
+			let b = SeaMultivectorLowSparseCoefficents::<f32, u8>::from_str("     e1  + 3e12").unwrap();
+	
+			let out = SeaMultivectorLowSparseCoefficents::<f32, u8>::from_str("3").unwrap();
+			assert_eq!(
+				a.regressive_product((&b, &m)),
+				out
+			);
+	
+			let a = SeaMultivectorLowSparseCoefficents::<f32, u8>::from_str("1 + 2e1 + 1e12 + 2e3").unwrap();
+			let b = SeaMultivectorLowSparseCoefficents::<f32, u8>::from_str("  + 1e2 + 2e13 + 1e23").unwrap();
+	
+			let out = SeaMultivectorLowSparseCoefficents::<f32, u8>::from_str("2 -2e1 -e2").unwrap();
+			assert_eq!(
+				a.regressive_product((&b, &m)),
+				out
+			);
+	
+			let m = SeaMetric::new(4, 0, 0);
+	
+			let a = SeaMultivectorLowSparseCoefficents::<f32, u16>::from_str(" + 1 + e1 + 2e12 + e13 + e234 ").unwrap();
+			let b = SeaMultivectorLowSparseCoefficents::<f32, u16>::from_str("  + 1e4 + 2e124 + 3e13 +4e34").unwrap();
+	
+			let out = SeaMultivectorLowSparseCoefficents::<f32, u16>::from_str("8 -2e1 +3e3 +2e24").unwrap();
+			assert_eq!(
+				a.regressive_product((&b, &m)),
+				out
+			);
+		}
+	
+		#[test]
+		fn projective() {
+			let m = SeaMetric::new(3, 0, 1);
+	
+			let a = SeaMultivectorLowSparseCoefficents::<f32, u16>::from_str("1 + 2e1 + 1e12 + 2e3").unwrap();
+			let b = SeaMultivectorLowSparseCoefficents::<f32, u16>::from_str("  + 1e2 + 2e13 + 1e23").unwrap();
+	
+			let out = SeaMultivectorLowSparseCoefficents::<f32, u16>::from_str("").unwrap();
+			assert_eq!(
+				a.regressive_product((&b, &m)),
+				out
+			);
+	
+			let a = SeaMultivectorLowSparseCoefficents::<f32, u16>::from_str(" + 2e3 + 2e14 + 1e124 ").unwrap();
+			let b = SeaMultivectorLowSparseCoefficents::<f32, u16>::from_str("  + 1e24 + 2e134").unwrap();
+	
+			let out = SeaMultivectorLowSparseCoefficents::<f32, u16>::from_str("2e14").unwrap();
+			assert_eq!(
+				a.regressive_product((&b, &m)),
+				out
+			);
+	
+			let a = SeaMultivectorLowSparseCoefficents::<f32, u16>::from_str(" + 1 + e1 + 2e12 + e13 + e234 ").unwrap();
+			let b = SeaMultivectorLowSparseCoefficents::<f32, u16>::from_str("  + 3e13 + 1e4 + 2e124  +4e34").unwrap();
+	
+			let out = SeaMultivectorLowSparseCoefficents::<f32, u16>::from_str("+8 -2e1 +3e3 -2e24").unwrap();
+			assert_eq!(
+				a.regressive_product((&b, &m)),
+				out
+			);
+	
+			let a = SeaMultivectorLowSparseCoefficents::<f32, u16>::from_str("  + e1 + 2e2 - e234 + e1234 ").unwrap();
+			let b = SeaMultivectorLowSparseCoefficents::<f32, u16>::from_str("  - 3e13 + 1e4 - 2e124  +4e34").unwrap();
+	
+			let out = SeaMultivectorLowSparseCoefficents::<f32, u16>::from_str("+e4 +3e3 -2e24 +4e34 -3e13 -2e124").unwrap();
+			assert_eq!(
+				a.regressive_product((&b, &m)),
+				out
+			);
+
+			let m = SeaMetric::new(3, 0, 2);
+	
+			let a = SeaMultivectorLowSparseCoefficents::<f32, u32>::from_str(" + 1 + e1 + 2e2 + 3e12 + 4e3 + 5e13 + 6e23 + 7e123 + 8e4 + 9e14 + 10e24 + 11e124 + 12e345 + 13e1345 + 14e2345 + 15e12345").unwrap();
+			let b = SeaMultivectorLowSparseCoefficents::<f32, u32>::from_str("  + 3e12 + 1e4 + 2e124  +4e345").unwrap();
+			
+			let out = SeaMultivectorLowSparseCoefficents::<f32, u32>::from_str("48 +83e4 -39e1 -42e2 +28e3 +26e14 +28e24 +45e12 +60e345 +30e124").unwrap();
+			assert_eq!(
+				a.regressive_product((&b, &m)),
+				out
+			);
+		}
+	
+		#[test]
+		fn hyperbolic() {
+			let m = SeaMetric::new(3, 1, 0);
+	
+			let a = SeaMultivectorLowSparseCoefficents::<f32, u16>::from_str("1 + 2e1 + 1e12 + 2e3").unwrap();
+			let b = SeaMultivectorLowSparseCoefficents::<f32, u16>::from_str("  + 1e2 + 2e13 + 1e23").unwrap();
+	
+			let out = SeaMultivectorLowSparseCoefficents::<f32, u16>::from_str("").unwrap();
+			assert_eq!(
+				a.regressive_product((&b, &m)),
+				out
+			);
+	
+			let a = SeaMultivectorLowSparseCoefficents::<f32, u16>::from_str(" + e1 + 2e2 - e234 + e1234  ").unwrap();
+			let b = SeaMultivectorLowSparseCoefficents::<f32, u16>::from_str("  - 3e13 + 1e4 - 2e124  +4e34").unwrap();
+	
+			let out = SeaMultivectorLowSparseCoefficents::<f32, u16>::from_str("3e3 +e4 -3e13 +2e24 +4e34 -2e124").unwrap();
+			assert_eq!(
+				a.regressive_product((&b, &m)),
+				out
+			);
+	
+			let a = SeaMultivectorLowSparseCoefficents::<f32, u16>::from_str(" + 1 + e1 + 2e2 + 3e12 + 4e3 + 5e13 + 6e23 + 7e123 + 8e4 + 9e14 + 10e24 + 11e124 + 12e34 + 13e134 + 14e234 + 15e1234").unwrap();
+			let b = SeaMultivectorLowSparseCoefficents::<f32, u16>::from_str("  + 3e13 + 1e4 + 2e124  +4e34").unwrap();
+	
+			let out = SeaMultivectorLowSparseCoefficents::<f32, u16>::from_str(" -33 -43e1 -12e2 +70e3 +83e4 -14e12 +45e13 +26e14 +28e24 +60e34 +30e124").unwrap();
+			assert_eq!(
+				a.regressive_product((&b, &m)),
+				out
+			);
+		}
+	
+		#[test]
+		fn other() {
+			let m = SeaMetric::new(3, 2, 0);
+	
+			let a = SeaMultivectorLowSparseCoefficents::<f32, u32>::from_str(" + 1 + e1 + 2e2 + 3e12 + 4e3 + 5e13 + 6e23 + 7e123 + 8e4 + 9e14 + 10e24 + 11e124 + 12e345 + 13e1345 + 14e2345 + 15e12345").unwrap();
+			let b = SeaMultivectorLowSparseCoefficents::<f32, u32>::from_str("  + 3e13 + 1e4 + 2e124  +4e345").unwrap();
+	
+			let out = SeaMultivectorLowSparseCoefficents::<f32, u32>::from_str("12 +70e3 +83e4 +45e13 +26e14 +28e24 +30e124 +60e345").unwrap();
+			assert_eq!(
+				a.regressive_product((&b, &m)),
+				out
+			);
+	
+			let m = SeaMetric::new(3, 1, 1);
+			
+			let a = SeaMultivectorLowSparseCoefficents::<f32, u32>::from_str(" + 1 + e1 + 2e2 + 3e12 + 4e3 + 5e13 + 6e23 + 7e123 + 8e4 + 9e14 + 10e24 + 11e124 + 12e345 + 13e1345 + 14e2345 + 15e12345").unwrap();
+			let b = SeaMultivectorLowSparseCoefficents::<f32, u32>::from_str("  + 3e13 + 1e4 + 2e124  +4e345").unwrap();
+	
+			let out = SeaMultivectorLowSparseCoefficents::<f32, u32>::from_str("12 -14e3 +83e4 +45e13 +26e14 +28e24 +60e345 +30e124").unwrap();
+			assert_eq!(
+				a.regressive_product((&b, &m)),
+				out
+			);
+		}
+	
+		#[test]
+		fn dimensions_6() {
+			let m = SeaMetric::new(3, 3, 0);
+	
+			let a = SeaMultivectorLowSparseCoefficents::<f32, u64>::from_str(" + 1 + e1 + 2e2 + 3e12 + 4e3 + 5e13 + 6e23 + 7e123 + 8e4 + 9e14 + 10e24 + 11e124 + 12e345 + 13e1345 + 14e2345 + 15e12345 +e6 + 12e126 + 8e46").unwrap();
+			let b = SeaMultivectorLowSparseCoefficents::<f32, u64>::from_str("  + 3e13 + 1e4 + 2e124  +4e345 +83e1235 + 70e1245 + 4e1345 + 8e2345 + 12e123456").unwrap();
+	
+			let out = SeaMultivectorLowSparseCoefficents::<f32, u64>::from_str(" -604 -36e1 -72e2 +48e3 +96e4 +12e6 +36e12 +60e13 +108e14 +72e23 +120e24 +96e46 +84e123 +132e124 +144e126 +144e345 +156e1345 +168e2345 +180e12345").unwrap();
+			assert_eq!(
+				a.regressive_product((&b, &m)),
+				out
+			);
+	
+			let a = SeaMultivectorLowSparseCoefficents::<f32, u64>::from_str("1 + 2e1 + 1e12 + 2e3").unwrap();
+			let b = SeaMultivectorLowSparseCoefficents::<f32, u64>::from_str("  + 1e2 + 2e13 + 1e23").unwrap();
+	
+			let out = SeaMultivectorLowSparseCoefficents::<f32, u64>::from_str("").unwrap();
+			assert_eq!(
+				a.regressive_product((&b, &m)),
+				out
+			);
+
+			// let now = Instant::now();
+			// let num_iters = 10_000;
+			// let mut t = a.clone();
+			// for _ in 0..num_iters {
+			// 	t = t.geometric_product((&b, &m));
+			// }
+			// let elapsed_time = now.elapsed();
+			// println!("time time time {:?}", elapsed_time/num_iters);
+		}
+	
+	}
 }

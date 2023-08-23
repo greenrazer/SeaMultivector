@@ -1,13 +1,16 @@
 use std::str::FromStr;
-use std::ops::{Deref, DerefMut, Shl, Shr, BitOr, BitXor, Mul, Not};
+use std::ops::{Deref, DerefMut, Shl, Shr, BitOr, BitXor, Mul, Not, BitAnd, Index, AddAssign, Add, Neg};
 
 use crate::errors::ParseMultivectorError;
+use crate::grade::SeaGrade;
 use crate::metric::SeaMetric;
 use crate::coefficient::SeaCoefficient;
-use crate::multivector_product_traits::{LeftContraction, RightContraction, InnerProduct, OuterProduct, GeometricProduct};
+use crate::multivector_product_traits::{LeftContraction, RightContraction, InnerProduct, OuterProduct, GeometricProduct, RegressiveProduct};
 use crate::multivector_traits::{Multivector, MultivectorMut};
 
-use super::without_metric::SeaMultivectorLowSparseCoefficents; 
+use super::basis_blade::SeaBasisBladeLow;
+use super::basis_blade_index::SeaBasisBladeIndexLow;
+use super::without_metric::{SeaMultivectorLowSparseCoefficents, SparseMultivectorIter, SparseMultivectorGradeIter}; 
 use super::basis_blade_bits::SeaBasisBladeBitsInner;
 use super::basis_blade_bits::SeaBasisBladeBits;
 
@@ -23,6 +26,14 @@ impl<T:SeaCoefficient, I:SeaBasisBladeBitsInner> SeaMultivectorLowSparseCoeffice
 			metric: SeaMetric::new(p,n,z),
 			multivector: SeaMultivectorLowSparseCoefficents::<T, I>::new()
 		}
+	}
+
+	pub fn iter<'a>(&'a self) -> SparseMultivectorIter<'a, T, I> {
+		self.multivector.iter()
+	}
+
+	pub fn grade_iter<'a>(&'a self, grade: &SeaGrade) -> SparseMultivectorGradeIter<'a, T, I> {
+		self.multivector.grade_iter(grade)
 	}
 
 	pub fn dual(&self) -> Self {
@@ -81,6 +92,47 @@ impl<T:SeaCoefficient, I:SeaBasisBladeBitsInner> FromStr for SeaMultivectorLowSp
 			metric,
 			multivector: mv 
 		})
+	}
+}
+
+impl<T:SeaCoefficient, I:SeaBasisBladeBitsInner> Index<&SeaBasisBladeIndexLow> for SeaMultivectorLowSparseCoefficentsWithMetric<T, I> {
+	type Output = T;
+	fn index(&self, index: &SeaBasisBladeIndexLow) -> &Self::Output {
+		&self.multivector[index]
+	}
+}
+
+impl<T:SeaCoefficient, I:SeaBasisBladeBitsInner> AddAssign<&SeaBasisBladeLow<T>> for SeaMultivectorLowSparseCoefficentsWithMetric<T, I> {
+	fn add_assign(&mut self, rhs: &SeaBasisBladeLow<T>) {
+		self.multivector += rhs
+	}
+}
+impl<T:SeaCoefficient, I:SeaBasisBladeBitsInner> AddAssign<&Self> for SeaMultivectorLowSparseCoefficentsWithMetric<T, I> {
+	fn add_assign(&mut self, rhs: &Self) {
+		assert_eq!(self.metric, rhs.metric);
+		self.multivector += &rhs.multivector
+	}
+}
+impl<T:SeaCoefficient, I:SeaBasisBladeBitsInner> Add<Self> for &SeaMultivectorLowSparseCoefficentsWithMetric<T, I> {
+    type Output = SeaMultivectorLowSparseCoefficentsWithMetric<T, I>;
+
+    fn add(self, rhs: Self) -> Self::Output {
+		assert_eq!(self.metric, rhs.metric);
+		SeaMultivectorLowSparseCoefficentsWithMetric {
+			metric: self.metric.clone(),
+			multivector: &self.multivector + &rhs.multivector
+		}
+	}
+}
+
+impl<T:SeaCoefficient, I:SeaBasisBladeBitsInner> Neg for &SeaMultivectorLowSparseCoefficentsWithMetric<T, I> {
+	type Output = SeaMultivectorLowSparseCoefficentsWithMetric<T, I>;
+
+	fn neg(self) -> Self::Output {
+		SeaMultivectorLowSparseCoefficentsWithMetric {
+			metric: self.metric.clone(),
+			multivector: -&self.multivector
+		}
 	}
 }
 
@@ -229,6 +281,25 @@ impl<T:SeaCoefficient, I:SeaBasisBladeBitsInner> BitXor<Self> for &SeaMultivecto
 	}
 }
 
+impl<T:SeaCoefficient, I:SeaBasisBladeBitsInner> RegressiveProduct<&Self> for SeaMultivectorLowSparseCoefficentsWithMetric<T, I> {
+	type Output = Self;
+	
+	fn regressive_product(&self, rhs: &Self) -> Self::Output {
+		assert_eq!(self.metric, rhs.metric);
+		Self {
+			metric: self.metric.clone(),
+			multivector: self.multivector.regressive_product((&rhs.multivector, &self.metric))
+		}
+	}
+}
+impl<T:SeaCoefficient, I:SeaBasisBladeBitsInner> BitAnd<Self> for &SeaMultivectorLowSparseCoefficentsWithMetric<T, I> {
+	type Output = SeaMultivectorLowSparseCoefficentsWithMetric<T, I>;
+	
+	fn bitand(self, rhs: Self) -> Self::Output {
+		self.regressive_product(rhs)
+	}
+}
+
 impl<T:SeaCoefficient, I:SeaBasisBladeBitsInner> GeometricProduct<&Self> for SeaMultivectorLowSparseCoefficentsWithMetric<T, I> {
 	type Output = Self;
 	fn geometric_product(&self, rhs: &Self) -> Self::Output {
@@ -245,6 +316,7 @@ impl<T:SeaCoefficient, I:SeaBasisBladeBitsInner> Mul<Self> for &SeaMultivectorLo
 		self.geometric_product(rhs)
 	}
 }
+
 
 #[cfg(test)]
 mod tests {
@@ -302,6 +374,97 @@ mod tests {
 		assert_eq!(
 			!&a,
 			out_dual
+		);
+	}
+
+	#[test]
+	fn iter() {
+		let a = SeaMultivectorLowSparseCoefficentsWithMetric::<f32, u16>::from_str("4>1 + e1 + 2e2 + 3e12 + 4e3 + 5e13 + 6e23 + 7e123 + 8e4 + 9e14 + 10e24 + 11e124 + 12e34 + 13e134 + 14e234 + 15e1234").unwrap();
+		let mut iter = a.iter();
+		assert_eq!(iter.next(), Some(SeaBasisBladeLow::from_str("1").unwrap()));
+		assert_eq!(iter.next(), Some(SeaBasisBladeLow::from_str("1e1").unwrap()));
+		assert_eq!(iter.next(), Some(SeaBasisBladeLow::from_str("2e2").unwrap()));
+		assert_eq!(iter.next(), Some(SeaBasisBladeLow::from_str("3e12").unwrap()));
+		assert_eq!(iter.next(), Some(SeaBasisBladeLow::from_str("4e3").unwrap()));
+		assert_eq!(iter.next(), Some(SeaBasisBladeLow::from_str("5e13").unwrap()));
+		assert_eq!(iter.next(), Some(SeaBasisBladeLow::from_str("6e23").unwrap()));
+		assert_eq!(iter.next(), Some(SeaBasisBladeLow::from_str("7e123").unwrap()));
+		assert_eq!(iter.next(), Some(SeaBasisBladeLow::from_str("8e4").unwrap()));
+		assert_eq!(iter.next(), Some(SeaBasisBladeLow::from_str("9e14").unwrap()));
+		assert_eq!(iter.next(), Some(SeaBasisBladeLow::from_str("10e24").unwrap()));
+		assert_eq!(iter.next(), Some(SeaBasisBladeLow::from_str("11e124").unwrap()));
+		assert_eq!(iter.next(), Some(SeaBasisBladeLow::from_str("12e34").unwrap()));
+		assert_eq!(iter.next(), Some(SeaBasisBladeLow::from_str("13e134").unwrap()));
+		assert_eq!(iter.next(), Some(SeaBasisBladeLow::from_str("14e234").unwrap()));
+		assert_eq!(iter.next(), Some(SeaBasisBladeLow::from_str("15e1234").unwrap()));
+		assert_eq!(iter.next(), None);
+	}
+
+	#[test]
+	fn grade_iter() {
+		let a = SeaMultivectorLowSparseCoefficentsWithMetric::<f32, u16>::from_str("4>1 + e1 + 2e2 + 3e12 + 4e3 + 5e13 + 6e23 + 7e123 + 8e4 + 9e14 + 10e24 + 11e124 + 12e34 + 13e134 + 14e234 + 15e1234").unwrap();
+		
+		let mut iter = a.grade_iter(&SeaGrade(0));
+		assert_eq!(iter.next(), Some(SeaBasisBladeLow::from_str("1").unwrap()));
+		assert_eq!(iter.next(), None);
+
+		let mut iter = a.grade_iter(&SeaGrade(1));
+		assert_eq!(iter.next(), Some(SeaBasisBladeLow::from_str("1e1").unwrap()));
+		assert_eq!(iter.next(), Some(SeaBasisBladeLow::from_str("2e2").unwrap()));
+		assert_eq!(iter.next(), Some(SeaBasisBladeLow::from_str("4e3").unwrap()));
+		assert_eq!(iter.next(), Some(SeaBasisBladeLow::from_str("8e4").unwrap()));
+		assert_eq!(iter.next(), None);
+
+		let mut iter = a.grade_iter(&SeaGrade(2));
+		assert_eq!(iter.next(), Some(SeaBasisBladeLow::from_str("3e12").unwrap()));
+		assert_eq!(iter.next(), Some(SeaBasisBladeLow::from_str("5e13").unwrap()));
+		assert_eq!(iter.next(), Some(SeaBasisBladeLow::from_str("6e23").unwrap()));
+		assert_eq!(iter.next(), Some(SeaBasisBladeLow::from_str("9e14").unwrap()));
+		assert_eq!(iter.next(), Some(SeaBasisBladeLow::from_str("10e24").unwrap()));
+		assert_eq!(iter.next(), Some(SeaBasisBladeLow::from_str("12e34").unwrap()));
+		assert_eq!(iter.next(), None);
+
+		let mut iter = a.grade_iter(&SeaGrade(3));
+		assert_eq!(iter.next(), Some(SeaBasisBladeLow::from_str("7e123").unwrap()));
+		assert_eq!(iter.next(), Some(SeaBasisBladeLow::from_str("11e124").unwrap()));
+		assert_eq!(iter.next(), Some(SeaBasisBladeLow::from_str("13e134").unwrap()));
+		assert_eq!(iter.next(), Some(SeaBasisBladeLow::from_str("14e234").unwrap()));
+		assert_eq!(iter.next(), None);
+
+		let mut iter = a.grade_iter(&SeaGrade(4));
+		assert_eq!(iter.next(), Some(SeaBasisBladeLow::from_str("15e1234").unwrap()));
+		assert_eq!(iter.next(), None);
+	}
+
+	#[test]
+	fn add() {
+		let mut a = SeaMultivectorLowSparseCoefficentsWithMetric::<f32, u8>::from_str("3>-1 + e1 + 2e2 + 3e12 + 4e3 + 5e13 + 6e23 + 7e123").unwrap();
+		let b = SeaMultivectorLowSparseCoefficentsWithMetric::<f32, u8>::from_str("3>-1 + e1 + 2e2 + 3e12 + 4e3 + 5e13 + 6e23 + 7e123").unwrap();
+		assert_eq!(
+			&a + &b,
+			SeaMultivectorLowSparseCoefficentsWithMetric::<f32, u8>::from_str("3>-2 + 2e1 + 4e2 + 6e12 + 8e3 + 10e13 + 12e23 + 14e123").unwrap()
+		);
+
+		a += &b;
+		assert_eq!(
+			a,
+			SeaMultivectorLowSparseCoefficentsWithMetric::<f32, u8>::from_str("3>-2 + 2e1 + 4e2 + 6e12 + 8e3 + 10e13 + 12e23 + 14e123").unwrap()
+		);
+
+		let mut a = SeaMultivectorLowSparseCoefficentsWithMetric::<f32, u8>::from_str("3>-1 + e1 + 2e2 + 3e12 + 5e13 + 6e23 + 7e123").unwrap();
+		a += &SeaBasisBladeLow::from_str("4e3").unwrap();
+		assert_eq!(
+			a,
+			SeaMultivectorLowSparseCoefficentsWithMetric::<f32, u8>::from_str("3>-1 + e1 + 2e2 + 3e12 + 4e3 + 5e13 + 6e23 + 7e123").unwrap()
+		);
+
+		let mut a = SeaMultivectorLowSparseCoefficentsWithMetric::<f32, u8>::from_str("3>-1 + e1 + 2e2 + 3e12 + 5e13").unwrap();
+		a += &SeaBasisBladeLow::from_str("4e3").unwrap();
+		a += &SeaBasisBladeLow::from_str("7e123").unwrap();
+		a += &SeaBasisBladeLow::from_str("6e23").unwrap();
+		assert_eq!(
+			a,
+			SeaMultivectorLowSparseCoefficentsWithMetric::<f32, u8>::from_str("3>-1 + e1 + 2e2 + 3e12 + 4e3 + 5e13 + 6e23 + 7e123").unwrap()
 		);
 	}
 
@@ -418,6 +581,22 @@ mod tests {
 	
 			let result = catch_unwind_silent(|| a.geometric_product(&b));
 			assert!(result.is_err());
+		}
+	}
+
+	mod regressive_product {
+		use super::*;
+
+		#[test]
+		fn works() {
+			let a = SeaMultivectorLowSparseCoefficentsWithMetric::<f32, u32>::from_str("3,2> + 1 + e1 + 2e2 + 3e12 + 4e3 + 5e13 + 6e23 + 7e123 + 8e4 + 9e14 + 10e24 + 11e124 + 12e345 + 13e1345 + 14e2345 + 15e12345").unwrap();
+			let b = SeaMultivectorLowSparseCoefficentsWithMetric::<f32, u32>::from_str("3,2>  + 3e13 + 1e4 + 2e124  +4e345").unwrap();
+	
+			let out = SeaMultivectorLowSparseCoefficentsWithMetric::<f32, u32>::from_str("3,2> 12 +70e3 +83e4 +45e13 +26e14 +28e24 +30e124 +60e345").unwrap();
+			assert_eq!(
+				a.regressive_product(&b),
+				out
+			);
 		}
 	}
 }
