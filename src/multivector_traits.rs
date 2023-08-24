@@ -32,6 +32,8 @@ pub trait Multivector<T:SeaCoefficient>:
 
 	fn scalar_norm(&self) -> T;
 	fn scalar_normalized(&self) -> Self;
+
+	fn exp(&self) -> Self;
 }
 pub trait MultivectorMut<T:SeaCoefficient>: 
 	Multivector<T>

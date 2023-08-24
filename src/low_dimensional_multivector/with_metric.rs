@@ -15,7 +15,7 @@ use super::basis_blade_bits::SeaBasisBladeBitsInner;
 use super::basis_blade_bits::SeaBasisBladeBits;
 
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone)]
 pub struct SeaMultivectorLowSparseCoefficentsWithMetric<T:SeaCoefficient, I:SeaBasisBladeBitsInner>{
 	metric: SeaMetric,
 	multivector:SeaMultivectorLowSparseCoefficents<T, I>
@@ -151,6 +151,13 @@ impl<T:SeaCoefficient, I:SeaBasisBladeBitsInner> Multivector<T> for SeaMultivect
 		Self { 
 			metric: self.metric.clone(), 
 			multivector: self.multivector.scalar_normalized(&self.metric) 
+		}
+	}
+
+	fn exp(&self) -> Self {
+		Self {
+			metric: self.metric.clone(),
+			multivector: self.multivector.exp(&self.metric)
 		}
 	}
 }
@@ -795,6 +802,41 @@ mod tests {
 			!a,
 			out_dual
 		);
+	}
+
+	#[test]
+	fn exp() {
+		let a = SeaMultivectorLowSparseCoefficentsWithMetric::<f32, u8>::from_str("2,1>e12 + 2e13 + 3e23").unwrap();
+		let out = SeaMultivectorLowSparseCoefficentsWithMetric::<f32, u8>::from_str("2,1>15.989522934 +4.6067419052e12 +9.2134838104e13 +13.8202257156e23").unwrap();
+		for (a_bb, o_bb) in a.exp().iter().zip(out.iter()) {
+			assert_eq!(a_bb.index, o_bb.index);
+			let abs_diff = (a_bb.coefficient - o_bb.coefficient).abs();
+			assert!(abs_diff < 1e-6, "left != right(epsilon={})\n{:?}\n{:?}", 1e-6, a.exp(), out);
+		}
+
+		let a = SeaMultivectorLowSparseCoefficentsWithMetric::<f32, u32>::from_str("4,1>-e15 +4e25+e45 -e35").unwrap();
+		let out = SeaMultivectorLowSparseCoefficentsWithMetric::<f32, u32>::from_str("4,1>39.0919036865 -8.9653635025e15 +35.86145401e25 -8.9653635025e35 +8.9653635025e45").unwrap();
+		for (a_bb, o_bb) in a.exp().iter().zip(out.iter()) {
+			assert_eq!(a_bb.index, o_bb.index);
+			let abs_diff = (a_bb.coefficient - o_bb.coefficient).abs();
+			assert!(abs_diff < 1e-5, "left != right(epsilon={})\n{:?}\n{:?}", 1e-5, a.exp(), out);
+		}
+
+		let a = SeaMultivectorLowSparseCoefficentsWithMetric::<f32, u16>::from_str("3,0,1>e12 + 2e13 + 3e23").unwrap();
+		let out = SeaMultivectorLowSparseCoefficentsWithMetric::<f32, u16>::from_str("3,0,1>-0.8252990842 -0.1509213299e12 -0.3018426597e13 -0.4527639747e23").unwrap();
+		for (a_bb, o_bb) in a.exp().iter().zip(out.iter()) {
+			assert_eq!(a_bb.index, o_bb.index);
+			let abs_diff = (a_bb.coefficient - o_bb.coefficient).abs();
+			assert!(abs_diff < 1e-6, "left != right(epsilon={})\n{:?}\n{:?}", 1e-6, a.exp(), out);
+		}
+
+		let a = SeaMultivectorLowSparseCoefficentsWithMetric::<f32, u16>::from_str("3,0,1>4e14 + 5e24 + 6e34").unwrap();
+		let out = SeaMultivectorLowSparseCoefficentsWithMetric::<f32, u16>::from_str("3,0,1>1 +4e14 +5e24 +6e34").unwrap();
+		for (a_bb, o_bb) in a.exp().iter().zip(out.iter()) {
+			assert_eq!(a_bb.index, o_bb.index);
+			let abs_diff = (a_bb.coefficient - o_bb.coefficient).abs();
+			assert!(abs_diff < 1e-6, "left != right(epsilon={})\n{:?}\n{:?}", 1e-6, a.exp(), out);
+		}
 	}
 
 	mod norm {

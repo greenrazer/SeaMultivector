@@ -9,7 +9,12 @@ pub trait SeaCoefficient:
 	Clone + Copy + Display + Debug + FromStr
 	+ One + Zero + Real
 	+ AddAssign + SubAssign + MulAssign + DivAssign
-{}
+{
+	fn factorial(a: u64) -> Self {
+		let o: u64 = (1..=a).product();
+		Self::from(o).unwrap()
+	}
+}
 impl<T> SeaCoefficient for T 
 	where 
 		T: 

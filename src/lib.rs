@@ -36,9 +36,11 @@ pub mod prelude {
 // Norm
 
 // not done:
+// exp
 
 //Versor/ Motor/Glide Wrappers
 //invere sandwich exponential logarithm
+//operations of bundles of multivectors with the same metric and basis blade bits
 
 
 #[cfg(test)]
