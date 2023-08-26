@@ -34,12 +34,12 @@ pub mod prelude {
 // Add basisblade for multivector
 // Regressive Product
 // Norm
-
-// not done:
 // exp
 
+// not done:
+
 //Versor/ Motor/Glide Wrappers
-//invere sandwich exponential logarithm
+//invere sandwich  logarithm
 //operations of bundles of multivectors with the same metric and basis blade bits
 
 

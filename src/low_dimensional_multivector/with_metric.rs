@@ -14,6 +14,9 @@ use super::without_metric::{SeaMultivectorLowSparseCoefficents, SparseMultivecto
 use super::basis_blade_bits::SeaBasisBladeBitsInner;
 use super::basis_blade_bits::SeaBasisBladeBits;
 
+mod linear_operations;
+mod non_geometric_linear_operations;
+mod scalar_operations;
 
 #[derive(Debug, PartialEq, Clone)]
 pub struct SeaMultivectorLowSparseCoefficentsWithMetric<T:SeaCoefficient, I:SeaBasisBladeBitsInner>{
@@ -200,98 +203,6 @@ impl<T:SeaCoefficient, I:SeaBasisBladeBitsInner> MultivectorMut<T> for SeaMultiv
 	}
 }
 
-impl<T:SeaCoefficient, I:SeaBasisBladeBitsInner> AddAssign<T> for SeaMultivectorLowSparseCoefficentsWithMetric<T, I> {
-    fn add_assign(&mut self, rhs: T){
-		self.multivector += rhs
-	}
-}
-impl<T:SeaCoefficient, I:SeaBasisBladeBitsInner> Add<T> for SeaMultivectorLowSparseCoefficentsWithMetric<T, I> {
-    type Output = SeaMultivectorLowSparseCoefficentsWithMetric<T, I>;
-
-    fn add(self, rhs: T) -> Self::Output {
-		&self + rhs
-	}
-}
-impl<T:SeaCoefficient, I:SeaBasisBladeBitsInner> Add<T> for &SeaMultivectorLowSparseCoefficentsWithMetric<T, I> {
-    type Output = SeaMultivectorLowSparseCoefficentsWithMetric<T, I>;
-
-    fn add(self, rhs: T) -> Self::Output {
-		SeaMultivectorLowSparseCoefficentsWithMetric {
-			metric: self.metric.clone(),
-			multivector: &self.multivector + rhs
-		}
-	}
-}
-
-impl<T:SeaCoefficient, I:SeaBasisBladeBitsInner> SubAssign<T> for SeaMultivectorLowSparseCoefficentsWithMetric<T, I> {
-    fn sub_assign(&mut self, rhs: T){
-		self.multivector -= rhs
-	}
-}
-impl<T:SeaCoefficient, I:SeaBasisBladeBitsInner> Sub<T> for SeaMultivectorLowSparseCoefficentsWithMetric<T, I> {
-    type Output = SeaMultivectorLowSparseCoefficentsWithMetric<T, I>;
-
-    fn sub(self, rhs: T) -> Self::Output {
-		&self - rhs
-	}
-}
-impl<T:SeaCoefficient, I:SeaBasisBladeBitsInner> Sub<T> for &SeaMultivectorLowSparseCoefficentsWithMetric<T, I> {
-    type Output = SeaMultivectorLowSparseCoefficentsWithMetric<T, I>;
-
-    fn sub(self, rhs: T) -> Self::Output {
-		SeaMultivectorLowSparseCoefficentsWithMetric {
-			metric: self.metric.clone(),
-			multivector: &self.multivector - rhs
-		}
-	}
-}
-
-impl<T:SeaCoefficient, I:SeaBasisBladeBitsInner> MulAssign<T> for SeaMultivectorLowSparseCoefficentsWithMetric<T, I> {
-    fn mul_assign(&mut self, rhs: T){
-		self.multivector *= rhs
-	}
-}
-impl<T:SeaCoefficient, I:SeaBasisBladeBitsInner> Mul<T> for SeaMultivectorLowSparseCoefficentsWithMetric<T, I> {
-    type Output = SeaMultivectorLowSparseCoefficentsWithMetric<T, I>;
-
-    fn mul(self, rhs: T) -> Self::Output {
-		&self * rhs
-	}
-}
-impl<T:SeaCoefficient, I:SeaBasisBladeBitsInner> Mul<T> for &SeaMultivectorLowSparseCoefficentsWithMetric<T, I> {
-    type Output = SeaMultivectorLowSparseCoefficentsWithMetric<T, I>;
-
-    fn mul(self, rhs: T) -> Self::Output {
-		SeaMultivectorLowSparseCoefficentsWithMetric {
-			metric: self.metric.clone(),
-			multivector: &self.multivector * rhs
-		}
-	}
-}
-
-impl<T:SeaCoefficient, I:SeaBasisBladeBitsInner> DivAssign<T> for SeaMultivectorLowSparseCoefficentsWithMetric<T, I> {
-    fn div_assign(&mut self, rhs: T) {
-		self.multivector /= rhs
-	}
-}
-impl<T:SeaCoefficient, I:SeaBasisBladeBitsInner> Div<T> for SeaMultivectorLowSparseCoefficentsWithMetric<T, I> {
-    type Output = SeaMultivectorLowSparseCoefficentsWithMetric<T, I>;
-
-    fn div(self, rhs: T) -> Self::Output {
-		&self / rhs
-	}
-}
-impl<T:SeaCoefficient, I:SeaBasisBladeBitsInner> Div<T> for &SeaMultivectorLowSparseCoefficentsWithMetric<T, I> {
-    type Output = SeaMultivectorLowSparseCoefficentsWithMetric<T, I>;
-
-    fn div(self, rhs: T) -> Self::Output {
-		SeaMultivectorLowSparseCoefficentsWithMetric {
-			metric: self.metric.clone(),
-			multivector: &self.multivector / rhs
-		}
-	}
-}
-
 impl<T:SeaCoefficient, I:SeaBasisBladeBitsInner> Not for SeaMultivectorLowSparseCoefficentsWithMetric<T, I> {
 	type Output = SeaMultivectorLowSparseCoefficentsWithMetric<T, I>;
 
@@ -325,112 +236,6 @@ impl<T:SeaCoefficient, I:SeaBasisBladeBitsInner> Neg for SeaMultivectorLowSparse
 	}
 }
 
-impl<T:SeaCoefficient, I:SeaBasisBladeBitsInner> AddAssign<Self> for SeaMultivectorLowSparseCoefficentsWithMetric<T, I> {
-	fn add_assign(&mut self, rhs: Self) {
-		*self += &rhs
-	}
-}
-impl<T:SeaCoefficient, I:SeaBasisBladeBitsInner> AddAssign<&Self> for SeaMultivectorLowSparseCoefficentsWithMetric<T, I> {
-	fn add_assign(&mut self, rhs: &Self) {
-		assert_eq!(self.metric, rhs.metric);
-		self.multivector += &rhs.multivector
-	}
-}
-
-impl<T:SeaCoefficient, I:SeaBasisBladeBitsInner> SubAssign<Self> for SeaMultivectorLowSparseCoefficentsWithMetric<T, I> {
-	fn sub_assign(&mut self, rhs: Self) {
-		*self -= &rhs
-	}
-}
-impl<T:SeaCoefficient, I:SeaBasisBladeBitsInner> SubAssign<&Self> for SeaMultivectorLowSparseCoefficentsWithMetric<T, I> {
-	fn sub_assign(&mut self, rhs: &Self) {
-		assert_eq!(self.metric, rhs.metric);
-		self.multivector -= &rhs.multivector
-	}
-}
-
-impl<T:SeaCoefficient, I:SeaBasisBladeBitsInner> Add<Self> for SeaMultivectorLowSparseCoefficentsWithMetric<T, I> {
-    type Output = SeaMultivectorLowSparseCoefficentsWithMetric<T, I>;
-
-    fn add(self, rhs: Self) -> Self::Output {
-		&self + &rhs
-	}
-}
-impl<T:SeaCoefficient, I:SeaBasisBladeBitsInner> Add<&Self> for SeaMultivectorLowSparseCoefficentsWithMetric<T, I> {
-    type Output = SeaMultivectorLowSparseCoefficentsWithMetric<T, I>;
-
-    fn add(self, rhs: &Self) -> Self::Output {
-		&self + rhs
-	}
-}
-impl<T:SeaCoefficient, I:SeaBasisBladeBitsInner> Add<SeaMultivectorLowSparseCoefficentsWithMetric<T, I>> for &SeaMultivectorLowSparseCoefficentsWithMetric<T, I> {
-    type Output = SeaMultivectorLowSparseCoefficentsWithMetric<T, I>;
-
-    fn add(self, rhs: SeaMultivectorLowSparseCoefficentsWithMetric<T, I>) -> Self::Output {
-		self + &rhs
-	}
-}
-impl<T:SeaCoefficient, I:SeaBasisBladeBitsInner> Add<Self> for &SeaMultivectorLowSparseCoefficentsWithMetric<T, I> {
-    type Output = SeaMultivectorLowSparseCoefficentsWithMetric<T, I>;
-
-    fn add(self, rhs: Self) -> Self::Output {
-		assert_eq!(self.metric, rhs.metric);
-		SeaMultivectorLowSparseCoefficentsWithMetric {
-			metric: self.metric.clone(),
-			multivector: &self.multivector + &rhs.multivector
-		}
-	}
-}
-
-impl<T:SeaCoefficient, I:SeaBasisBladeBitsInner> Sub<Self> for SeaMultivectorLowSparseCoefficentsWithMetric<T, I> {
-    type Output = SeaMultivectorLowSparseCoefficentsWithMetric<T, I>;
-
-    fn sub(self, rhs: Self) -> Self::Output {
-		&self - &rhs
-	}
-}
-impl<T:SeaCoefficient, I:SeaBasisBladeBitsInner> Sub<&Self> for SeaMultivectorLowSparseCoefficentsWithMetric<T, I> {
-    type Output = SeaMultivectorLowSparseCoefficentsWithMetric<T, I>;
-
-    fn sub(self, rhs: &Self) -> Self::Output {
-		&self - rhs
-	}
-}
-impl<T:SeaCoefficient, I:SeaBasisBladeBitsInner> Sub<SeaMultivectorLowSparseCoefficentsWithMetric<T, I>> for &SeaMultivectorLowSparseCoefficentsWithMetric<T, I> {
-    type Output = SeaMultivectorLowSparseCoefficentsWithMetric<T, I>;
-
-    fn sub(self, rhs: SeaMultivectorLowSparseCoefficentsWithMetric<T, I>) -> Self::Output {
-		self - &rhs
-	}
-}
-impl<T:SeaCoefficient, I:SeaBasisBladeBitsInner> Sub<Self> for &SeaMultivectorLowSparseCoefficentsWithMetric<T, I> {
-    type Output = SeaMultivectorLowSparseCoefficentsWithMetric<T, I>;
-
-    fn sub(self, rhs: Self) -> Self::Output {
-		assert_eq!(self.metric, rhs.metric);
-		SeaMultivectorLowSparseCoefficentsWithMetric {
-			metric: self.metric.clone(),
-			multivector: &self.multivector - &rhs.multivector
-		}
-	}
-}
-
-impl<T:SeaCoefficient, I:SeaBasisBladeBitsInner> LeftContraction<Self> for SeaMultivectorLowSparseCoefficentsWithMetric<T, I> {
-	type Output = Self;
-	fn left_contraction(&self, rhs: Self) -> Self::Output {
-		self.left_contraction(&rhs)
-	}
-}
-impl<T:SeaCoefficient, I:SeaBasisBladeBitsInner> LeftContraction<&Self> for SeaMultivectorLowSparseCoefficentsWithMetric<T, I> {
-	type Output = Self;
-	fn left_contraction(&self, rhs: &Self) -> Self::Output {
-		assert_eq!(self.metric, rhs.metric);
-		Self {
-			metric: self.metric.clone(),
-			multivector: self.multivector.left_contraction(&rhs.multivector, &self.metric)
-		}
-	}
-}
 impl<T:SeaCoefficient, I:SeaBasisBladeBitsInner> Shl<Self> for SeaMultivectorLowSparseCoefficentsWithMetric<T, I> {
 	type Output = SeaMultivectorLowSparseCoefficentsWithMetric<T, I>;
 	fn shl(self, rhs: Self) -> Self::Output {
@@ -456,22 +261,6 @@ impl<T:SeaCoefficient, I:SeaBasisBladeBitsInner> Shl<Self> for &SeaMultivectorLo
 	}
 }
 
-impl<T:SeaCoefficient, I:SeaBasisBladeBitsInner> RightContraction<Self> for SeaMultivectorLowSparseCoefficentsWithMetric<T, I> {
-	type Output = Self;
-	fn right_contraction(&self, rhs: Self) -> Self::Output {
-		self.right_contraction(&rhs)
-	}
-}
-impl<T:SeaCoefficient, I:SeaBasisBladeBitsInner> RightContraction<&Self> for SeaMultivectorLowSparseCoefficentsWithMetric<T, I> {
-	type Output = Self;
-	fn right_contraction(&self, rhs: &Self) -> Self::Output {
-		assert_eq!(self.metric, rhs.metric);
-		Self {
-			metric: self.metric.clone(),
-			multivector: self.multivector.right_contraction(&rhs.multivector, &self.metric)
-		}
-	}
-}
 impl<T:SeaCoefficient, I:SeaBasisBladeBitsInner> Shr<Self> for SeaMultivectorLowSparseCoefficentsWithMetric<T, I> {
 	type Output = SeaMultivectorLowSparseCoefficentsWithMetric<T, I>;
 	fn shr(self, rhs: Self) -> Self::Output {
@@ -497,22 +286,6 @@ impl<T:SeaCoefficient, I:SeaBasisBladeBitsInner> Shr<Self> for &SeaMultivectorLo
 	}
 }
 
-impl<T:SeaCoefficient, I:SeaBasisBladeBitsInner> InnerProduct<Self> for SeaMultivectorLowSparseCoefficentsWithMetric<T, I> {
-	type Output = Self;
-	fn inner_product(&self, rhs: Self) -> Self::Output {
-		self.inner_product(&rhs)
-	}
-}
-impl<T:SeaCoefficient, I:SeaBasisBladeBitsInner> InnerProduct<&Self> for SeaMultivectorLowSparseCoefficentsWithMetric<T, I> {
-	type Output = Self;
-	fn inner_product(&self, rhs: &Self) -> Self::Output {
-		assert_eq!(self.metric, rhs.metric);
-		Self {
-			metric: self.metric.clone(),
-			multivector: self.multivector.inner_product(&rhs.multivector, &self.metric)
-		}
-	}
-}
 impl<T:SeaCoefficient, I:SeaBasisBladeBitsInner> BitOr<Self> for SeaMultivectorLowSparseCoefficentsWithMetric<T, I> {
 	type Output = SeaMultivectorLowSparseCoefficentsWithMetric<T, I>;
 	fn bitor(self, rhs: Self) -> Self::Output {
@@ -538,36 +311,6 @@ impl<T:SeaCoefficient, I:SeaBasisBladeBitsInner> BitOr<Self> for &SeaMultivector
 	}
 }
 
-impl<T:SeaCoefficient, I:SeaBasisBladeBitsInner> ScalarProduct<Self> for SeaMultivectorLowSparseCoefficentsWithMetric<T, I> {
-	type Output = T;
-	fn scalar_product(&self, rhs: Self) -> Self::Output {
-		self.scalar_product(&rhs)
-	}
-}
-impl<T:SeaCoefficient, I:SeaBasisBladeBitsInner> ScalarProduct<&Self> for SeaMultivectorLowSparseCoefficentsWithMetric<T, I> {
-	type Output = T;
-	fn scalar_product(&self, rhs: &Self) -> Self::Output {
-		assert_eq!(self.metric, rhs.metric);
-		self.multivector.scalar_product(&rhs.multivector, &self.metric)
-	}
-}
-
-impl<T:SeaCoefficient, I:SeaBasisBladeBitsInner> OuterProduct<Self> for SeaMultivectorLowSparseCoefficentsWithMetric<T, I> {
-	type Output = Self;
-	fn outer_product(&self, rhs: Self) -> Self::Output {
-		self.outer_product(&rhs)
-	}
-}
-impl<T:SeaCoefficient, I:SeaBasisBladeBitsInner> OuterProduct<&Self> for SeaMultivectorLowSparseCoefficentsWithMetric<T, I> {
-	type Output = Self;
-	fn outer_product(&self, rhs: &Self) -> Self::Output {
-		assert_eq!(self.metric.dimensions, rhs.metric.dimensions);
-		Self {
-			metric: self.metric.clone(),
-			multivector: self.multivector.outer_product(&rhs.multivector)
-		}
-	}
-}
 impl<T:SeaCoefficient, I:SeaBasisBladeBitsInner> BitXor<Self> for SeaMultivectorLowSparseCoefficentsWithMetric<T, I> {
 	type Output = SeaMultivectorLowSparseCoefficentsWithMetric<T, I>;
 	fn bitxor(self, rhs: Self) -> Self::Output {
@@ -593,24 +336,6 @@ impl<T:SeaCoefficient, I:SeaBasisBladeBitsInner> BitXor<Self> for &SeaMultivecto
 	}
 }
 
-impl<T:SeaCoefficient, I:SeaBasisBladeBitsInner> RegressiveProduct<Self> for SeaMultivectorLowSparseCoefficentsWithMetric<T, I> {
-	type Output = Self;
-	
-	fn regressive_product(&self, rhs: Self) -> Self::Output {
-		self.regressive_product(&rhs)
-	}
-}
-impl<T:SeaCoefficient, I:SeaBasisBladeBitsInner> RegressiveProduct<&Self> for SeaMultivectorLowSparseCoefficentsWithMetric<T, I> {
-	type Output = Self;
-	
-	fn regressive_product(&self, rhs: &Self) -> Self::Output {
-		assert_eq!(self.metric, rhs.metric);
-		Self {
-			metric: self.metric.clone(),
-			multivector: self.multivector.regressive_product(&rhs.multivector, &self.metric)
-		}
-	}
-}
 impl<T:SeaCoefficient, I:SeaBasisBladeBitsInner> BitAnd<Self> for SeaMultivectorLowSparseCoefficentsWithMetric<T, I> {
 	type Output = SeaMultivectorLowSparseCoefficentsWithMetric<T, I>;
 	
@@ -640,22 +365,6 @@ impl<T:SeaCoefficient, I:SeaBasisBladeBitsInner> BitAnd<Self> for &SeaMultivecto
 	}
 }
 
-impl<T:SeaCoefficient, I:SeaBasisBladeBitsInner> GeometricProduct<Self> for SeaMultivectorLowSparseCoefficentsWithMetric<T, I> {
-	type Output = Self;
-	fn geometric_product(&self, rhs: Self) -> Self::Output {
-		self.geometric_product(&rhs)
-	}
-}
-impl<T:SeaCoefficient, I:SeaBasisBladeBitsInner> GeometricProduct<&Self> for SeaMultivectorLowSparseCoefficentsWithMetric<T, I> {
-	type Output = Self;
-	fn geometric_product(&self, rhs: &Self) -> Self::Output {
-		assert_eq!(self.metric, rhs.metric);
-		Self {
-			metric: self.metric.clone(),
-			multivector: self.multivector.geometric_product(&rhs.multivector, &self.metric)
-		}
-	}
-}
 impl<T:SeaCoefficient, I:SeaBasisBladeBitsInner> Mul<Self> for SeaMultivectorLowSparseCoefficentsWithMetric<T, I> {
 	type Output = SeaMultivectorLowSparseCoefficentsWithMetric<T, I>;
 	fn mul(self, rhs: Self) -> Self::Output {

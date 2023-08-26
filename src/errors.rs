@@ -23,3 +23,8 @@ pub enum ParseMetricError {
 	InvalidNumZero,
 	InvalidMetricLength
 }
+
+#[derive(Debug, PartialEq)]
+pub enum IntoVersorError {
+	NonVersorMultivector
+}
