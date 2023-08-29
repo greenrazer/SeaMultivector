@@ -18,3 +18,44 @@ impl<T:SeaCoefficient, I:SeaBasisBladeBitsInner> RegressiveProduct<&Self> for Se
 		}
 	}
 }
+
+#[cfg(test)]
+mod tests {
+	use crate::tests::catch_unwind_silent;
+
+    use super::*;
+
+	#[test]
+	fn works() {
+		let a = SeaMultivectorLowSparseCoefficentsWithMetric::<f32, u32>::from_str("3,2> + 1 + e1 + 2e2 + 3e12 + 4e3 + 5e13 + 6e23 + 7e123 + 8e4 + 9e14 + 10e24 + 11e124 + 12e345 + 13e1345 + 14e2345 + 15e12345").unwrap();
+		let b = SeaMultivectorLowSparseCoefficentsWithMetric::<f32, u32>::from_str("3,2>  + 3e13 + 1e4 + 2e124  +4e345").unwrap();
+
+		let out = SeaMultivectorLowSparseCoefficentsWithMetric::<f32, u32>::from_str("3,2> 12 +70e3 +83e4 +45e13 +26e14 +28e24 +30e124 +60e345").unwrap();
+		assert_eq!(
+			a.regressive_product(&b),
+			out
+		);
+
+		assert_eq!(
+			&a & &b,
+			out
+		);
+
+		assert_eq!(
+			a & &b,
+			out
+		);
+
+		let a = SeaMultivectorLowSparseCoefficentsWithMetric::<f32, u32>::from_str("3,2> + 1 + e1 + 2e2 + 3e12 + 4e3 + 5e13 + 6e23 + 7e123 + 8e4 + 9e14 + 10e24 + 11e124 + 12e345 + 13e1345 + 14e2345 + 15e12345").unwrap();
+		assert_eq!(
+			&a & b,
+			out
+		);
+
+		let b = SeaMultivectorLowSparseCoefficentsWithMetric::<f32, u32>::from_str("3,2>  + 3e13 + 1e4 + 2e124  +4e345").unwrap();
+		assert_eq!(
+			a & b,
+			out
+		);
+	}
+}
