@@ -20,8 +20,8 @@ mod scalar_operations;
 
 #[derive(Debug, PartialEq, Clone)]
 pub struct SeaMultivectorLowSparseCoefficentsWithMetric<T:SeaCoefficient, I:SeaBasisBladeBitsInner>{
-	metric: SeaMetric,
-	multivector:SeaMultivectorLowSparseCoefficents<T, I>
+	pub metric: SeaMetric,
+	pub multivector:SeaMultivectorLowSparseCoefficents<T, I>
 }
 impl<T:SeaCoefficient, I:SeaBasisBladeBitsInner> SeaMultivectorLowSparseCoefficentsWithMetric<T, I> {
 	pub fn new(p:u8, n:u8, z:u8) -> Self {
@@ -38,17 +38,9 @@ impl<T:SeaCoefficient, I:SeaBasisBladeBitsInner> SeaMultivectorLowSparseCoeffice
 	pub fn grade_iter(&self, grade: &SeaGrade) -> SparseMultivectorGradeIter<'_, T, I> {
 		self.multivector.grade_iter(grade)
 	}
-}
 
-impl<T:SeaCoefficient, I:SeaBasisBladeBitsInner> Deref for SeaMultivectorLowSparseCoefficentsWithMetric<T, I> {
-	type Target = SeaMultivectorLowSparseCoefficents<T, I>;
-	fn deref(&self) -> &Self::Target {
-		&self.multivector
-	}
-}
-impl<T:SeaCoefficient, I:SeaBasisBladeBitsInner> DerefMut for SeaMultivectorLowSparseCoefficentsWithMetric<T, I> {
-	fn deref_mut(&mut self) -> &mut Self::Target {
-		&mut self.multivector
+	pub fn simplify(&mut self) {
+		self.multivector.simplify();
 	}
 }
 
@@ -76,13 +68,6 @@ impl<T:SeaCoefficient, I:SeaBasisBladeBitsInner> FromStr for SeaMultivectorLowSp
 	}
 }
 
-impl<T:SeaCoefficient, I:SeaBasisBladeBitsInner> Index<&SeaBasisBladeIndexLow> for SeaMultivectorLowSparseCoefficentsWithMetric<T, I> {
-	type Output = T;
-	fn index(&self, index: &SeaBasisBladeIndexLow) -> &Self::Output {
-		&self.multivector[index]
-	}
-}
-
 impl<T:SeaCoefficient, I:SeaBasisBladeBitsInner> AddAssign<&SeaBasisBladeLow<T>> for SeaMultivectorLowSparseCoefficentsWithMetric<T, I> {
 	fn add_assign(&mut self, rhs: &SeaBasisBladeLow<T>) {
 		self.multivector += rhs
@@ -90,6 +75,12 @@ impl<T:SeaCoefficient, I:SeaBasisBladeBitsInner> AddAssign<&SeaBasisBladeLow<T>>
 }
 
 impl<T:SeaCoefficient, I:SeaBasisBladeBitsInner> Multivector<T> for SeaMultivectorLowSparseCoefficentsWithMetric<T, I> {
+	type MultivectorIndexType = SeaBasisBladeIndexLow;
+
+	fn basis_blade_coefficient(&self, index: &Self::MultivectorIndexType) -> T {
+		self.multivector.basis_blade_coefficient(index)
+	}
+
 	fn reversion_conjugated(&self) -> Self {
 		Self {
 			metric: self.metric.clone(),

@@ -41,7 +41,7 @@ impl<'a, T:SeaCoefficient, I:SeaBasisBladeBitsInner> Iterator for SparseMultivec
 	type Item = SeaBasisBladeLow<T>;
 	fn next(&mut self) -> Option<Self::Item> {
 		let next_index = self.curr_iter.next()?;
-		let coeff = self.multivector[&next_index];
+		let coeff = self.multivector.basis_blade_coefficient(&next_index);
 		Some(SeaBasisBladeLow {
 			index: next_index,
 			coefficient: coeff
@@ -76,7 +76,7 @@ impl<'a, T:SeaCoefficient, I:SeaBasisBladeBitsInner> Iterator for SparseMultivec
 	type Item = SeaBasisBladeLow<T>;
 	fn next(&mut self) -> Option<Self::Item> {
 		let next_index = self.curr_iter.next()?;
-		let coeff = self.multivector[&next_index];
+		let coeff = self.multivector.basis_blade_coefficient(&next_index);
 		Some(SeaBasisBladeLow {
 			index: next_index,
 			coefficient: coeff
@@ -107,6 +107,30 @@ impl<T:SeaCoefficient, I:SeaBasisBladeBitsInner> SeaMultivectorLowSparseCoeffice
 			basis_blade_bits: SeaBasisBladeBits::ZERO, 
 			coefficients: vec![]
 		}
+	}
+}
+
+// simplify
+impl<T:SeaCoefficient, I:SeaBasisBladeBitsInner> SeaMultivectorLowSparseCoefficents<T, I> {	
+	pub fn simplify(&mut self) {
+		for (i, idx) in self.basis_blade_bits.into_iter().enumerate(){
+			if self.coefficients[i].is_zero() {
+				self.basis_blade_bits.toggle(&idx);
+			}
+		}
+
+		self.coefficients.retain(|x| !x.is_zero());
+	}
+}
+
+// Multivector Index
+impl<T:SeaCoefficient, I:SeaBasisBladeBitsInner> SeaMultivectorLowSparseCoefficents<T, I> {	
+	pub fn basis_blade_coefficient(&self, index: &SeaBasisBladeIndexLow) -> T {
+		if !self.basis_blade_bits.has(index) {
+			return T::zero();
+		}
+		let coeff_idx = self.basis_blade_bits.count_basis_blades_less_than(index);
+		self.coefficients[coeff_idx as usize]
 	}
 }
 
@@ -268,17 +292,6 @@ impl<T:SeaCoefficient, I:SeaBasisBladeBitsInner> FromStr for SeaMultivectorLowSp
 			coefficients: basis_blades.iter().map(|i| i.coefficient).collect()
 		})
 
-	}
-}
-
-impl<T:SeaCoefficient, I:SeaBasisBladeBitsInner> Index<&SeaBasisBladeIndexLow> for SeaMultivectorLowSparseCoefficents<T, I> {
-	type Output = T;
-	fn index(&self, index: &SeaBasisBladeIndexLow) -> &Self::Output {
-		if !self.basis_blade_bits.has(index) {
-			panic!("{:?} doesn't exist inside of multivector", index)
-		}
-		let coeff_idx = self.basis_blade_bits.count_basis_blades_less_than(index);
-		&self.coefficients[coeff_idx as usize]
 	}
 }
 
@@ -523,6 +536,25 @@ mod tests{
 		let mut iter = a.grade_iter(&SeaGrade(4));
 		assert_eq!(iter.next(), Some(SeaBasisBladeLow::from_str("15e1234").unwrap()));
 		assert_eq!(iter.next(), None);
+	}
+
+	#[test]
+	fn simplify() {
+		let mut a = SeaMultivectorLowSparseCoefficents::<f32, u16>::from_str("1 + e1 + 0e2 + 0e12 + 0e3 + 0e13 + 0e23 + 0e123 + 0e4 + 0e14 + 0e24 + 0e124 + 0e34 + 0e134 + 0e234 + 0e1234").unwrap();
+		let out = SeaMultivectorLowSparseCoefficents::<f32, u16>::from_str("1 + e1").unwrap();
+		a.simplify();
+		assert_eq!(
+			a,
+			out
+		);
+
+		let mut a = SeaMultivectorLowSparseCoefficents::<f32, u16>::from_str("0 + 0e1 + 0e2 + 0e12 + 0e3 + 1e13 + 0e23 + 0e123 + 0e4 + 0e14 + 0e24 + 0e124 + 10e34 + 0e134 + 0e234 + 0e1234").unwrap();
+		let out = SeaMultivectorLowSparseCoefficents::<f32, u16>::from_str("1e13 + 10e34").unwrap();
+		a.simplify();
+		assert_eq!(
+			a,
+			out
+		)
 	}
 
 	#[test]

@@ -11,7 +11,8 @@ mod without_metric;
 mod with_metric;
 
 use with_metric::SeaMultivectorLowSparseCoefficentsWithMetric;
-
+pub use basis_blade_bits::SeaBasisBladeBits;
+pub use basis_blade_index::SeaBasisBladeIndexLow;
 
 pub type Multivector3D<T> = SeaMultivectorLowSparseCoefficentsWithMetric::<T, u8>;
 pub type Multivector4D<T> = SeaMultivectorLowSparseCoefficentsWithMetric::<T, u16>;

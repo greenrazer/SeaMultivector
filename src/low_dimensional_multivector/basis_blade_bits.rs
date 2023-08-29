@@ -366,7 +366,7 @@ impl<I:SeaBasisBladeBitsInner> Iterator for SeaBasisBladeBitsIter<I> {
 }
 
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, Copy, PartialEq)]
 pub struct SeaBasisBladeBits<I: SeaBasisBladeBitsInner>(pub I);
 impl<I: SeaBasisBladeBitsInner> SeaBasisBladeBits<I> {
 	pub const DIMENSIONS: u8 = I::DIMENSIONS;
@@ -475,6 +475,19 @@ impl<I: SeaBasisBladeBitsInner> SeaBasisBladeBits<I> {
 
 	pub fn has(&self, index: &SeaBasisBladeIndexLow) -> bool{
 		!(self & index).is_zero()		
+	}
+	
+	pub fn set(&mut self, index: &SeaBasisBladeIndexLow, value:bool) {
+		if value {
+			*self |= index
+		}
+		else {
+			*self &= &Self::from(&(!index))
+		}
+	}
+
+	pub fn toggle(&mut self, index: &SeaBasisBladeIndexLow) {
+		*self ^= &Self::from(index);
 	}
 
 	pub fn count_basis_blades_less_than(&self, idx:&SeaBasisBladeIndexLow) -> u32{

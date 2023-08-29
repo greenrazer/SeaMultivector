@@ -20,6 +20,8 @@ pub trait Multivector<T:SeaCoefficient>:
 				Self: Sized,
 				for<'a> &'a Self: Add<T> + Mul<T> + Sub<T> + Div<T> + Neg + Add<Self> + Add<&'a Self> + Sub<Self> + Sub<&'a Self>
 {
+	type MultivectorIndexType;
+	fn basis_blade_coefficient(&self, index: &Self::MultivectorIndexType) -> T;
 	fn reversion_conjugated(&self) -> Self;
 	fn involution_conjugated(&self) -> Self;
 	fn clifford_conjugated(&self) -> Self;

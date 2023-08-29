@@ -8,6 +8,7 @@ mod low_dimensional_multivector;
 mod multivector_traits;
 mod multivector_product_traits;
 mod grade;
+mod special_cases;
 
 pub mod prelude {
     pub use std::str::FromStr;
@@ -17,6 +18,7 @@ pub mod prelude {
         Multivector5D, 
         Multivector6D
     };
+    pub use super::low_dimensional_multivector::SeaBasisBladeBits;
 }
 
 
