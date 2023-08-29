@@ -33,3 +33,44 @@ impl<T:SeaCoefficient, I:SeaBasisBladeBitsInner> Add<Self> for &SeaMultivectorLo
 		out
 	}
 }
+
+#[cfg(test)]
+mod tests{
+	use std::time::Instant;
+
+	use crate::tests::catch_unwind_silent;
+
+	use super::*;
+
+	#[test]
+	fn add() {
+		let mut a = SeaMultivectorLowSparseCoefficents::<f32, u8>::from_str("-1 + e1 + 2e2 + 3e12 + 4e3 + 5e13 + 6e23 + 7e123").unwrap();
+		let b = SeaMultivectorLowSparseCoefficents::<f32, u8>::from_str("-1 + e1 + 2e2 + 3e12 + 4e3 + 5e13 + 6e23 + 7e123").unwrap();
+		assert_eq!(
+			&a + &b,
+			SeaMultivectorLowSparseCoefficents::<f32, u8>::from_str("-2 + 2e1 + 4e2 + 6e12 + 8e3 + 10e13 + 12e23 + 14e123").unwrap()
+		);
+
+		a += &b;
+		assert_eq!(
+			a,
+			SeaMultivectorLowSparseCoefficents::<f32, u8>::from_str("-2 + 2e1 + 4e2 + 6e12 + 8e3 + 10e13 + 12e23 + 14e123").unwrap()
+		);
+
+		let mut a = SeaMultivectorLowSparseCoefficents::<f32, u8>::from_str("-1 + e1 + 2e2 + 3e12 + 5e13 + 6e23 + 7e123").unwrap();
+		a += &SeaBasisBladeLow::from_str("4e3").unwrap();
+		assert_eq!(
+			a,
+			SeaMultivectorLowSparseCoefficents::<f32, u8>::from_str("-1 + e1 + 2e2 + 3e12 + 4e3 + 5e13 + 6e23 + 7e123").unwrap()
+		);
+
+		let mut a = SeaMultivectorLowSparseCoefficents::<f32, u8>::from_str("-1 + e1 + 2e2 + 3e12 + 5e13").unwrap();
+		a += &SeaBasisBladeLow::from_str("4e3").unwrap();
+		a += &SeaBasisBladeLow::from_str("7e123").unwrap();
+		a += &SeaBasisBladeLow::from_str("6e23").unwrap();
+		assert_eq!(
+			a,
+			SeaMultivectorLowSparseCoefficents::<f32, u8>::from_str("-1 + e1 + 2e2 + 3e12 + 4e3 + 5e13 + 6e23 + 7e123").unwrap()
+		);
+	}
+}
