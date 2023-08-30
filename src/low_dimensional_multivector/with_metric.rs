@@ -39,8 +39,16 @@ impl<T:SeaCoefficient, I:SeaBasisBladeBitsInner> SeaMultivectorLowSparseCoeffice
 		self.multivector.grade_iter(grade)
 	}
 
-	pub fn simplify(&mut self) {
-		self.multivector.simplify();
+	pub fn remove_zeros(&mut self) {
+		self.multivector.remove_zeros();
+	}
+
+	pub fn remove_approx_zeros(&mut self, epsilon: T) {
+		self.multivector.remove_approx_zeros(epsilon);
+	}
+
+	pub fn round_to_decimals(&mut self, decimals:i32) {
+		self.multivector.round_to_decimals(decimals);
 	}
 }
 

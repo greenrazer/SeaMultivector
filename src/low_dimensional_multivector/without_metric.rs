@@ -112,14 +112,30 @@ impl<T:SeaCoefficient, I:SeaBasisBladeBitsInner> SeaMultivectorLowSparseCoeffice
 
 // simplify
 impl<T:SeaCoefficient, I:SeaBasisBladeBitsInner> SeaMultivectorLowSparseCoefficents<T, I> {	
-	pub fn simplify(&mut self) {
+	pub fn remove_zeros(&mut self) {
 		for (i, idx) in self.basis_blade_bits.into_iter().enumerate(){
 			if self.coefficients[i].is_zero() {
+				self.basis_blade_bits.toggle(&idx);		
+			}
+		}
+		self.coefficients.retain(|x| !x.is_zero())
+	}
+
+	pub fn remove_approx_zeros(&mut self, epsilon: T) {
+		for (i, idx) in self.basis_blade_bits.into_iter().enumerate(){
+			if self.coefficients[i].abs() < epsilon {
 				self.basis_blade_bits.toggle(&idx);
 			}
 		}
 
-		self.coefficients.retain(|x| !x.is_zero());
+		self.coefficients.retain(|x| x.abs() >= epsilon)
+	}
+
+	pub fn round_to_decimals(&mut self, decimals: i32) {
+		let sf = T::from(10.0).unwrap().powi(decimals);
+		for c in &mut self.coefficients {
+			*c = (*c * sf).round() / sf;
+		}
 	}
 }
 
@@ -539,10 +555,10 @@ mod tests{
 	}
 
 	#[test]
-	fn simplify() {
+	fn remove_zeros() {
 		let mut a = SeaMultivectorLowSparseCoefficents::<f32, u16>::from_str("1 + e1 + 0e2 + 0e12 + 0e3 + 0e13 + 0e23 + 0e123 + 0e4 + 0e14 + 0e24 + 0e124 + 0e34 + 0e134 + 0e234 + 0e1234").unwrap();
 		let out = SeaMultivectorLowSparseCoefficents::<f32, u16>::from_str("1 + e1").unwrap();
-		a.simplify();
+		a.remove_zeros();
 		assert_eq!(
 			a,
 			out
@@ -550,7 +566,26 @@ mod tests{
 
 		let mut a = SeaMultivectorLowSparseCoefficents::<f32, u16>::from_str("0 + 0e1 + 0e2 + 0e12 + 0e3 + 1e13 + 0e23 + 0e123 + 0e4 + 0e14 + 0e24 + 0e124 + 10e34 + 0e134 + 0e234 + 0e1234").unwrap();
 		let out = SeaMultivectorLowSparseCoefficents::<f32, u16>::from_str("1e13 + 10e34").unwrap();
-		a.simplify();
+		a.remove_zeros();
+		assert_eq!(
+			a,
+			out
+		)
+	}
+
+	#[test]
+	fn remove_approx_zeros() {
+		let mut a = SeaMultivectorLowSparseCoefficents::<f32, u16>::from_str("1 + e1 + 0.0000000000000000001e2 + 0.0000000000000000001e12 + 0.0000000000000000001e3 + 0.0000000000000000001e13 + 0.0000000000000000001e23 + 0.0000000000000000001e123 + 0.0000000000000000001e4 + 0.0000000000000000001e14 + 0.0000000000000000001e24 + 0.0000000000000000001e124 + 0.0000000000000000001e34 + 0.0000000000000000001e134 + 0.0000000000000000001e234 + 0.0000000000000000001e1234").unwrap();
+		let out = SeaMultivectorLowSparseCoefficents::<f32, u16>::from_str("1 + e1").unwrap();
+		a.remove_approx_zeros(1e-15);
+		assert_eq!(
+			a,
+			out
+		);
+
+		let mut a = SeaMultivectorLowSparseCoefficents::<f32, u16>::from_str("0.0000000000000000001 + 0.0000000000000000001e1 + 0.0000000000000000001e2 + 0.0000000000000000001e12 + 0.0000000000000000001e3 + 1e13 + 0.0000000000000000001e23 + 0.0000000000000000001e123 + 0.0000000000000000001e4 + 0.0000000000000000001e14 + 0.0000000000000000001e24 + 0.0000000000000000001e124 + 10.0000000000000000001e34 + 0.0000000000000000001e134 + 0.0000000000000000001e234 + 0.0000000000000000001e1234").unwrap();
+		let out = SeaMultivectorLowSparseCoefficents::<f32, u16>::from_str("1e13 + 10e34").unwrap();
+		a.remove_approx_zeros(1e-15);
 		assert_eq!(
 			a,
 			out

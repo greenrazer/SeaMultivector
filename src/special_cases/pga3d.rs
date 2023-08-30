@@ -8,10 +8,33 @@ use crate::low_dimensional_multivector::Multivector4D;
 use crate::low_dimensional_multivector::SeaBasisBladeBits;
 use crate::low_dimensional_multivector::SeaBasisBladeIndexLow;
 
-#[derive(Debug, PartialEq)]
+struct SeaMotorPGA3D<T:SeaCoefficient>(MultivectorPGA3D<T>);
+impl<T:SeaCoefficient> SeaMotorPGA3D<T> {
+	fn inversed(&self) -> Self {
+		Self(MultivectorPGA3D((**self).0.reversion_conjugated()))
+	}
+
+	fn into(self) -> MultivectorPGA3D<T> {
+		self.0
+	}
+}
+impl<T: SeaCoefficient> Deref for SeaMotorPGA3D<T> {
+	type Target = MultivectorPGA3D<T>;
+	fn deref(&self) -> &Self::Target {
+		&self.0
+	}
+}
+impl<T: SeaCoefficient> DerefMut for SeaMotorPGA3D<T> {
+	fn deref_mut(&mut self) -> &mut Self::Target {
+		&mut self.0
+	}
+}
+
+#[derive(Debug, PartialEq, Clone)]
 struct MultivectorPGA3D<T:SeaCoefficient>(Multivector4D<T>);
 
 const POINT_BASIS_BLADES: SeaBasisBladeBits<u16> = SeaBasisBladeBits::<u16>::GRADES[3];
+const COMBINED_LINE_BASIS_BLADES: SeaBasisBladeBits<u16> = SeaBasisBladeBits::<u16>::GRADES[2];
 const PLANE_BASIS_BLADES: SeaBasisBladeBits<u16> = SeaBasisBladeBits::<u16>::GRADES[1];
 const LINE_BASIS_BLADES: SeaBasisBladeBits<u16> = SeaBasisBladeBits::<u16>(0x0068);
 const IDEAL_LINE_BASIS_BLADES: SeaBasisBladeBits<u16> = SeaBasisBladeBits::<u16>(0x1600);
@@ -21,11 +44,18 @@ impl<T:SeaCoefficient> MultivectorPGA3D<T>{
 		Self(Multivector4D::new(3, 0, 1))
 	}
 
+	fn new_lifted_scalar(s:T) -> Self {
+		let mut mv = Self::new();
+		mv.0.multivector.basis_blade_bits = SeaBasisBladeBits::ONE;
+		mv.0.multivector.coefficients = vec![s];
+		mv
+	}
+
 	fn new_point(x:T, y:T, z:T) -> Self {
 		let mut mv = Self::new();
 		mv.0.multivector.basis_blade_bits = POINT_BASIS_BLADES;
 		mv.0.multivector.coefficients = vec![T::one(),-z,y,-x];
-		mv.0.multivector.simplify();
+		mv.0.multivector.remove_zeros();
 		mv
 	}
 
@@ -33,33 +63,84 @@ impl<T:SeaCoefficient> MultivectorPGA3D<T>{
 		let mut mv = Self::new();
 		mv.0.multivector.basis_blade_bits = PLANE_BASIS_BLADES;
 		mv.0.multivector.coefficients = vec![x,y,z,w];
-		mv.0.multivector.simplify();
+		mv.0.multivector.remove_zeros();
 		mv
 	}
 
-	fn new_line(a:T, b:T, c:T) -> Self {
+	fn new_line(xy:T, xz:T, yz:T) -> Self {
 		let mut mv = Self::new();
 		mv.0.multivector.basis_blade_bits = LINE_BASIS_BLADES;
-		mv.0.multivector.coefficients = vec![a,-b,c];
-		mv.0.multivector.simplify();
+		mv.0.multivector.coefficients = vec![xy,-xz,yz];
+		mv.0.multivector.remove_zeros();
 		mv
 	}
 
-	fn new_ideal_line(d:T, e:T, f:T) -> Self {
+	fn new_ideal_line(x:T, y:T, z:T) -> Self {
 		let mut mv = Self::new();
 		mv.0.multivector.basis_blade_bits = IDEAL_LINE_BASIS_BLADES;
-		mv.0.multivector.coefficients = vec![d,e,f];
-		mv.0.multivector.simplify();
+		mv.0.multivector.coefficients = vec![x,y,z];
+		mv.0.multivector.remove_zeros();
 		mv
+	}
+
+	fn new_combined_line(x:T, y:T, z:T, xy:T, xz:T, yz:T) -> Self {
+		let mut mv = Self::new();
+		mv.0.multivector.basis_blade_bits = COMBINED_LINE_BASIS_BLADES;
+		mv.0.multivector.coefficients = vec![xy, xz, yz, x,y,z];
+		mv.0.multivector.remove_zeros();
+		mv
+	}
+
+	fn new_motor(line:&Self, value:T) -> SeaMotorPGA3D<T> {
+		SeaMotorPGA3D(Self((line*value/T::from(2.0).unwrap()).0.exp()))
+	}
+
+	fn point_to_vec4(&self) -> [T;4] {
+		let mut out = [
+			-self.0.basis_blade_coefficient(&SeaBasisBladeIndexLow(14)),
+			self.0.basis_blade_coefficient(&SeaBasisBladeIndexLow(13)),
+			-self.0.basis_blade_coefficient(&SeaBasisBladeIndexLow(11)),
+			self.0.basis_blade_coefficient(&SeaBasisBladeIndexLow(7))
+		];
+
+		for o in &mut out {
+			if o.abs() < T::from(1e-15).unwrap() {
+				*o = T::zero()
+			}
+		}
+		out
 	}
 
 	fn point_to_vec3(&self) -> [T;3] {
 		let sf = self.0.basis_blade_coefficient(&SeaBasisBladeIndexLow(7));
-		[
+		let mut out = [
 			-self.0.basis_blade_coefficient(&SeaBasisBladeIndexLow(14))/sf,
 			self.0.basis_blade_coefficient(&SeaBasisBladeIndexLow(13))/sf,
 			-self.0.basis_blade_coefficient(&SeaBasisBladeIndexLow(11))/sf,
-		]
+		];
+
+		for o in &mut out {
+			if o.abs() < T::from(1e-15).unwrap() {
+				*o = T::zero()
+			}
+		}
+		out
+	}
+
+	fn simplify(&mut self) {
+		self.0.remove_approx_zeros(T::from(1e-15).unwrap());
+		self.0.round_to_decimals(14);
+	}
+}
+
+impl<T:SeaCoefficient> From<SeaMotorPGA3D<T>> for MultivectorPGA3D<T> {
+	fn from(value: SeaMotorPGA3D<T>) -> Self {
+		value.0
+	}
+}
+impl<T:SeaCoefficient> From<&SeaMotorPGA3D<T>> for MultivectorPGA3D<T> {
+	fn from(value: &SeaMotorPGA3D<T>) -> Self {
+		value.0.clone()
 	}
 }
 
@@ -247,10 +328,92 @@ impl<T:SeaCoefficient> Mul<Self> for &MultivectorPGA3D<T> {
 	}
 }
 
+impl<T:SeaCoefficient> AddAssign<T> for MultivectorPGA3D<T> {
+    fn add_assign(&mut self, rhs: T){
+		self.0 += rhs
+	}
+}
+impl<T:SeaCoefficient> Add<T> for MultivectorPGA3D<T> {
+    type Output = MultivectorPGA3D<T>;
+
+    fn add(self, rhs: T) -> Self::Output {
+		&self + rhs
+	}
+}
+impl<T:SeaCoefficient> Add<T> for &MultivectorPGA3D<T> {
+    type Output = MultivectorPGA3D<T>;
+
+    fn add(self, rhs: T) -> Self::Output {
+		MultivectorPGA3D(&self.0 + rhs)
+	}
+}
+
+impl<T:SeaCoefficient> SubAssign<T> for MultivectorPGA3D<T> {
+    fn sub_assign(&mut self, rhs: T){
+		self.0 -= rhs
+	}
+}
+impl<T:SeaCoefficient> Sub<T> for MultivectorPGA3D<T> {
+    type Output = MultivectorPGA3D<T>;
+
+    fn sub(self, rhs: T) -> Self::Output {
+		&self - rhs
+	}
+}
+impl<T:SeaCoefficient> Sub<T> for &MultivectorPGA3D<T> {
+    type Output = MultivectorPGA3D<T>;
+
+    fn sub(self, rhs: T) -> Self::Output {
+		MultivectorPGA3D(&self.0 - rhs)
+	}
+}
+
+impl<T:SeaCoefficient> MulAssign<T> for MultivectorPGA3D<T> {
+    fn mul_assign(&mut self, rhs: T){
+		self.0 *= rhs
+	}
+}
+impl<T:SeaCoefficient> Mul<T> for MultivectorPGA3D<T> {
+    type Output = MultivectorPGA3D<T>;
+
+    fn mul(self, rhs: T) -> Self::Output {
+		&self * rhs
+	}
+}
+impl<T:SeaCoefficient> Mul<T> for &MultivectorPGA3D<T> {
+    type Output = MultivectorPGA3D<T>;
+
+    fn mul(self, rhs: T) -> Self::Output {
+		MultivectorPGA3D(&self.0 * rhs)
+	}
+}
+
+impl<T:SeaCoefficient> DivAssign<T> for MultivectorPGA3D<T> {
+    fn div_assign(&mut self, rhs: T){
+		self.0 /= rhs
+	}
+}
+impl<T:SeaCoefficient> Div<T> for MultivectorPGA3D<T> {
+    type Output = MultivectorPGA3D<T>;
+
+    fn div(self, rhs: T) -> Self::Output {
+		&self / rhs
+	}
+}
+impl<T:SeaCoefficient> Div<T> for &MultivectorPGA3D<T> {
+    type Output = MultivectorPGA3D<T>;
+
+    fn div(self, rhs: T) -> Self::Output {
+		MultivectorPGA3D(&self.0 / rhs)
+	}
+}
+
 
 #[cfg(test)]
 mod tests {
-	use super::*;
+	use std::f64::consts::TAU;
+
+use super::*;
 
     #[test]
     fn create_plane_from_points() {
@@ -285,6 +448,16 @@ mod tests {
 		assert_eq!(
 			c,
 			out
+		);
+	}
+
+	#[test]
+	fn point_to_vec() {
+		let p1 = MultivectorPGA3D::new_point(1.0,2.0,3.0);
+		let v = p1.point_to_vec3();
+		assert_eq!(
+			v,
+			[1.0, 2.0, 3.0]
 		);
 	}
 
@@ -342,16 +515,229 @@ mod tests {
 	}
 
 	#[test]
-	fn point_to_vec() {
-		let p1 = MultivectorPGA3D::new_point(1.0,2.0,3.0);
-		let v = p1.point_to_vec3();
+	fn rotor() {
+		let l = MultivectorPGA3D::new_line(2.0,3.0,5.0);
+		let r = MultivectorPGA3D::new_motor(&l, TAU/1.6);
+		let r_inv = r.inversed();
+		let mut approx_one = r.into() * r_inv.into();
+		approx_one.simplify();
 		assert_eq!(
-			v,
-			[
-				1.0,
-				2.0,
-				3.0
-			]
+			approx_one,
+			MultivectorPGA3D::new_lifted_scalar(1.0),
 		);
+
+
+		let l = MultivectorPGA3D::new_line(1.0,0.0,0.0);
+		let r = MultivectorPGA3D::new_motor(&l, TAU/2.0);
+		let r_inv = r.inversed();
+		let p = MultivectorPGA3D::new_point(1.0, 0.0, 0.0);
+		let p_rot = r.into() * p * r_inv.into();
+
+		let out = [-1.0, 0.0, 0.0];
+
+		assert_eq!(
+			p_rot.point_to_vec3(),
+			out
+		)
+
+
+
+	}
+
+	#[test]
+	fn translator() {
+		let l = MultivectorPGA3D::new_ideal_line(2.0,3.0,5.0);
+		let r = MultivectorPGA3D::new_motor(&l, TAU/3.2);
+		let r_inv = r.inversed();
+		let mut approx_one = r.into() * r_inv.into();
+		approx_one.simplify();
+		assert_eq!(
+			approx_one,
+			MultivectorPGA3D::new_lifted_scalar(1.0),
+		);
+
+
+		let l = MultivectorPGA3D::new_ideal_line(1.0,0.0,0.0);
+		let r = MultivectorPGA3D::new_motor(&l, 4.0);
+		let r_inv = r.inversed();
+		let p = MultivectorPGA3D::new_point(0.0, 0.0, 0.0);
+		let p_trans = r.into() * p * r_inv.into();
+
+		let out = [4.0, 0.0, 0.0];
+
+		assert_eq!(
+			p_trans.point_to_vec3(),
+			out
+		)
+
+
+
+	}
+
+	mod camera {
+		use super::*;
+
+		#[test]
+		fn simple_projection() {
+			let image_plane = MultivectorPGA3D::new_plane(0.0,0.0,1.0, 0.0);
+			let focal_point = MultivectorPGA3D::new_point(0.0, 0.0, -1.0);
+	
+			let translation_dir = MultivectorPGA3D::new_ideal_line(1.0,1.0,1.0);
+			let camera_pos = MultivectorPGA3D::new_motor(&translation_dir, 0.0);
+	
+			let rotation_axis = MultivectorPGA3D::new_line(1.0,0.0,0.0);
+			let camera_rot = MultivectorPGA3D::new_motor(&rotation_axis, 0.0);
+	
+			let camera_trans = SeaMotorPGA3D(camera_rot.into() * camera_pos.into());
+			let camera_trans_inv = camera_trans.inversed();
+			
+			let scene_point = MultivectorPGA3D::new_point(0.0,3.0,2.0);
+			let scene_point_trans = camera_trans.into() * scene_point * camera_trans_inv.into();
+	
+			let fp_to_scene = focal_point&scene_point_trans;
+	
+			let screen_point = fp_to_scene^image_plane;
+	
+			assert_eq!(
+				screen_point.point_to_vec3(),
+				[0.0, 1.0, 0.0]
+			);
+		}
+
+		#[test]
+		fn translation() {
+			let image_plane = MultivectorPGA3D::new_plane(0.0,0.0,1.0, 0.0);
+			let focal_point = MultivectorPGA3D::new_point(0.0, 0.0, -1.0);
+	
+			let translation_dir = MultivectorPGA3D::new_ideal_line(1.0,1.0,0.0);
+			let camera_pos = MultivectorPGA3D::new_motor(&translation_dir, -3.0);
+	
+			let rotation_axis = MultivectorPGA3D::new_line(1.0,0.0,0.0);
+			let camera_rot = MultivectorPGA3D::new_motor(&rotation_axis, 0.0);
+	
+			let camera_trans = SeaMotorPGA3D(camera_rot.into() * camera_pos.into());
+			let camera_trans_inv = camera_trans.inversed();
+			
+			let scene_point = MultivectorPGA3D::new_point(0.0,3.0,2.0);
+			let scene_point_trans = camera_trans.into() * scene_point * camera_trans_inv.into();
+	
+			let fp_to_scene = focal_point&scene_point_trans;
+	
+			let screen_point = fp_to_scene^image_plane;
+	
+			assert_eq!(
+				screen_point.point_to_vec3(),
+				[-1.0, 0.0, 0.0]
+			);
+		}
+
+		#[test]
+		fn rotation() {
+			let image_plane = MultivectorPGA3D::new_plane(0.0,0.0,1.0, 0.0);
+			let focal_point = MultivectorPGA3D::new_point(0.0, 0.0, -1.0);
+	
+			let translation_dir = MultivectorPGA3D::new_ideal_line(0.0,0.0,0.0);
+			let camera_pos = MultivectorPGA3D::new_motor(&translation_dir, -3.0);
+	
+			let rotation_axis = MultivectorPGA3D::new_line(1.0,0.0,0.0);
+			let camera_rot = MultivectorPGA3D::new_motor(&rotation_axis, -TAU/4.0);
+	
+			let camera_trans = SeaMotorPGA3D(camera_rot.into() * camera_pos.into());
+			let camera_trans_inv = camera_trans.inversed();
+			
+			let scene_point = MultivectorPGA3D::new_point(0.0,3.0,2.0);
+			let scene_point_trans = camera_trans.into() * scene_point * camera_trans_inv.into();
+	
+			let fp_to_scene = &focal_point&scene_point_trans;
+	
+			let mut screen_point = fp_to_scene^&image_plane;
+			
+			screen_point.simplify();
+
+			assert_eq!(
+				screen_point.point_to_vec3(),
+				[-1.0, 0.0, 0.0]
+			);
+
+			let image_plane = MultivectorPGA3D::new_plane(0.0,0.0,1.0, 0.0);
+			let focal_point = MultivectorPGA3D::new_point(0.0, 0.0, -1.0);
+	
+			let translation_dir = MultivectorPGA3D::new_ideal_line(0.0,0.0,0.0);
+			let camera_pos = MultivectorPGA3D::new_motor(&translation_dir, 0.0);
+	
+			let rotation_axis = MultivectorPGA3D::new_line(1.0,0.0,0.0);
+			let camera_rot = MultivectorPGA3D::new_motor(&rotation_axis, -TAU/2.0);
+	
+			let camera_trans = SeaMotorPGA3D(camera_rot.into() * camera_pos.into());
+			let camera_trans_inv = camera_trans.inversed();
+			
+			let scene_point = MultivectorPGA3D::new_point(0.0,3.0,2.0);
+			let scene_point_trans = camera_trans.into() * scene_point * camera_trans_inv.into();
+	
+			let fp_to_scene = &focal_point&scene_point_trans;
+	
+			let screen_point = fp_to_scene^&image_plane;
+	
+			assert_eq!(
+				screen_point.point_to_vec3(),
+				[0.0, -1.0, 0.0]
+			);
+		}
+
+		#[test]
+		fn rotate_and_trans() {
+			let image_plane = MultivectorPGA3D::new_plane(0.0,0.0,1.0, 0.0);
+			let focal_point = MultivectorPGA3D::new_point(0.0, 0.0, -1.0);
+	
+			let translation_dir = MultivectorPGA3D::new_ideal_line(1.0,1.0,0.0);
+			let camera_pos = MultivectorPGA3D::new_motor(&translation_dir, -3.0);
+	
+			let rotation_axis = MultivectorPGA3D::new_line(1.0,0.0,0.0);
+			let camera_rot = MultivectorPGA3D::new_motor(&rotation_axis, -TAU/4.0);
+			
+			let camera_trans = SeaMotorPGA3D(camera_rot.into() * camera_pos.into());
+			let camera_trans_inv = camera_trans.inversed();
+			
+			let scene_point = MultivectorPGA3D::new_point(0.0,3.0,2.0);
+			let scene_point_trans = camera_trans.into() * scene_point * camera_trans_inv.into();
+	
+			let fp_to_scene = &focal_point&scene_point_trans;
+	
+			let mut screen_point = fp_to_scene^&image_plane;
+			
+			screen_point.simplify();
+
+			assert_eq!(
+				screen_point.point_to_vec3(),
+				[0.0, -1.0, 0.0]
+			);
+		}
+	
+		#[test]
+		fn precomputed() {
+			let image_plane = MultivectorPGA3D::new_plane(0.0,0.0,1.0, 0.0);
+			let focal_point = MultivectorPGA3D::new_point(0.0, 0.0, -1.0);
+	
+			let translation_dir = MultivectorPGA3D::new_ideal_line(1.0,1.0,0.0);
+			let camera_pos = MultivectorPGA3D::new_motor(&translation_dir, -3.0);
+	
+			let rotation_axis = MultivectorPGA3D::new_line(1.0,0.0,0.0);
+			let camera_rot = MultivectorPGA3D::new_motor(&rotation_axis, -TAU/4.0);
+			
+			let camera_trans = SeaMotorPGA3D(camera_rot.into() * camera_pos.into());
+			let camera_trans_inv = camera_trans.inversed();
+			
+			let scene_point = MultivectorPGA3D::new_point(0.0,3.0,2.0);
+			let scene_point_trans = camera_trans.into() * scene_point * camera_trans_inv.into();
+
+			let mut screen_point = focal_point&scene_point_trans^image_plane;
+
+			screen_point.simplify();
+
+			assert_eq!(
+				screen_point.point_to_vec3(),
+				[0.0, -1.0, 0.0]
+			);
+		}
 	}
 }
