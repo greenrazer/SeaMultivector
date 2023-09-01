@@ -18,6 +18,8 @@ pub mod prelude {
         Multivector5D, 
         Multivector6D
     };
+    pub use super::special_cases::pga3d::MultivectorPGA3D;
+    pub use super::special_cases::pga3d::SeaMotorPGA3D;
     pub use super::low_dimensional_multivector::SeaBasisBladeBits;
 }
 

@@ -8,13 +8,14 @@ use crate::low_dimensional_multivector::Multivector4D;
 use crate::low_dimensional_multivector::SeaBasisBladeBits;
 use crate::low_dimensional_multivector::SeaBasisBladeIndexLow;
 
-struct SeaMotorPGA3D<T:SeaCoefficient>(MultivectorPGA3D<T>);
+#[derive(Debug, PartialEq)]
+pub struct SeaMotorPGA3D<T:SeaCoefficient>(pub MultivectorPGA3D<T>);
 impl<T:SeaCoefficient> SeaMotorPGA3D<T> {
-	fn inversed(&self) -> Self {
+	pub fn inversed(&self) -> Self {
 		Self(MultivectorPGA3D((**self).0.reversion_conjugated()))
 	}
 
-	fn into(self) -> MultivectorPGA3D<T> {
+	pub fn into(self) -> MultivectorPGA3D<T> {
 		self.0
 	}
 }
@@ -31,7 +32,7 @@ impl<T: SeaCoefficient> DerefMut for SeaMotorPGA3D<T> {
 }
 
 #[derive(Debug, PartialEq, Clone)]
-struct MultivectorPGA3D<T:SeaCoefficient>(Multivector4D<T>);
+pub struct MultivectorPGA3D<T:SeaCoefficient>(Multivector4D<T>);
 
 const POINT_BASIS_BLADES: SeaBasisBladeBits<u16> = SeaBasisBladeBits::<u16>::GRADES[3];
 const COMBINED_LINE_BASIS_BLADES: SeaBasisBladeBits<u16> = SeaBasisBladeBits::<u16>::GRADES[2];
@@ -40,18 +41,18 @@ const LINE_BASIS_BLADES: SeaBasisBladeBits<u16> = SeaBasisBladeBits::<u16>(0x006
 const IDEAL_LINE_BASIS_BLADES: SeaBasisBladeBits<u16> = SeaBasisBladeBits::<u16>(0x1600);
 
 impl<T:SeaCoefficient> MultivectorPGA3D<T>{
-	fn new() -> Self{
+	pub fn new() -> Self{
 		Self(Multivector4D::new(3, 0, 1))
 	}
 
-	fn new_lifted_scalar(s:T) -> Self {
+	pub fn new_lifted_scalar(s:T) -> Self {
 		let mut mv = Self::new();
 		mv.0.multivector.basis_blade_bits = SeaBasisBladeBits::ONE;
 		mv.0.multivector.coefficients = vec![s];
 		mv
 	}
 
-	fn new_point(x:T, y:T, z:T) -> Self {
+	pub fn new_point(x:T, y:T, z:T) -> Self {
 		let mut mv = Self::new();
 		mv.0.multivector.basis_blade_bits = POINT_BASIS_BLADES;
 		mv.0.multivector.coefficients = vec![T::one(),-z,y,-x];
@@ -59,7 +60,7 @@ impl<T:SeaCoefficient> MultivectorPGA3D<T>{
 		mv
 	}
 
-	fn new_plane(x:T, y:T, z:T, w:T) -> Self {
+	pub fn new_plane(x:T, y:T, z:T, w:T) -> Self {
 		let mut mv = Self::new();
 		mv.0.multivector.basis_blade_bits = PLANE_BASIS_BLADES;
 		mv.0.multivector.coefficients = vec![x,y,z,w];
@@ -67,7 +68,7 @@ impl<T:SeaCoefficient> MultivectorPGA3D<T>{
 		mv
 	}
 
-	fn new_line(xy:T, xz:T, yz:T) -> Self {
+	pub fn new_line(xy:T, xz:T, yz:T) -> Self {
 		let mut mv = Self::new();
 		mv.0.multivector.basis_blade_bits = LINE_BASIS_BLADES;
 		mv.0.multivector.coefficients = vec![xy,-xz,yz];
@@ -75,7 +76,7 @@ impl<T:SeaCoefficient> MultivectorPGA3D<T>{
 		mv
 	}
 
-	fn new_ideal_line(x:T, y:T, z:T) -> Self {
+	pub fn new_ideal_line(x:T, y:T, z:T) -> Self {
 		let mut mv = Self::new();
 		mv.0.multivector.basis_blade_bits = IDEAL_LINE_BASIS_BLADES;
 		mv.0.multivector.coefficients = vec![x,y,z];
@@ -83,7 +84,7 @@ impl<T:SeaCoefficient> MultivectorPGA3D<T>{
 		mv
 	}
 
-	fn new_combined_line(x:T, y:T, z:T, xy:T, xz:T, yz:T) -> Self {
+	pub fn new_combined_line(x:T, y:T, z:T, xy:T, xz:T, yz:T) -> Self {
 		let mut mv = Self::new();
 		mv.0.multivector.basis_blade_bits = COMBINED_LINE_BASIS_BLADES;
 		mv.0.multivector.coefficients = vec![xy, xz, yz, x,y,z];
@@ -91,11 +92,11 @@ impl<T:SeaCoefficient> MultivectorPGA3D<T>{
 		mv
 	}
 
-	fn new_motor(line:&Self, value:T) -> SeaMotorPGA3D<T> {
+	pub fn new_motor(line:&Self, value:T) -> SeaMotorPGA3D<T> {
 		SeaMotorPGA3D(Self((line*value/T::from(2.0).unwrap()).0.exp()))
 	}
 
-	fn point_to_vec4(&self) -> [T;4] {
+	pub fn point_to_vec4(&self) -> [T;4] {
 		let mut out = [
 			-self.0.basis_blade_coefficient(&SeaBasisBladeIndexLow(14)),
 			self.0.basis_blade_coefficient(&SeaBasisBladeIndexLow(13)),
@@ -111,7 +112,7 @@ impl<T:SeaCoefficient> MultivectorPGA3D<T>{
 		out
 	}
 
-	fn point_to_vec3(&self) -> [T;3] {
+	pub fn point_to_vec3(&self) -> [T;3] {
 		let sf = self.0.basis_blade_coefficient(&SeaBasisBladeIndexLow(7));
 		let mut out = [
 			-self.0.basis_blade_coefficient(&SeaBasisBladeIndexLow(14))/sf,
@@ -130,6 +131,15 @@ impl<T:SeaCoefficient> MultivectorPGA3D<T>{
 	fn simplify(&mut self) {
 		self.0.remove_approx_zeros(T::from(1e-15).unwrap());
 		self.0.round_to_decimals(14);
+	}
+
+	pub fn raw(&self) -> (u16, [T;16]) {
+		let mut out_mat = [T::zero(); 16];
+		for i in 0..16 {
+			out_mat[i] = self.0.basis_blade_coefficient(&SeaBasisBladeIndexLow(i as u8))
+		}
+		let out_bbb = self.0.multivector.basis_blade_bits.0 as u16;
+		(out_bbb, out_mat)
 	}
 }
 
@@ -726,6 +736,7 @@ use super::*;
 			
 			let camera_trans = SeaMotorPGA3D(camera_rot.into() * camera_pos.into());
 			let camera_trans_inv = camera_trans.inversed();
+			println!("{:?}", camera_trans);
 			
 			let scene_point = MultivectorPGA3D::new_point(0.0,3.0,2.0);
 			let scene_point_trans = camera_trans.into() * scene_point * camera_trans_inv.into();

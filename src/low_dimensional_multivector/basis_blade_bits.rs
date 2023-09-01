@@ -748,6 +748,18 @@ mod tests {
     use super::*;
 
 	#[test]
+	fn thing() {
+
+		// for i in 0..32{
+		// 	let a = SeaBasisBladeBits::<u32>::cannonical_reordering_neg_mask(&SeaBasisBladeIndexLow(i));
+		// 	println!("{:#x}", a.0);
+		// }
+	
+		let a = SeaBasisBladeBits::<u32>::geometric_product(&SeaBasisBladeBits(513 as u32), (&SeaBasisBladeBits(26752 as u32), 3 as u8));
+		println!("{:?}", a);
+	}
+
+	#[test]
 	fn left_contraction() {
 		// 1 + e1 + e2 + e13 + e123
 		let a = SeaBasisBladeBits(167_u8);
