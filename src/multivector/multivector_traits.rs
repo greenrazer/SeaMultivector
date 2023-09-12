@@ -80,13 +80,13 @@ pub trait MotorMut<T:SeaCoefficient>:
 			for<'a> &'a Self: Add<T> + Mul<T> + Sub<T> + Div<T> + Neg + Add<Self> + Add<&'a Self> + Sub<Self> + Sub<&'a Self>
 {}
 
-pub trait Glide<T:SeaCoefficient>: 
+pub trait Flector<T:SeaCoefficient>: 
 	Multivector<T> 
 		where 
 			for<'a> &'a Self: Add<T> + Mul<T> + Sub<T> + Div<T> + Neg + Add<Self> + Add<&'a Self> + Sub<Self> + Sub<&'a Self> 
 {}
-pub trait GlideMut<T:SeaCoefficient>: 
-	Glide<T> + MultivectorMut<T> 
+pub trait FlectorMut<T:SeaCoefficient>: 
+	Flector<T> + MultivectorMut<T> 
 		where 
 			for<'a> &'a Self: Add<T> + Mul<T> + Sub<T> + Div<T> + Neg + Add<Self> + Add<&'a Self> + Sub<Self> + Sub<&'a Self>
 {}

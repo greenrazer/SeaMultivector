@@ -173,7 +173,7 @@ impl<T:SeaCoefficient> MultivectorPGA3D<T>{
 
 impl<T:SeaCoefficient> Default for MultivectorPGA3D<T> {
 	fn default() -> Self {
-		Self(Multivector4D::new(3, 0, 1))
+		Self::new()
 	}
 }
 
