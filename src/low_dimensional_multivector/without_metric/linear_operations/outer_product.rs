@@ -1,6 +1,6 @@
 use super::*;
 
-impl<T:SeaCoefficient, I:SeaBasisBladeBits> OuterProduct<&Self> for SeaMultivectorLowSparseCoefficents<T, I> {
+impl<T:SeaCoefficient, I:SeaBasisBladeSet> OuterProduct<&Self> for SeaMultivectorLowSparseCoefficents<T, I> {
 	fn outer_product(&self, rhs: &Self) -> Self {
 		let output_basis_blade_bits = {
 			self.basis_blade_bits.outer_product(&rhs.basis_blade_bits)

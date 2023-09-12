@@ -6,7 +6,7 @@ use crate::multivector_traits::Multivector;
 use crate::grade::SeaGrade;
 use crate::low_dimensional_multivector::Multivector4D;
 
-use crate::low_dimensional_multivector::SeaBasisBladeBits;
+use crate::low_dimensional_multivector::SeaBasisBladeSet;
 use crate::low_dimensional_multivector::SeaBasisBladeIndexLow;
 use crate::multivector_traits::MultivectorMut;
 
@@ -46,14 +46,14 @@ impl<T:SeaCoefficient> MultivectorPGA3D<T>{
 
 	pub fn new_lifted_scalar(s:T) -> Self {
 		let mut mv = Self::new();
-		mv.0.multivector.basis_blade_bits = SeaBasisBladeBits::SCALAR;
+		mv.0.multivector.basis_blade_bits = SeaBasisBladeSet::SCALAR;
 		mv.0.multivector.coefficients = vec![s];
 		mv
 	}
 
 	pub fn new_point(x:T, y:T, z:T) -> Self {
 		let mut mv = Self::new();
-		mv.0.multivector.basis_blade_bits = SeaBasisBladeBits::grade(&SeaGrade(3));
+		mv.0.multivector.basis_blade_bits = SeaBasisBladeSet::grade(&SeaGrade(3));
 		mv.0.multivector.coefficients = vec![T::one(),-z,y,-x];
 		mv.0.multivector.remove_zeros();
 		mv
@@ -61,7 +61,7 @@ impl<T:SeaCoefficient> MultivectorPGA3D<T>{
 
 	pub fn new_plane(x:T, y:T, z:T, w:T) -> Self {
 		let mut mv = Self::new();
-		mv.0.multivector.basis_blade_bits = SeaBasisBladeBits::grade(&SeaGrade(1));
+		mv.0.multivector.basis_blade_bits = SeaBasisBladeSet::grade(&SeaGrade(1));
 		mv.0.multivector.coefficients = vec![x,y,z,w];
 		mv.0.multivector.remove_zeros();
 		mv
@@ -85,7 +85,7 @@ impl<T:SeaCoefficient> MultivectorPGA3D<T>{
 
 	pub fn new_combined_line(x:T, y:T, z:T, xy:T, xz:T, yz:T) -> Self {
 		let mut mv = Self::new();
-		mv.0.multivector.basis_blade_bits = SeaBasisBladeBits::grade(&SeaGrade(2));
+		mv.0.multivector.basis_blade_bits = SeaBasisBladeSet::grade(&SeaGrade(2));
 		mv.0.multivector.coefficients = vec![xy, xz, yz, x,y,z];
 		mv.0.multivector.remove_zeros();
 		mv

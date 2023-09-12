@@ -1,6 +1,6 @@
 use super::*;
 
-impl<T:SeaCoefficient, I:SeaBasisBladeBits> AddAssign<&Self> for SeaMultivectorLowSparseCoefficents<T, I> {
+impl<T:SeaCoefficient, I:SeaBasisBladeSet> AddAssign<&Self> for SeaMultivectorLowSparseCoefficents<T, I> {
 	fn add_assign(&mut self, rhs: &Self) {
 		let bb_out = self.basis_blade_bits.union(&rhs.basis_blade_bits);
 
@@ -24,7 +24,7 @@ impl<T:SeaCoefficient, I:SeaBasisBladeBits> AddAssign<&Self> for SeaMultivectorL
 		self.basis_blade_bits = bb_out;
 	}
 }
-impl<T:SeaCoefficient, I:SeaBasisBladeBits> Add<Self> for &SeaMultivectorLowSparseCoefficents<T, I> {
+impl<T:SeaCoefficient, I:SeaBasisBladeSet> Add<Self> for &SeaMultivectorLowSparseCoefficents<T, I> {
     type Output = SeaMultivectorLowSparseCoefficents<T, I>;
 
     fn add(self, rhs: Self) -> Self::Output {

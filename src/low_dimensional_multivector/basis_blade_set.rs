@@ -403,7 +403,7 @@ impl SeaBasisBladeUnsignedConstants for u64 {
 	];
 }
 
-pub trait SeaBasisBladeBitsUnsigned: SeaBasisBladeUnsignedConstants + From<SeaBasisBladeIndexLow> + for<'a> From<&'a SeaBasisBladeIndexLow>{ 
+pub trait SeaBasisBladeSetUnsigned: SeaBasisBladeUnsignedConstants + From<SeaBasisBladeIndexLow> + for<'a> From<&'a SeaBasisBladeIndexLow>{ 
 	/// sets all least signifigant bits up to n
 	/// e.g. 5
 	/// ...0011111
@@ -486,10 +486,10 @@ pub trait SeaBasisBladeBitsUnsigned: SeaBasisBladeUnsignedConstants + From<SeaBa
 		*self |= msb >> shift_amnt;
 	}
 }
-impl<I:SeaBasisBladeUnsignedConstants> SeaBasisBladeBitsUnsigned for I {}
+impl<I:SeaBasisBladeUnsignedConstants> SeaBasisBladeSetUnsigned for I {}
 
-pub struct SeaBasisBladeBitsIter<I:SeaBasisBladeBits>(I);
-impl<I: SeaBasisBladeBitsUnsigned> Iterator for SeaBasisBladeBitsIter<I> {
+pub struct SeaBasisBladeSetIter<I:SeaBasisBladeSet>(I);
+impl<I: SeaBasisBladeSetUnsigned> Iterator for SeaBasisBladeSetIter<I> {
 	type Item = SeaBasisBladeIndexLow;
 
 	fn next(&mut self) -> Option<Self::Item> {
@@ -512,7 +512,7 @@ impl<I: SeaBasisBladeBitsUnsigned> Iterator for SeaBasisBladeBitsIter<I> {
 	} 
 }
 
-pub trait SeaBasisBladeBits:
+pub trait SeaBasisBladeSet:
 	From<SeaBasisBladeIndexLow> + for<'a> From<&'a SeaBasisBladeIndexLow> 
 	+ Clone
 	+ LeftContraction<(Self, u8)>
@@ -582,7 +582,7 @@ pub trait SeaBasisBladeBits:
 	fn symmetric_difference_mut(&mut self, other:&Self);
 }
 
-impl<I: SeaBasisBladeBitsUnsigned> SeaBasisBladeBits for I {
+impl<I: SeaBasisBladeSetUnsigned> SeaBasisBladeSet for I {
 	const DIMENSIONS: u8 = Self::DIMENSIONS;
 	const NUM_BASIS_BLADES: usize = Self::NUM_BASIS_BLADES;
 	const MAX_BASIS_BLADE_INDEX: SeaBasisBladeIndexLow = SeaBasisBladeIndexLow((Self::NUM_BASIS_BLADES - 1) as u8);
@@ -591,7 +591,7 @@ impl<I: SeaBasisBladeBitsUnsigned> SeaBasisBladeBits for I {
 	const SCALAR: Self = Self::ONE;
 	const ALL: Self = Self::CONTAINS_BASIS_VEC_BITS[0];
 
-	type IntoIterType = SeaBasisBladeBitsIter<I>;
+	type IntoIterType = SeaBasisBladeSetIter<I>;
 
 	fn reversion_negations() -> Self {
 		Self::REVERSION_NEGATION_BITS
@@ -736,7 +736,7 @@ impl<I: SeaBasisBladeBitsUnsigned> SeaBasisBladeBits for I {
 	}
 
 	fn iter(&self) -> Self::IntoIterType {
-		SeaBasisBladeBitsIter(*self)
+		SeaBasisBladeSetIter(*self)
 	}
 
 	fn intersection(&self, other:&Self) -> Self {
@@ -764,7 +764,7 @@ impl<I: SeaBasisBladeBitsUnsigned> SeaBasisBladeBits for I {
 	}
 }
 
-impl<I: SeaBasisBladeBitsUnsigned> LeftContraction<(&SeaBasisBladeIndexLow, u8)> for I {
+impl<I: SeaBasisBladeSetUnsigned> LeftContraction<(&SeaBasisBladeIndexLow, u8)> for I {
 	fn left_contraction(&self, (index, num_metric_non_zeros): (&SeaBasisBladeIndexLow, u8)) -> Self {
 		if index.contains_basis_vectors_greater_than(num_metric_non_zeros) {
 			return Self::ZERO
@@ -777,7 +777,7 @@ impl<I: SeaBasisBladeBitsUnsigned> LeftContraction<(&SeaBasisBladeIndexLow, u8)>
 		curr
 	}
 }
-impl<I: SeaBasisBladeBitsUnsigned> LeftContraction<(&Self, u8)> for I {
+impl<I: SeaBasisBladeSetUnsigned> LeftContraction<(&Self, u8)> for I {
 	fn left_contraction(&self, (rhs, num_metric_non_zeros): (&Self, u8)) -> Self {
 		let mut curr = Self::ZERO;
 		for i in self.iter() {
@@ -786,13 +786,13 @@ impl<I: SeaBasisBladeBitsUnsigned> LeftContraction<(&Self, u8)> for I {
 		curr
 	}
 }
-impl<I: SeaBasisBladeBitsUnsigned> LeftContraction<(Self, u8)> for I {
+impl<I: SeaBasisBladeSetUnsigned> LeftContraction<(Self, u8)> for I {
 	fn left_contraction(&self, (rhs, num_metric_non_zeros): (Self, u8)) -> Self {
 		self.left_contraction((&rhs, num_metric_non_zeros))
 	}
 }
 
-impl<I: SeaBasisBladeBitsUnsigned> RightContraction<(&SeaBasisBladeIndexLow, u8)> for I {
+impl<I: SeaBasisBladeSetUnsigned> RightContraction<(&SeaBasisBladeIndexLow, u8)> for I {
 	fn right_contraction(&self, (index, num_metric_non_zeros): (&SeaBasisBladeIndexLow, u8)) -> Self {
 		let mut curr = self.dual() >> (I::NUM_BASIS_BLADES - 1 - **index as usize);
 		for i in 0..I::DIMENSIONS {
@@ -809,34 +809,34 @@ impl<I: SeaBasisBladeBitsUnsigned> RightContraction<(&SeaBasisBladeIndexLow, u8)
 		curr
 	}
 }
-impl<I: SeaBasisBladeBitsUnsigned> RightContraction<(&Self, u8)> for I {
+impl<I: SeaBasisBladeSetUnsigned> RightContraction<(&Self, u8)> for I {
 	fn right_contraction(&self, (rhs, num_metric_non_zeros): (&Self, u8)) -> Self {
 		rhs.left_contraction((self, num_metric_non_zeros))
 	}
 }
-impl<I: SeaBasisBladeBitsUnsigned> RightContraction<(Self, u8)> for I {
+impl<I: SeaBasisBladeSetUnsigned> RightContraction<(Self, u8)> for I {
 	fn right_contraction(&self, (rhs, num_metric_non_zeros): (Self, u8)) -> Self {
 		self.right_contraction((&rhs, num_metric_non_zeros))
 	}
 }
 
-impl<I: SeaBasisBladeBitsUnsigned> InnerProduct<(&SeaBasisBladeIndexLow, u8)> for I {
+impl<I: SeaBasisBladeSetUnsigned> InnerProduct<(&SeaBasisBladeIndexLow, u8)> for I {
 	fn inner_product(&self, (index, num_metric_non_zeros): (&SeaBasisBladeIndexLow, u8)) -> Self {
 		self.left_contraction((index, num_metric_non_zeros)) | self.right_contraction((index, num_metric_non_zeros))
 	}
 }
-impl<I: SeaBasisBladeBitsUnsigned> InnerProduct<(&Self, u8)> for I {
+impl<I: SeaBasisBladeSetUnsigned> InnerProduct<(&Self, u8)> for I {
 	fn inner_product(&self, (rhs, num_metric_non_zeros): (&Self, u8)) -> Self {
 		self.left_contraction((rhs, num_metric_non_zeros)) | self.right_contraction((rhs, num_metric_non_zeros))
 	}
 }
-impl<I: SeaBasisBladeBitsUnsigned> InnerProduct<(Self, u8)> for I {
+impl<I: SeaBasisBladeSetUnsigned> InnerProduct<(Self, u8)> for I {
 	fn inner_product(&self, (rhs, num_metric_non_zeros): (Self, u8)) -> Self {
 		self.inner_product((&rhs, num_metric_non_zeros))
 	}
 }
 
-impl<I: SeaBasisBladeBitsUnsigned> OuterProduct<&SeaBasisBladeIndexLow> for I {
+impl<I: SeaBasisBladeSetUnsigned> OuterProduct<&SeaBasisBladeIndexLow> for I {
 	fn outer_product(&self, index: &SeaBasisBladeIndexLow) -> Self {
 		let mut curr = *self << index.0;
 		for i in index {
@@ -846,7 +846,7 @@ impl<I: SeaBasisBladeBitsUnsigned> OuterProduct<&SeaBasisBladeIndexLow> for I {
 		curr
 	}
 }
-impl<I: SeaBasisBladeBitsUnsigned> OuterProduct<&Self> for I {
+impl<I: SeaBasisBladeSetUnsigned> OuterProduct<&Self> for I {
 	fn outer_product(&self, rhs: &Self) -> Self {
 		let mut curr = Self::ZERO;
 		for i in self.iter() {
@@ -855,13 +855,13 @@ impl<I: SeaBasisBladeBitsUnsigned> OuterProduct<&Self> for I {
 		curr
 	}
 }
-impl<I: SeaBasisBladeBitsUnsigned> OuterProduct<Self> for I {
+impl<I: SeaBasisBladeSetUnsigned> OuterProduct<Self> for I {
 	fn outer_product(&self, rhs: Self) -> Self {
 		self.outer_product(&rhs)
 	}
 }
 
-impl<I: SeaBasisBladeBitsUnsigned> GeometricProduct<(&SeaBasisBladeIndexLow, u8)> for I {
+impl<I: SeaBasisBladeSetUnsigned> GeometricProduct<(&SeaBasisBladeIndexLow, u8)> for I {
 	fn geometric_product(&self, (index, num_metric_non_zeros): (&SeaBasisBladeIndexLow, u8)) -> Self {
 		let mut curr = *self;
 		for i in index {
@@ -874,7 +874,7 @@ impl<I: SeaBasisBladeBitsUnsigned> GeometricProduct<(&SeaBasisBladeIndexLow, u8)
 		curr
 	}
 }
-impl<I: SeaBasisBladeBitsUnsigned> GeometricProduct<(&Self, u8)> for I {
+impl<I: SeaBasisBladeSetUnsigned> GeometricProduct<(&Self, u8)> for I {
 	fn geometric_product(&self, (rhs, num_metric_non_zeros): (&Self, u8)) -> Self {
 		let mut curr = Self::ZERO;
 		for i in self.iter() {
@@ -883,7 +883,7 @@ impl<I: SeaBasisBladeBitsUnsigned> GeometricProduct<(&Self, u8)> for I {
 		curr
 	}
 }
-impl<I: SeaBasisBladeBitsUnsigned> GeometricProduct<(Self, u8)> for I {
+impl<I: SeaBasisBladeSetUnsigned> GeometricProduct<(Self, u8)> for I {
 	fn geometric_product(&self, (rhs, num_metric_non_zeros): (Self, u8)) -> Self {
 		self.geometric_product((&rhs, num_metric_non_zeros))
 	}
@@ -899,14 +899,14 @@ mod tests {
 	// fn thing() {
 
 	// 	// for i in 0..32{
-	// 	// 	let a = SeaBasisBladeBits::<u32>::cannonical_reordering_neg_mask(&SeaBasisBladeIndexLow(i));
+	// 	// 	let a = SeaBasisBladeSet::<u32>::cannonical_reordering_neg_mask(&SeaBasisBladeIndexLow(i));
 	// 	// 	println!("{:#x}", a.0);
 	// 	// }
 	
-	// 	// let a = SeaBasisBladeBits::<u32>::geometric_product(&SeaBasisBladeBits(513 as u32), (&SeaBasisBladeBits(26752 as u32), 3 as u8));
+	// 	// let a = SeaBasisBladeSet::<u32>::geometric_product(&SeaBasisBladeSet(513 as u32), (&SeaBasisBladeSet(26752 as u32), 3 as u8));
 	// 	// println!("{:?}", a);
 
-	// 	let a = SeaBasisBladeBits::<u32>::outer_product(&SeaBasisBladeBits(5633 as u32), &SeaBasisBladeBits(16 as u32));
+	// 	let a = SeaBasisBladeSet::<u32>::outer_product(&SeaBasisBladeSet(5633 as u32), &SeaBasisBladeSet(16 as u32));
 	// 	println!("{:?}", a);
 	// }
 

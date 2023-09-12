@@ -1,38 +1,38 @@
 use super::*;
 
-impl<T:SeaCoefficient, I:SeaBasisBladeBits> SubAssign<Self> for SeaMultivectorLowSparseCoefficentsWithMetric<T, I> {
+impl<T:SeaCoefficient, I:SeaBasisBladeSet> SubAssign<Self> for SeaMultivectorLowSparseCoefficentsWithMetric<T, I> {
 	fn sub_assign(&mut self, rhs: Self) {
 		*self -= &rhs
 	}
 }
-impl<T:SeaCoefficient, I:SeaBasisBladeBits> SubAssign<&Self> for SeaMultivectorLowSparseCoefficentsWithMetric<T, I> {
+impl<T:SeaCoefficient, I:SeaBasisBladeSet> SubAssign<&Self> for SeaMultivectorLowSparseCoefficentsWithMetric<T, I> {
 	fn sub_assign(&mut self, rhs: &Self) {
 		assert_eq!(self.metric, rhs.metric);
 		self.multivector -= &rhs.multivector
 	}
 }
-impl<T:SeaCoefficient, I:SeaBasisBladeBits> Sub<Self> for SeaMultivectorLowSparseCoefficentsWithMetric<T, I> {
+impl<T:SeaCoefficient, I:SeaBasisBladeSet> Sub<Self> for SeaMultivectorLowSparseCoefficentsWithMetric<T, I> {
     type Output = SeaMultivectorLowSparseCoefficentsWithMetric<T, I>;
 
     fn sub(self, rhs: Self) -> Self::Output {
 		&self - &rhs
 	}
 }
-impl<T:SeaCoefficient, I:SeaBasisBladeBits> Sub<&Self> for SeaMultivectorLowSparseCoefficentsWithMetric<T, I> {
+impl<T:SeaCoefficient, I:SeaBasisBladeSet> Sub<&Self> for SeaMultivectorLowSparseCoefficentsWithMetric<T, I> {
     type Output = SeaMultivectorLowSparseCoefficentsWithMetric<T, I>;
 
     fn sub(self, rhs: &Self) -> Self::Output {
 		&self - rhs
 	}
 }
-impl<T:SeaCoefficient, I:SeaBasisBladeBits> Sub<SeaMultivectorLowSparseCoefficentsWithMetric<T, I>> for &SeaMultivectorLowSparseCoefficentsWithMetric<T, I> {
+impl<T:SeaCoefficient, I:SeaBasisBladeSet> Sub<SeaMultivectorLowSparseCoefficentsWithMetric<T, I>> for &SeaMultivectorLowSparseCoefficentsWithMetric<T, I> {
     type Output = SeaMultivectorLowSparseCoefficentsWithMetric<T, I>;
 
     fn sub(self, rhs: SeaMultivectorLowSparseCoefficentsWithMetric<T, I>) -> Self::Output {
 		self - &rhs
 	}
 }
-impl<T:SeaCoefficient, I:SeaBasisBladeBits> Sub<Self> for &SeaMultivectorLowSparseCoefficentsWithMetric<T, I> {
+impl<T:SeaCoefficient, I:SeaBasisBladeSet> Sub<Self> for &SeaMultivectorLowSparseCoefficentsWithMetric<T, I> {
     type Output = SeaMultivectorLowSparseCoefficentsWithMetric<T, I>;
 
     fn sub(self, rhs: Self) -> Self::Output {

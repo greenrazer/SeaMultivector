@@ -1,7 +1,7 @@
 use super::*;
 
 //Exp
-impl<T:SeaCoefficient, I:SeaBasisBladeBits> SeaMultivectorLowSparseCoefficents<T, I> {
+impl<T:SeaCoefficient, I:SeaBasisBladeSet> SeaMultivectorLowSparseCoefficents<T, I> {
 	pub fn exp(&self, metric: &SeaMetric) -> Self {
 		
 		let mut next_self = self.geometric_product(self, metric);

@@ -1,11 +1,11 @@
 use super::*;
 
-impl<T:SeaCoefficient, I:SeaBasisBladeBits> RegressiveProduct<Self> for SeaMultivectorLowSparseCoefficentsWithMetric<T, I> {
+impl<T:SeaCoefficient, I:SeaBasisBladeSet> RegressiveProduct<Self> for SeaMultivectorLowSparseCoefficentsWithMetric<T, I> {
 	fn regressive_product(&self, rhs: Self) -> Self {
 		self.regressive_product(&rhs)
 	}
 }
-impl<T:SeaCoefficient, I:SeaBasisBladeBits> RegressiveProduct<&Self> for SeaMultivectorLowSparseCoefficentsWithMetric<T, I> {
+impl<T:SeaCoefficient, I:SeaBasisBladeSet> RegressiveProduct<&Self> for SeaMultivectorLowSparseCoefficentsWithMetric<T, I> {
 	fn regressive_product(&self, rhs: &Self) -> Self {
 		assert_eq!(self.metric, rhs.metric);
 		Self {

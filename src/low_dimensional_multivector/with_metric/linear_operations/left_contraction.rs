@@ -1,11 +1,11 @@
 use super::*;
 
-impl<T:SeaCoefficient, I:SeaBasisBladeBits> LeftContraction<Self> for SeaMultivectorLowSparseCoefficentsWithMetric<T, I> {
+impl<T:SeaCoefficient, I:SeaBasisBladeSet> LeftContraction<Self> for SeaMultivectorLowSparseCoefficentsWithMetric<T, I> {
 	fn left_contraction(&self, rhs: Self) -> Self {
 		self.left_contraction(&rhs)
 	}
 }
-impl<T:SeaCoefficient, I:SeaBasisBladeBits> LeftContraction<&Self> for SeaMultivectorLowSparseCoefficentsWithMetric<T, I> {
+impl<T:SeaCoefficient, I:SeaBasisBladeSet> LeftContraction<&Self> for SeaMultivectorLowSparseCoefficentsWithMetric<T, I> {
 	fn left_contraction(&self, rhs: &Self) -> Self {
 		assert_eq!(self.metric, rhs.metric);
 		Self {

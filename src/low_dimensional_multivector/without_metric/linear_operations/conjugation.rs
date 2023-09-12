@@ -1,6 +1,6 @@
 use super::*;
 
-impl<T:SeaCoefficient, I:SeaBasisBladeBits> SeaMultivectorLowSparseCoefficents<T, I>{
+impl<T:SeaCoefficient, I:SeaBasisBladeSet> SeaMultivectorLowSparseCoefficents<T, I>{
 	pub fn reversion_conjugated(&self) -> Self {
 		self.negated_basis_blades(&I::reversion_negations())
 	}
@@ -14,7 +14,7 @@ impl<T:SeaCoefficient, I:SeaBasisBladeBits> SeaMultivectorLowSparseCoefficents<T
 	}
 }
 
-impl<T:SeaCoefficient, I:SeaBasisBladeBits> SeaMultivectorLowSparseCoefficents<T, I>{
+impl<T:SeaCoefficient, I:SeaBasisBladeSet> SeaMultivectorLowSparseCoefficents<T, I>{
 	pub fn reversion_conjugation(&mut self) {
 		self.negate_basis_blades(&I::reversion_negations())
 	}

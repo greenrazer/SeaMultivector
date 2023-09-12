@@ -1,7 +1,7 @@
 use super::*;
 
 // Dual
-impl<T:SeaCoefficient, I:SeaBasisBladeBits> SeaMultivectorLowSparseCoefficents<T, I> {
+impl<T:SeaCoefficient, I:SeaBasisBladeSet> SeaMultivectorLowSparseCoefficents<T, I> {
 	pub fn poincare_dual(&self) -> Self {
 		Self { 
 			basis_blade_bits: self.basis_blade_bits.dual(), 
@@ -36,7 +36,7 @@ impl<T:SeaCoefficient, I:SeaBasisBladeBits> SeaMultivectorLowSparseCoefficents<T
 }
 
 //Dual Mut
-impl<T:SeaCoefficient, I:SeaBasisBladeBits> SeaMultivectorLowSparseCoefficents<T, I> {
+impl<T:SeaCoefficient, I:SeaBasisBladeSet> SeaMultivectorLowSparseCoefficents<T, I> {
 	pub fn poincare_dualization(&mut self){
 		self.basis_blade_bits = self.basis_blade_bits.dual();
 		self.coefficients.reverse();

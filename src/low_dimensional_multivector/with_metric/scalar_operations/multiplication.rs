@@ -1,18 +1,18 @@
 use super::*;
 
-impl<T:SeaCoefficient, I:SeaBasisBladeBits> MulAssign<T> for SeaMultivectorLowSparseCoefficentsWithMetric<T, I> {
+impl<T:SeaCoefficient, I:SeaBasisBladeSet> MulAssign<T> for SeaMultivectorLowSparseCoefficentsWithMetric<T, I> {
     fn mul_assign(&mut self, rhs: T){
 		self.multivector *= rhs
 	}
 }
-impl<T:SeaCoefficient, I:SeaBasisBladeBits> Mul<T> for SeaMultivectorLowSparseCoefficentsWithMetric<T, I> {
+impl<T:SeaCoefficient, I:SeaBasisBladeSet> Mul<T> for SeaMultivectorLowSparseCoefficentsWithMetric<T, I> {
     type Output = SeaMultivectorLowSparseCoefficentsWithMetric<T, I>;
 
     fn mul(self, rhs: T) -> Self::Output {
 		&self * rhs
 	}
 }
-impl<T:SeaCoefficient, I:SeaBasisBladeBits> Mul<T> for &SeaMultivectorLowSparseCoefficentsWithMetric<T, I> {
+impl<T:SeaCoefficient, I:SeaBasisBladeSet> Mul<T> for &SeaMultivectorLowSparseCoefficentsWithMetric<T, I> {
     type Output = SeaMultivectorLowSparseCoefficentsWithMetric<T, I>;
 
     fn mul(self, rhs: T) -> Self::Output {

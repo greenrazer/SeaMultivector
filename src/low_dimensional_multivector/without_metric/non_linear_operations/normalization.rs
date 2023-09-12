@@ -1,7 +1,7 @@
 use super::*;
 
 // Scalar Norm
-impl<T:SeaCoefficient, I:SeaBasisBladeBits> SeaMultivectorLowSparseCoefficents<T, I> {
+impl<T:SeaCoefficient, I:SeaBasisBladeSet> SeaMultivectorLowSparseCoefficents<T, I> {
 	pub fn scalar_norm(&self, metric: &SeaMetric) -> T {
 		let (_, metric_non_zeros, metric_negs) = Self::metric_product_constants(metric);
 

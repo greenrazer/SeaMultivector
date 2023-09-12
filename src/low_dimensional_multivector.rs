@@ -6,12 +6,12 @@ use crate::coefficient::SeaCoefficient;
 
 mod basis_blade_index;
 mod basis_blade;
-mod basis_blade_bits;
+mod basis_blade_set;
 mod without_metric;
 mod with_metric;
 
 use with_metric::SeaMultivectorLowSparseCoefficentsWithMetric;
-pub use basis_blade_bits::SeaBasisBladeBits;
+pub use basis_blade_set::SeaBasisBladeSet;
 pub use basis_blade_index::SeaBasisBladeIndexLow;
 
 pub type Multivector3D<T> = SeaMultivectorLowSparseCoefficentsWithMetric::<T, u8>;

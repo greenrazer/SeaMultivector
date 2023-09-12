@@ -1,6 +1,6 @@
 use super::*;
 
-impl<T:SeaCoefficient, I:SeaBasisBladeBits> SubAssign<T> for SeaMultivectorLowSparseCoefficents<T, I> {
+impl<T:SeaCoefficient, I:SeaBasisBladeSet> SubAssign<T> for SeaMultivectorLowSparseCoefficents<T, I> {
     fn sub_assign(&mut self, rhs: T) {
 		*self += &SeaBasisBladeLow {
 			index: SeaBasisBladeIndexLow::SCALAR,
@@ -8,14 +8,14 @@ impl<T:SeaCoefficient, I:SeaBasisBladeBits> SubAssign<T> for SeaMultivectorLowSp
 		};
 	}
 }
-impl<T:SeaCoefficient, I:SeaBasisBladeBits> Sub<T> for SeaMultivectorLowSparseCoefficents<T, I> {
+impl<T:SeaCoefficient, I:SeaBasisBladeSet> Sub<T> for SeaMultivectorLowSparseCoefficents<T, I> {
     type Output = SeaMultivectorLowSparseCoefficents<T, I>;
 
     fn sub(self, rhs: T) -> Self::Output {
 		&self - rhs
 	}
 }
-impl<T:SeaCoefficient, I:SeaBasisBladeBits> Sub<T> for &SeaMultivectorLowSparseCoefficents<T, I> {
+impl<T:SeaCoefficient, I:SeaBasisBladeSet> Sub<T> for &SeaMultivectorLowSparseCoefficents<T, I> {
     type Output = SeaMultivectorLowSparseCoefficents<T, I>;
 
     fn sub(self, rhs: T) -> Self::Output {
