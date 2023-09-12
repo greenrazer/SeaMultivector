@@ -8,12 +8,12 @@ mod multivector;
 pub mod prelude {
     pub use std::str::FromStr;
     pub use super::multivector::low_dimensional::{
-        Multivector3D, 
-        Multivector4D, 
-        Multivector5D, 
-        Multivector6D
+        SeaMultivector3D, 
+        SeaMultivector4D, 
+        SeaMultivector5D, 
+        SeaMultivector6D
     };
-    pub use super::multivector::low_dimensional::pga3d::MultivectorPGA3D;
+    pub use super::multivector::low_dimensional::pga3d::SeaMultivectorPGA3D;
     pub use super::multivector::low_dimensional::pga3d::SeaMotorPGA3D;
     pub use super::multivector::low_dimensional::basis_blade_set::SeaBasisBladeSet;
 }
@@ -56,52 +56,52 @@ mod tests {
 
     #[test]
     fn multivector_type_wrapper_works() {
-		let mv = Multivector4D::<f32>::from_str("3,1,0>e1 + e12");
+		let mv = SeaMultivector4D::<f32>::from_str("3,1,0>e1 + e12");
 		assert!(mv.is_ok());
 	}
 
     #[test]
     fn multivector_products_works() {
-		let mv_a = Multivector4D::<f32>::from_str("3,1,0>e1 + e12").unwrap();
-		let mv_b = Multivector4D::<f32>::from_str("3,1,0>e3 + e123 + e4").unwrap();
+		let mv_a = SeaMultivector4D::<f32>::from_str("3,1,0>e1 + e12").unwrap();
+		let mv_b = SeaMultivector4D::<f32>::from_str("3,1,0>e3 + e123 + e4").unwrap();
 
-        let out = Multivector4D::<f32>::from_str("3,1,0>-e3 +e13 +e14 +e23 +e123 +e124").unwrap();
+        let out = SeaMultivector4D::<f32>::from_str("3,1,0>-e3 +e13 +e14 +e23 +e123 +e124").unwrap();
 		assert_eq!(
             &mv_a * &mv_b,
             out
         );
 
-        let mv_a = Multivector4D::<f32>::from_str("3,1,0>e1 + e12").unwrap();
-		let mv_b = Multivector4D::<f32>::from_str("3,1,0>e3 + e123 + e4").unwrap();
+        let mv_a = SeaMultivector4D::<f32>::from_str("3,1,0>e1 + e12").unwrap();
+		let mv_b = SeaMultivector4D::<f32>::from_str("3,1,0>e3 + e123 + e4").unwrap();
 
-        let out = Multivector4D::<f32>::from_str("3,1,0>-e3 +e23").unwrap();
+        let out = SeaMultivector4D::<f32>::from_str("3,1,0>-e3 +e23").unwrap();
 		assert_eq!(
             &mv_a | &mv_b,
             out
         );
 
-        let mv_a = Multivector4D::<f32>::from_str("3,1,0>e1 + e12").unwrap();
-		let mv_b = Multivector4D::<f32>::from_str("3,1,0>e3 + e123 + e4").unwrap();
+        let mv_a = SeaMultivector4D::<f32>::from_str("3,1,0>e1 + e12").unwrap();
+		let mv_b = SeaMultivector4D::<f32>::from_str("3,1,0>e3 + e123 + e4").unwrap();
 
-        let out = Multivector4D::<f32>::from_str("3,1,0>e13 +e14 +e123 +e124").unwrap();
+        let out = SeaMultivector4D::<f32>::from_str("3,1,0>e13 +e14 +e123 +e124").unwrap();
 		assert_eq!(
             &mv_a ^ &mv_b,
             out
         );
 
-        let mv_a = Multivector4D::<f32>::from_str("3,1,0>e1 + e12").unwrap();
-		let mv_b = Multivector4D::<f32>::from_str("3,1,0>e3 + e123 + e4").unwrap();
+        let mv_a = SeaMultivector4D::<f32>::from_str("3,1,0>e1 + e12").unwrap();
+		let mv_b = SeaMultivector4D::<f32>::from_str("3,1,0>e3 + e123 + e4").unwrap();
 
-        let out = Multivector4D::<f32>::from_str("3,1,0>-e3 +e23").unwrap();
+        let out = SeaMultivector4D::<f32>::from_str("3,1,0>-e3 +e23").unwrap();
 		assert_eq!(
             &mv_a << &mv_b,
             out
         );
 
-        let mv_a = Multivector4D::<f32>::from_str("3,1,0>e1 + e12").unwrap();
-		let mv_b = Multivector4D::<f32>::from_str("3,1,0>e3 + e123 + e4").unwrap();
+        let mv_a = SeaMultivector4D::<f32>::from_str("3,1,0>e1 + e12").unwrap();
+		let mv_b = SeaMultivector4D::<f32>::from_str("3,1,0>e3 + e123 + e4").unwrap();
 
-        let out = Multivector4D::<f32>::from_str("3,1,0>").unwrap();
+        let out = SeaMultivector4D::<f32>::from_str("3,1,0>").unwrap();
 		assert_eq!(
             &mv_a >> &mv_b,
             out

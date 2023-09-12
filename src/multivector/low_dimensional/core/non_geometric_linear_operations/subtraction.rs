@@ -1,6 +1,6 @@
 use super::*;
 
-impl<T:SeaCoefficient, I:SeaBasisBladeSet> SubAssign<&Self> for SeaSparseMultivectorLowDimensions<T, I> {
+impl<T:SeaCoefficient, I:SeaBasisBladeSet> SubAssign<&Self> for SeaLowDimensionalSparseMultivector<T, I> {
 	fn sub_assign(&mut self, rhs: &Self) {
 		let bb_out = self.basis_blade_bits.union(&rhs.basis_blade_bits);
 
@@ -24,8 +24,8 @@ impl<T:SeaCoefficient, I:SeaBasisBladeSet> SubAssign<&Self> for SeaSparseMultive
 		self.basis_blade_bits = bb_out;
 	}
 }
-impl<T:SeaCoefficient, I:SeaBasisBladeSet> Sub<Self> for &SeaSparseMultivectorLowDimensions<T, I> {
-    type Output = SeaSparseMultivectorLowDimensions<T, I>;
+impl<T:SeaCoefficient, I:SeaBasisBladeSet> Sub<Self> for &SeaLowDimensionalSparseMultivector<T, I> {
+    type Output = SeaLowDimensionalSparseMultivector<T, I>;
 
     fn sub(self, rhs: Self) -> Self::Output {
 		let mut out = self.clone();

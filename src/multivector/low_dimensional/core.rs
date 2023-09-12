@@ -26,11 +26,11 @@ mod non_geometric_linear_operations;
 mod non_linear_operations;
 
 pub struct SparseMultivectorIter<'a, T:SeaCoefficient, I:SeaBasisBladeSet>{
-	multivector: &'a SeaSparseMultivectorLowDimensions<T,I>,
+	multivector: &'a SeaLowDimensionalSparseMultivector<T,I>,
 	curr_iter: I::IntoIterType
 }
 impl<'a, T:SeaCoefficient, I:SeaBasisBladeSet> SparseMultivectorIter<'a, T, I> {
-	pub fn new(multivector: &'a SeaSparseMultivectorLowDimensions<T,I>) -> Self{
+	pub fn new(multivector: &'a SeaLowDimensionalSparseMultivector<T,I>) -> Self{
 		SparseMultivectorIter {
 			multivector,
 			curr_iter: multivector.basis_blade_bits.iter()
@@ -60,11 +60,11 @@ impl<'a, T:SeaCoefficient, I:SeaBasisBladeSet> Iterator for SparseMultivectorIte
 }
 
 pub struct SparseMultivectorGradeIter<'a, T:SeaCoefficient, I:SeaBasisBladeSet>{
-	multivector: &'a SeaSparseMultivectorLowDimensions<T,I>,
+	multivector: &'a SeaLowDimensionalSparseMultivector<T,I>,
 	curr_iter: I::IntoIterType
 }
 impl<'a, T:SeaCoefficient, I:SeaBasisBladeSet> SparseMultivectorGradeIter<'a, T, I> {
-	pub fn new(multivector: &'a SeaSparseMultivectorLowDimensions<T,I>, grade: &SeaGrade) -> Self{
+	pub fn new(multivector: &'a SeaLowDimensionalSparseMultivector<T,I>, grade: &SeaGrade) -> Self{
 		let iter_bits =  multivector.basis_blade_bits.intersection(&I::grade(grade));
 		SparseMultivectorGradeIter {
 			multivector,
@@ -96,12 +96,12 @@ impl<'a, T:SeaCoefficient, I:SeaBasisBladeSet> Iterator for SparseMultivectorGra
 
 
 #[derive(Debug, Clone, PartialEq)]
-pub struct SeaSparseMultivectorLowDimensions<T:SeaCoefficient, I:SeaBasisBladeSet>{
+pub struct SeaLowDimensionalSparseMultivector<T:SeaCoefficient, I:SeaBasisBladeSet>{
 	pub basis_blade_bits: I,
 	pub coefficients: Vec<T>
 }
 // New
-impl<T:SeaCoefficient, I:SeaBasisBladeSet> SeaSparseMultivectorLowDimensions<T, I> {
+impl<T:SeaCoefficient, I:SeaBasisBladeSet> SeaLowDimensionalSparseMultivector<T, I> {
 	pub fn new() -> Self {
 		Self { 
 			basis_blade_bits: SeaBasisBladeSet::EMPTY, 
@@ -111,7 +111,7 @@ impl<T:SeaCoefficient, I:SeaBasisBladeSet> SeaSparseMultivectorLowDimensions<T, 
 }
 
 // simplify
-impl<T:SeaCoefficient, I:SeaBasisBladeSet> SeaSparseMultivectorLowDimensions<T, I> {	
+impl<T:SeaCoefficient, I:SeaBasisBladeSet> SeaLowDimensionalSparseMultivector<T, I> {	
 	pub fn remove_zeros(&mut self) {
 		for (i, idx) in self.basis_blade_bits.iter().enumerate(){
 			if self.coefficients[i].is_zero() {
@@ -140,7 +140,7 @@ impl<T:SeaCoefficient, I:SeaBasisBladeSet> SeaSparseMultivectorLowDimensions<T, 
 }
 
 // Multivector Index
-impl<T:SeaCoefficient, I:SeaBasisBladeSet> SeaSparseMultivectorLowDimensions<T, I> {	
+impl<T:SeaCoefficient, I:SeaBasisBladeSet> SeaLowDimensionalSparseMultivector<T, I> {	
 	pub fn basis_blade_coefficient(&self, index: &SeaBasisBladeIndexLow) -> T {
 		if !self.basis_blade_bits.has(index) {
 			return T::zero();
@@ -151,7 +151,7 @@ impl<T:SeaCoefficient, I:SeaBasisBladeSet> SeaSparseMultivectorLowDimensions<T, 
 }
 
 // Multivector Product Helpers
-impl<T:SeaCoefficient, I:SeaBasisBladeSet> SeaSparseMultivectorLowDimensions<T, I> {	
+impl<T:SeaCoefficient, I:SeaBasisBladeSet> SeaLowDimensionalSparseMultivector<T, I> {	
 	fn metric_product_constants(metric: &SeaMetric) -> (u8, SeaBasisBladeIndexLow, SeaBasisBladeIndexLow) {
 		let num_metric_non_zeros = metric.positive + metric.negitive;
 		let metric_non_zeros = SeaBasisBladeIndexLow::basis_vectors_less_than_or_equal(num_metric_non_zeros);
@@ -205,7 +205,7 @@ impl<T:SeaCoefficient, I:SeaBasisBladeSet> SeaSparseMultivectorLowDimensions<T, 
 }
 
 // Multivector Iter
-impl<T:SeaCoefficient, I:SeaBasisBladeSet> SeaSparseMultivectorLowDimensions<T, I> {
+impl<T:SeaCoefficient, I:SeaBasisBladeSet> SeaLowDimensionalSparseMultivector<T, I> {
 	pub fn iter(&self) -> SparseMultivectorIter<'_, T, I> {
 		SparseMultivectorIter::new(self)
 	}
@@ -215,13 +215,13 @@ impl<T:SeaCoefficient, I:SeaBasisBladeSet> SeaSparseMultivectorLowDimensions<T, 
 	}
 }
 
-impl<T:SeaCoefficient, I:SeaBasisBladeSet> Default for SeaSparseMultivectorLowDimensions<T, I> {
+impl<T:SeaCoefficient, I:SeaBasisBladeSet> Default for SeaLowDimensionalSparseMultivector<T, I> {
 	fn default() -> Self {
 		Self::new()
 	}
 }
 
-impl<T:SeaCoefficient, I:SeaBasisBladeSet> FromStr for SeaSparseMultivectorLowDimensions<T, I> {
+impl<T:SeaCoefficient, I:SeaBasisBladeSet> FromStr for SeaLowDimensionalSparseMultivector<T, I> {
 	type Err = ParseMultivectorError;
 	
 	fn from_str(s: &str) -> Result<Self, Self::Err> {
@@ -263,15 +263,15 @@ impl<T:SeaCoefficient, I:SeaBasisBladeSet> FromStr for SeaSparseMultivectorLowDi
 	}
 }
 
-impl<T:SeaCoefficient, I:SeaBasisBladeSet> BitXor<Self> for &SeaSparseMultivectorLowDimensions<T, I> {
-	type Output = SeaSparseMultivectorLowDimensions<T, I>;
+impl<T:SeaCoefficient, I:SeaBasisBladeSet> BitXor<Self> for &SeaLowDimensionalSparseMultivector<T, I> {
+	type Output = SeaLowDimensionalSparseMultivector<T, I>;
 	fn bitxor(self, rhs: Self) -> Self::Output {
 		self.outer_product(rhs)
 	}
 }
 
-impl<T:SeaCoefficient, I:SeaBasisBladeSet> Neg for &SeaSparseMultivectorLowDimensions<T, I> {
-	type Output = SeaSparseMultivectorLowDimensions<T, I>;
+impl<T:SeaCoefficient, I:SeaBasisBladeSet> Neg for &SeaLowDimensionalSparseMultivector<T, I> {
+	type Output = SeaLowDimensionalSparseMultivector<T, I>;
 	fn neg(self) -> Self::Output {
 		self.negated()
 	}
@@ -287,84 +287,84 @@ mod tests{
 
 	#[test]
 	fn from_str() {
-		let a = SeaSparseMultivectorLowDimensions::<f32, u8>::from_str("1 + e1 + 2e2 + 3e12 + 4e3 + 5e13 + 6e23 + 7e123").unwrap();
+		let a = SeaLowDimensionalSparseMultivector::<f32, u8>::from_str("1 + e1 + 2e2 + 3e12 + 4e3 + 5e13 + 6e23 + 7e123").unwrap();
 		assert_eq!(
 			a,
-			SeaSparseMultivectorLowDimensions { 
+			SeaLowDimensionalSparseMultivector { 
 				basis_blade_bits: 255, 
 				coefficients: vec![1_f32, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0] 
 			}
 		);
 
-		let a = SeaSparseMultivectorLowDimensions::<f32, u16>::from_str("1 - e1 + 2e2 - 3e12 + 4e3 - 5e13 + 6e23 - 7e123 + 8e4 - 9e14 + 10e24 - 11e124 + 12e34 - 13e134 + 14e234 - 15e1234").unwrap();
+		let a = SeaLowDimensionalSparseMultivector::<f32, u16>::from_str("1 - e1 + 2e2 - 3e12 + 4e3 - 5e13 + 6e23 - 7e123 + 8e4 - 9e14 + 10e24 - 11e124 + 12e34 - 13e134 + 14e234 - 15e1234").unwrap();
 		assert_eq!(
 			a,
-			SeaSparseMultivectorLowDimensions { 
+			SeaLowDimensionalSparseMultivector { 
 				basis_blade_bits: 65535, 
 				coefficients: vec![1_f32, -1.0, 2.0, -3.0, 4.0, -5.0, 6.0, -7.0, 8.0, -9.0, 10.0, -11.0, 12.0, -13.0, 14.0, -15.0] 
 			}
 		);
 
-		assert_eq!(SeaSparseMultivectorLowDimensions::<f32, u8>::from_str("e4").unwrap_err(), ParseMultivectorError::InvalidBasisBladeForAlgebra);
-		assert_eq!(SeaSparseMultivectorLowDimensions::<f32, u8>::from_str("e21").unwrap_err(), ParseMultivectorError::InvalidBasisVectorOrdering);
-		assert_eq!(SeaSparseMultivectorLowDimensions::<f32, u8>::from_str("e11").unwrap_err(), ParseMultivectorError::DuplicateBasisVector);
-		assert_eq!(SeaSparseMultivectorLowDimensions::<f32, u8>::from_str("e1 + e1").unwrap_err(), ParseMultivectorError::DuplicateBasisBlade);
+		assert_eq!(SeaLowDimensionalSparseMultivector::<f32, u8>::from_str("e4").unwrap_err(), ParseMultivectorError::InvalidBasisBladeForAlgebra);
+		assert_eq!(SeaLowDimensionalSparseMultivector::<f32, u8>::from_str("e21").unwrap_err(), ParseMultivectorError::InvalidBasisVectorOrdering);
+		assert_eq!(SeaLowDimensionalSparseMultivector::<f32, u8>::from_str("e11").unwrap_err(), ParseMultivectorError::DuplicateBasisVector);
+		assert_eq!(SeaLowDimensionalSparseMultivector::<f32, u8>::from_str("e1 + e1").unwrap_err(), ParseMultivectorError::DuplicateBasisBlade);
 	}
 
 	
 	#[test]
 	fn multivector() {
-		let a = SeaSparseMultivectorLowDimensions::<f32, u8>::from_str("1 + e1 + 2e2 + 3e12 + 4e3 + 5e13 + 6e23 + 7e123").unwrap();
-		let out = SeaSparseMultivectorLowDimensions::<f32, u8>::from_str("1 + e1 + 2e2 - 3e12 + 4e3 - 5e13 - 6e23 - 7e123").unwrap();
+		let a = SeaLowDimensionalSparseMultivector::<f32, u8>::from_str("1 + e1 + 2e2 + 3e12 + 4e3 + 5e13 + 6e23 + 7e123").unwrap();
+		let out = SeaLowDimensionalSparseMultivector::<f32, u8>::from_str("1 + e1 + 2e2 - 3e12 + 4e3 - 5e13 - 6e23 - 7e123").unwrap();
 		assert_eq!(
 			a.reversion_conjugated(),
 			out
 		);
 
-		let a = SeaSparseMultivectorLowDimensions::<f32, u8>::from_str("1 + e1 + 2e2 + 3e12 + 4e3 + 5e13 + 6e23 + 7e123").unwrap();
-		let out = SeaSparseMultivectorLowDimensions::<f32, u8>::from_str("1 - e1 - 2e2 + 3e12 - 4e3 + 5e13 + 6e23 - 7e123").unwrap();
+		let a = SeaLowDimensionalSparseMultivector::<f32, u8>::from_str("1 + e1 + 2e2 + 3e12 + 4e3 + 5e13 + 6e23 + 7e123").unwrap();
+		let out = SeaLowDimensionalSparseMultivector::<f32, u8>::from_str("1 - e1 - 2e2 + 3e12 - 4e3 + 5e13 + 6e23 - 7e123").unwrap();
 		assert_eq!(
 			a.involution_conjugated(),
 			out
 		);
 
-		let a = SeaSparseMultivectorLowDimensions::<f32, u8>::from_str("1 + e1 + 2e2 + 3e12 + 4e3 + 5e13 + 6e23 + 7e123").unwrap();
-		let out = SeaSparseMultivectorLowDimensions::<f32, u8>::from_str("1 - e1 - 2e2 - 3e12 - 4e3 - 5e13 - 6e23 + 7e123").unwrap();
+		let a = SeaLowDimensionalSparseMultivector::<f32, u8>::from_str("1 + e1 + 2e2 + 3e12 + 4e3 + 5e13 + 6e23 + 7e123").unwrap();
+		let out = SeaLowDimensionalSparseMultivector::<f32, u8>::from_str("1 - e1 - 2e2 - 3e12 - 4e3 - 5e13 - 6e23 + 7e123").unwrap();
 		assert_eq!(
 			a.clifford_conjugated(),
 			out
 		);
 
-		let a = SeaSparseMultivectorLowDimensions::<f32, u8>::from_str("1 + e1 + 2e2 + 3e12 + 4e3 + 5e13 + 6e23 + 7e123").unwrap();
-		let out = SeaSparseMultivectorLowDimensions::<f32, u8>::from_str("7 + 6e1 + 5e2 + 4e12 + 3e3 + 2e13 + 1e23 + 1e123").unwrap();
+		let a = SeaLowDimensionalSparseMultivector::<f32, u8>::from_str("1 + e1 + 2e2 + 3e12 + 4e3 + 5e13 + 6e23 + 7e123").unwrap();
+		let out = SeaLowDimensionalSparseMultivector::<f32, u8>::from_str("7 + 6e1 + 5e2 + 4e12 + 3e3 + 2e13 + 1e23 + 1e123").unwrap();
 		assert_eq!(
 			a.poincare_dual(),
 			out
 		);
 
-		let a = SeaSparseMultivectorLowDimensions::<f32, u8>::from_str("1 + e1 + 2e2 + 3e12 + 4e3 + 5e13 + 6e23 + 7e123").unwrap();
-		let out = SeaSparseMultivectorLowDimensions::<f32, u8>::from_str("7 + 6e1 - 5e2 + 4e12 + 3e3 - 2e13 + 1e23 + 1e123").unwrap();
+		let a = SeaLowDimensionalSparseMultivector::<f32, u8>::from_str("1 + e1 + 2e2 + 3e12 + 4e3 + 5e13 + 6e23 + 7e123").unwrap();
+		let out = SeaLowDimensionalSparseMultivector::<f32, u8>::from_str("7 + 6e1 - 5e2 + 4e12 + 3e3 - 2e13 + 1e23 + 1e123").unwrap();
 		assert_eq!(
 			a.right_complimented(),
 			out
 		);
 
-		let a = SeaSparseMultivectorLowDimensions::<f32, u16>::from_str("1 + e1 + 2e2 + 3e12 + 4e3 + 5e13 + 6e23 + 7e123 + 8e4 + 9e14 + 10e24 + 11e124 + 12e34 + 13e134 + 14e234 + 15e1234").unwrap();
-		let out = SeaSparseMultivectorLowDimensions::<f32, u16>::from_str("15 + 14e1 + 13e2 + 12e12 + 11e3 + 10e13 + 9e23 + 8e123 + 7e4 + 6e14 + 5e24 + 4e124 + 3e34 + 2e134 + 1e234 + 1e1234").unwrap();
+		let a = SeaLowDimensionalSparseMultivector::<f32, u16>::from_str("1 + e1 + 2e2 + 3e12 + 4e3 + 5e13 + 6e23 + 7e123 + 8e4 + 9e14 + 10e24 + 11e124 + 12e34 + 13e134 + 14e234 + 15e1234").unwrap();
+		let out = SeaLowDimensionalSparseMultivector::<f32, u16>::from_str("15 + 14e1 + 13e2 + 12e12 + 11e3 + 10e13 + 9e23 + 8e123 + 7e4 + 6e14 + 5e24 + 4e124 + 3e34 + 2e134 + 1e234 + 1e1234").unwrap();
 		assert_eq!(
 			a.poincare_dual(),
 			out
 		);
 
-		let a = SeaSparseMultivectorLowDimensions::<f32, u16>::from_str("1 + e1 + 2e2 + 3e12 + 4e3 + 5e13 + 6e23 + 7e123 + 8e4 + 9e14 + 10e24 + 11e124 + 12e34 + 13e134 + 14e234 + 15e1234").unwrap();
-		let out = SeaSparseMultivectorLowDimensions::<f32, u16>::from_str("15 + 14e1 - 13e2 + 12e12 + 11e3 - 10e13 + 9e23 + 8e123 - 7e4 + 6e14 - 5e24 - 4e124 + 3e34 + 2e134 - 1e234 + 1e1234").unwrap();
+		let a = SeaLowDimensionalSparseMultivector::<f32, u16>::from_str("1 + e1 + 2e2 + 3e12 + 4e3 + 5e13 + 6e23 + 7e123 + 8e4 + 9e14 + 10e24 + 11e124 + 12e34 + 13e134 + 14e234 + 15e1234").unwrap();
+		let out = SeaLowDimensionalSparseMultivector::<f32, u16>::from_str("15 + 14e1 - 13e2 + 12e12 + 11e3 - 10e13 + 9e23 + 8e123 - 7e4 + 6e14 - 5e24 - 4e124 + 3e34 + 2e134 - 1e234 + 1e1234").unwrap();
 		assert_eq!(
 			a.right_complimented(),
 			out
 		);
 
-		let a = SeaSparseMultivectorLowDimensions::<f32, u16>::from_str("1 + e1 + 2e2 + 3e12 + 4e3 + 5e13 + 6e23 + 7e123 + 8e4 + 9e14 + 10e24 + 11e124 + 12e34 + 13e134 + 14e234 + 15e1234").unwrap();
-		let out = SeaSparseMultivectorLowDimensions::<f32, u16>::from_str("15 - 14e1 + 13e2 + 12e12 - 11e3 - 10e13 + 9e23 - 8e123 + 7e4 + 6e14 - 5e24 + 4e124 + 3e34 - 2e134 + 1e234 + 1e1234").unwrap();
+		let a = SeaLowDimensionalSparseMultivector::<f32, u16>::from_str("1 + e1 + 2e2 + 3e12 + 4e3 + 5e13 + 6e23 + 7e123 + 8e4 + 9e14 + 10e24 + 11e124 + 12e34 + 13e134 + 14e234 + 15e1234").unwrap();
+		let out = SeaLowDimensionalSparseMultivector::<f32, u16>::from_str("15 - 14e1 + 13e2 + 12e12 - 11e3 - 10e13 + 9e23 - 8e123 + 7e4 + 6e14 - 5e24 + 4e124 + 3e34 - 2e134 + 1e234 + 1e1234").unwrap();
 		assert_eq!(
 			a.left_complimented(),
 			out
@@ -373,64 +373,64 @@ mod tests{
 
 	#[test]
 	fn multivector_mut(){
-		let mut a = SeaSparseMultivectorLowDimensions::<f32, u8>::from_str("1 + e1 + 2e2 + 3e12 + 4e3 + 5e13 + 6e23 + 7e123").unwrap();
-		let out = SeaSparseMultivectorLowDimensions::<f32, u8>::from_str("1 + e1 + 2e2 - 3e12 + 4e3 - 5e13 - 6e23 - 7e123").unwrap();
+		let mut a = SeaLowDimensionalSparseMultivector::<f32, u8>::from_str("1 + e1 + 2e2 + 3e12 + 4e3 + 5e13 + 6e23 + 7e123").unwrap();
+		let out = SeaLowDimensionalSparseMultivector::<f32, u8>::from_str("1 + e1 + 2e2 - 3e12 + 4e3 - 5e13 - 6e23 - 7e123").unwrap();
 		a.reversion_conjugation();
 		assert_eq!(
 			a,
 			out
 		);
 
-		let mut a = SeaSparseMultivectorLowDimensions::<f32, u8>::from_str("1 + e1 + 2e2 + 3e12 + 4e3 + 5e13 + 6e23 + 7e123").unwrap();
-		let out = SeaSparseMultivectorLowDimensions::<f32, u8>::from_str("1 - e1 - 2e2 + 3e12 - 4e3 + 5e13 + 6e23 - 7e123").unwrap();
+		let mut a = SeaLowDimensionalSparseMultivector::<f32, u8>::from_str("1 + e1 + 2e2 + 3e12 + 4e3 + 5e13 + 6e23 + 7e123").unwrap();
+		let out = SeaLowDimensionalSparseMultivector::<f32, u8>::from_str("1 - e1 - 2e2 + 3e12 - 4e3 + 5e13 + 6e23 - 7e123").unwrap();
 		a.involution_conjugation();
 		assert_eq!(
 			a,
 			out
 		);
 
-		let mut a = SeaSparseMultivectorLowDimensions::<f32, u8>::from_str("1 + e1 + 2e2 + 3e12 + 4e3 + 5e13 + 6e23 + 7e123").unwrap();
-		let out = SeaSparseMultivectorLowDimensions::<f32, u8>::from_str("1 - e1 - 2e2 - 3e12 - 4e3 - 5e13 - 6e23 + 7e123").unwrap();
+		let mut a = SeaLowDimensionalSparseMultivector::<f32, u8>::from_str("1 + e1 + 2e2 + 3e12 + 4e3 + 5e13 + 6e23 + 7e123").unwrap();
+		let out = SeaLowDimensionalSparseMultivector::<f32, u8>::from_str("1 - e1 - 2e2 - 3e12 - 4e3 - 5e13 - 6e23 + 7e123").unwrap();
 		a.clifford_conjugation();
 		assert_eq!(
 			a,
 			out
 		);
 
-		let mut a = SeaSparseMultivectorLowDimensions::<f32, u8>::from_str("1 + e1 + 2e2 + 3e12 + 4e3 + 5e13 + 6e23 + 7e123").unwrap();
-		let out = SeaSparseMultivectorLowDimensions::<f32, u8>::from_str("7 + 6e1 + 5e2 + 4e12 + 3e3 + 2e13 + 1e23 + 1e123").unwrap();
+		let mut a = SeaLowDimensionalSparseMultivector::<f32, u8>::from_str("1 + e1 + 2e2 + 3e12 + 4e3 + 5e13 + 6e23 + 7e123").unwrap();
+		let out = SeaLowDimensionalSparseMultivector::<f32, u8>::from_str("7 + 6e1 + 5e2 + 4e12 + 3e3 + 2e13 + 1e23 + 1e123").unwrap();
 		a.poincare_dualization();
 		assert_eq!(
 			a,
 			out
 		);
 
-		let mut a = SeaSparseMultivectorLowDimensions::<f32, u8>::from_str("1 + e1 + 2e2 + 3e12 + 4e3 + 5e13 + 6e23 + 7e123").unwrap();
-		let out = SeaSparseMultivectorLowDimensions::<f32, u8>::from_str("7 + 6e1 - 5e2 + 4e12 + 3e3 - 2e13 + 1e23 + 1e123").unwrap();
+		let mut a = SeaLowDimensionalSparseMultivector::<f32, u8>::from_str("1 + e1 + 2e2 + 3e12 + 4e3 + 5e13 + 6e23 + 7e123").unwrap();
+		let out = SeaLowDimensionalSparseMultivector::<f32, u8>::from_str("7 + 6e1 - 5e2 + 4e12 + 3e3 - 2e13 + 1e23 + 1e123").unwrap();
 		a.right_compliment();
 		assert_eq!(
 			a,
 			out
 		);
 
-		let mut a = SeaSparseMultivectorLowDimensions::<f32, u8>::from_str("1 + e1 + 2e2 + 3e12 + 4e3 + 5e13 + 6e23 + 7e123").unwrap();
-		let out = SeaSparseMultivectorLowDimensions::<f32, u8>::from_str("7 + 6e1 - 5e2 + 4e12 + 3e3 - 2e13 + 1e23 + 1e123").unwrap();
+		let mut a = SeaLowDimensionalSparseMultivector::<f32, u8>::from_str("1 + e1 + 2e2 + 3e12 + 4e3 + 5e13 + 6e23 + 7e123").unwrap();
+		let out = SeaLowDimensionalSparseMultivector::<f32, u8>::from_str("7 + 6e1 - 5e2 + 4e12 + 3e3 - 2e13 + 1e23 + 1e123").unwrap();
 		a.left_compliment();
 		assert_eq!(
 			a,
 			out
 		);
 
-		let mut a = SeaSparseMultivectorLowDimensions::<f32, u16>::from_str("1 + e1 + 2e2 + 3e12 + 4e3 + 5e13 + 6e23 + 7e123 + 8e4 + 9e14 + 10e24 + 11e124 + 12e34 + 13e134 + 14e234 + 15e1234").unwrap();
-		let out = SeaSparseMultivectorLowDimensions::<f32, u16>::from_str("15 + 14e1 - 13e2 + 12e12 + 11e3 - 10e13 + 9e23 + 8e123 - 7e4 + 6e14 - 5e24 - 4e124 + 3e34 + 2e134 - 1e234 + 1e1234").unwrap();
+		let mut a = SeaLowDimensionalSparseMultivector::<f32, u16>::from_str("1 + e1 + 2e2 + 3e12 + 4e3 + 5e13 + 6e23 + 7e123 + 8e4 + 9e14 + 10e24 + 11e124 + 12e34 + 13e134 + 14e234 + 15e1234").unwrap();
+		let out = SeaLowDimensionalSparseMultivector::<f32, u16>::from_str("15 + 14e1 - 13e2 + 12e12 + 11e3 - 10e13 + 9e23 + 8e123 - 7e4 + 6e14 - 5e24 - 4e124 + 3e34 + 2e134 - 1e234 + 1e1234").unwrap();
 		a.right_compliment();
 		assert_eq!(
 			a,
 			out
 		);
 
-		let mut a = SeaSparseMultivectorLowDimensions::<f32, u16>::from_str("1 + e1 + 2e2 + 3e12 + 4e3 + 5e13 + 6e23 + 7e123 + 8e4 + 9e14 + 10e24 + 11e124 + 12e34 + 13e134 + 14e234 + 15e1234").unwrap();
-		let out = SeaSparseMultivectorLowDimensions::<f32, u16>::from_str("15 - 14e1 + 13e2 + 12e12 - 11e3 - 10e13 + 9e23 - 8e123 + 7e4 + 6e14 - 5e24 + 4e124 + 3e34 - 2e134 + 1e234 + 1e1234").unwrap();
+		let mut a = SeaLowDimensionalSparseMultivector::<f32, u16>::from_str("1 + e1 + 2e2 + 3e12 + 4e3 + 5e13 + 6e23 + 7e123 + 8e4 + 9e14 + 10e24 + 11e124 + 12e34 + 13e134 + 14e234 + 15e1234").unwrap();
+		let out = SeaLowDimensionalSparseMultivector::<f32, u16>::from_str("15 - 14e1 + 13e2 + 12e12 - 11e3 - 10e13 + 9e23 - 8e123 + 7e4 + 6e14 - 5e24 + 4e124 + 3e34 - 2e134 + 1e234 + 1e1234").unwrap();
 		a.left_compliment();
 		assert_eq!(
 			a,
@@ -440,7 +440,7 @@ mod tests{
 	
 	#[test]
 	fn iter() {
-		let a = SeaSparseMultivectorLowDimensions::<f32, u16>::from_str("1 + e1 + 2e2 + 3e12 + 4e3 + 5e13 + 6e23 + 7e123 + 8e4 + 9e14 + 10e24 + 11e124 + 12e34 + 13e134 + 14e234 + 15e1234").unwrap();
+		let a = SeaLowDimensionalSparseMultivector::<f32, u16>::from_str("1 + e1 + 2e2 + 3e12 + 4e3 + 5e13 + 6e23 + 7e123 + 8e4 + 9e14 + 10e24 + 11e124 + 12e34 + 13e134 + 14e234 + 15e1234").unwrap();
 		let mut iter = a.iter();
 		assert_eq!(iter.next(), Some(SeaBasisBladeLow::from_str("1").unwrap()));
 		assert_eq!(iter.next(), Some(SeaBasisBladeLow::from_str("1e1").unwrap()));
@@ -460,7 +460,7 @@ mod tests{
 		assert_eq!(iter.next(), Some(SeaBasisBladeLow::from_str("15e1234").unwrap()));
 		assert_eq!(iter.next(), None);
 
-		let a = SeaSparseMultivectorLowDimensions::<f32, u16>::from_str(" e1 + 3e12 + 4e3 + 13e134 + 15e1234").unwrap();
+		let a = SeaLowDimensionalSparseMultivector::<f32, u16>::from_str(" e1 + 3e12 + 4e3 + 13e134 + 15e1234").unwrap();
 		let mut iter = a.iter();
 		assert_eq!(iter.next(), Some(SeaBasisBladeLow::from_str("1e1").unwrap()));
 		assert_eq!(iter.next(), Some(SeaBasisBladeLow::from_str("3e12").unwrap()));
@@ -472,7 +472,7 @@ mod tests{
 
 	#[test]
 	fn grade_iter() {
-		let a = SeaSparseMultivectorLowDimensions::<f32, u16>::from_str("1 + e1 + 2e2 + 3e12 + 4e3 + 5e13 + 6e23 + 7e123 + 8e4 + 9e14 + 10e24 + 11e124 + 12e34 + 13e134 + 14e234 + 15e1234").unwrap();
+		let a = SeaLowDimensionalSparseMultivector::<f32, u16>::from_str("1 + e1 + 2e2 + 3e12 + 4e3 + 5e13 + 6e23 + 7e123 + 8e4 + 9e14 + 10e24 + 11e124 + 12e34 + 13e134 + 14e234 + 15e1234").unwrap();
 		
 		let mut iter = a.grade_iter(&SeaGrade(0));
 		assert_eq!(iter.next(), Some(SeaBasisBladeLow::from_str("1").unwrap()));
@@ -508,16 +508,16 @@ mod tests{
 
 	#[test]
 	fn remove_zeros() {
-		let mut a = SeaSparseMultivectorLowDimensions::<f32, u16>::from_str("1 + e1 + 0e2 + 0e12 + 0e3 + 0e13 + 0e23 + 0e123 + 0e4 + 0e14 + 0e24 + 0e124 + 0e34 + 0e134 + 0e234 + 0e1234").unwrap();
-		let out = SeaSparseMultivectorLowDimensions::<f32, u16>::from_str("1 + e1").unwrap();
+		let mut a = SeaLowDimensionalSparseMultivector::<f32, u16>::from_str("1 + e1 + 0e2 + 0e12 + 0e3 + 0e13 + 0e23 + 0e123 + 0e4 + 0e14 + 0e24 + 0e124 + 0e34 + 0e134 + 0e234 + 0e1234").unwrap();
+		let out = SeaLowDimensionalSparseMultivector::<f32, u16>::from_str("1 + e1").unwrap();
 		a.remove_zeros();
 		assert_eq!(
 			a,
 			out
 		);
 
-		let mut a = SeaSparseMultivectorLowDimensions::<f32, u16>::from_str("0 + 0e1 + 0e2 + 0e12 + 0e3 + 1e13 + 0e23 + 0e123 + 0e4 + 0e14 + 0e24 + 0e124 + 10e34 + 0e134 + 0e234 + 0e1234").unwrap();
-		let out = SeaSparseMultivectorLowDimensions::<f32, u16>::from_str("1e13 + 10e34").unwrap();
+		let mut a = SeaLowDimensionalSparseMultivector::<f32, u16>::from_str("0 + 0e1 + 0e2 + 0e12 + 0e3 + 1e13 + 0e23 + 0e123 + 0e4 + 0e14 + 0e24 + 0e124 + 10e34 + 0e134 + 0e234 + 0e1234").unwrap();
+		let out = SeaLowDimensionalSparseMultivector::<f32, u16>::from_str("1e13 + 10e34").unwrap();
 		a.remove_zeros();
 		assert_eq!(
 			a,
@@ -527,16 +527,16 @@ mod tests{
 
 	#[test]
 	fn remove_approx_zeros() {
-		let mut a = SeaSparseMultivectorLowDimensions::<f32, u16>::from_str("1 + e1 + 0.0000000000000000001e2 + 0.0000000000000000001e12 + 0.0000000000000000001e3 + 0.0000000000000000001e13 + 0.0000000000000000001e23 + 0.0000000000000000001e123 + 0.0000000000000000001e4 + 0.0000000000000000001e14 + 0.0000000000000000001e24 + 0.0000000000000000001e124 + 0.0000000000000000001e34 + 0.0000000000000000001e134 + 0.0000000000000000001e234 + 0.0000000000000000001e1234").unwrap();
-		let out = SeaSparseMultivectorLowDimensions::<f32, u16>::from_str("1 + e1").unwrap();
+		let mut a = SeaLowDimensionalSparseMultivector::<f32, u16>::from_str("1 + e1 + 0.0000000000000000001e2 + 0.0000000000000000001e12 + 0.0000000000000000001e3 + 0.0000000000000000001e13 + 0.0000000000000000001e23 + 0.0000000000000000001e123 + 0.0000000000000000001e4 + 0.0000000000000000001e14 + 0.0000000000000000001e24 + 0.0000000000000000001e124 + 0.0000000000000000001e34 + 0.0000000000000000001e134 + 0.0000000000000000001e234 + 0.0000000000000000001e1234").unwrap();
+		let out = SeaLowDimensionalSparseMultivector::<f32, u16>::from_str("1 + e1").unwrap();
 		a.remove_approx_zeros(1e-15);
 		assert_eq!(
 			a,
 			out
 		);
 
-		let mut a = SeaSparseMultivectorLowDimensions::<f32, u16>::from_str("0.0000000000000000001 + 0.0000000000000000001e1 + 0.0000000000000000001e2 + 0.0000000000000000001e12 + 0.0000000000000000001e3 + 1e13 + 0.0000000000000000001e23 + 0.0000000000000000001e123 + 0.0000000000000000001e4 + 0.0000000000000000001e14 + 0.0000000000000000001e24 + 0.0000000000000000001e124 + 10.0000000000000000001e34 + 0.0000000000000000001e134 + 0.0000000000000000001e234 + 0.0000000000000000001e1234").unwrap();
-		let out = SeaSparseMultivectorLowDimensions::<f32, u16>::from_str("1e13 + 10e34").unwrap();
+		let mut a = SeaLowDimensionalSparseMultivector::<f32, u16>::from_str("0.0000000000000000001 + 0.0000000000000000001e1 + 0.0000000000000000001e2 + 0.0000000000000000001e12 + 0.0000000000000000001e3 + 1e13 + 0.0000000000000000001e23 + 0.0000000000000000001e123 + 0.0000000000000000001e4 + 0.0000000000000000001e14 + 0.0000000000000000001e24 + 0.0000000000000000001e124 + 10.0000000000000000001e34 + 0.0000000000000000001e134 + 0.0000000000000000001e234 + 0.0000000000000000001e1234").unwrap();
+		let out = SeaLowDimensionalSparseMultivector::<f32, u16>::from_str("1e13 + 10e34").unwrap();
 		a.remove_approx_zeros(1e-15);
 		assert_eq!(
 			a,

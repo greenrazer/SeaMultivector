@@ -10,9 +10,9 @@ mod custom_metric;
 pub mod pga3d;
 pub mod basis_blade_set;
 
-use custom_metric::SeaSparseMultivectorLowDimensionsWithMetric;
+use custom_metric::SeaLowDimensionalMultivectorCustomMetric;
 
-pub type Multivector3D<T> = SeaSparseMultivectorLowDimensionsWithMetric::<T, u8>;
-pub type Multivector4D<T> = SeaSparseMultivectorLowDimensionsWithMetric::<T, u16>;
-pub type Multivector5D<T> = SeaSparseMultivectorLowDimensionsWithMetric::<T, u32>;
-pub type Multivector6D<T> = SeaSparseMultivectorLowDimensionsWithMetric::<T, u64>;
+pub type SeaMultivector3D<T> = SeaLowDimensionalMultivectorCustomMetric::<T, u8>;
+pub type SeaMultivector4D<T> = SeaLowDimensionalMultivectorCustomMetric::<T, u16>;
+pub type SeaMultivector5D<T> = SeaLowDimensionalMultivectorCustomMetric::<T, u32>;
+pub type SeaMultivector6D<T> = SeaLowDimensionalMultivectorCustomMetric::<T, u64>;
