@@ -548,10 +548,10 @@ mod tests {
 		#[test]
 		fn scalar_norm() {
 			let a = SeaSparseMultivectorLowDimensionsWithMetric::<f32, u16>::from_str("3,0,1>1 + e1 + 2e2 + 3e12 + 4e3 + 5e13 + 6e23 + 7e123 + 8e4 + 9e14 + 10e24 + 11e124 + 12e34 + 13e134 + 14e234 + 15e1234").unwrap();
-			assert_eq!(a.scalar_norm(), 11.8743418201);
+			assert_eq!(a.scalar_norm(), 11.874_342);
 
 			let a = SeaSparseMultivectorLowDimensionsWithMetric::<f32, u16>::from_str("3,1,0>1 + e1 + 2e2 + 3e12 + 4e3 + 5e13 + 6e23 + 7e123 + 8e4 + 9e14 + 10e24 + 11e124 + 12e34 + 13e134 + 14e234 + 15e1234").unwrap();
-			assert_eq!(a.scalar_norm(), 30.9677251344);
+			assert_eq!(a.scalar_norm(), 30.967_726);
 		}
 
 		#[test]

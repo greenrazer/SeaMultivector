@@ -18,7 +18,7 @@ impl<T:SeaCoefficient, I:SeaBasisBladeSet> SeaSparseMultivectorLowDimensions<T, 
 			
 			let curr_rhs_bbb = rhs.basis_blade_bits.geometric_product_with_basis_blade(&o, &metric_non_zeros);
 
-			let mut dot_mask = self.basis_blade_bits.intersection(&curr_rhs_bbb);
+			let dot_mask = self.basis_blade_bits.intersection(&curr_rhs_bbb);
 			
 			let total_neg_mask = I::total_negations(&o, &metric_negs);
 			
@@ -103,10 +103,10 @@ mod tests{
 			out
 		);
 
-		let m = SeaMetric::new(4, 0, 0);
+		let _m = SeaMetric::new(4, 0, 0);
 
-		let a = SeaSparseMultivectorLowDimensions::<f32, u64>::from_str("1 + 1e1 + 2e2 + 3e12 + 4e3 + 5e13 + 6e23 + 7e123").unwrap();
-		let b = SeaSparseMultivectorLowDimensions::<f32, u64>::from_str("1 + 1e1 + 2e2 + 3e12 + 4e3 + 5e13 + 6e23 + 7e123").unwrap();
+		let _a = SeaSparseMultivectorLowDimensions::<f32, u64>::from_str("1 + 1e1 + 2e2 + 3e12 + 4e3 + 5e13 + 6e23 + 7e123").unwrap();
+		let _b = SeaSparseMultivectorLowDimensions::<f32, u64>::from_str("1 + 1e1 + 2e2 + 3e12 + 4e3 + 5e13 + 6e23 + 7e123").unwrap();
 
 		// let now = Instant::now();
 		// let num_iters = 10_000;

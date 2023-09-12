@@ -14,9 +14,9 @@ impl<T:SeaCoefficient, I:SeaBasisBladeSet> OuterProduct<&Self> for SeaSparseMult
 
 		for (out_idx, o) in output_basis_blade_bits.iter().enumerate() {
 			
-			let mut curr_rhs_bbb = &reverse_rhs_bbbs.outer_product_with_basis_blade(&o);
+			let curr_rhs_bbb = &reverse_rhs_bbbs.outer_product_with_basis_blade(&o);
 			
-			let dot_mask = self.basis_blade_bits.intersection(&curr_rhs_bbb);
+			let dot_mask = self.basis_blade_bits.intersection(curr_rhs_bbb);
 			
 			let cannonical_neg_mask = I::cannonical_reordering_negations(&o);
 

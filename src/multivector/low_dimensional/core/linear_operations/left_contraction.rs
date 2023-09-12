@@ -16,9 +16,9 @@ impl<T:SeaCoefficient, I:SeaBasisBladeSet> SeaSparseMultivectorLowDimensions<T, 
 
 		for (out_idx, o) in output_basis_blade_bits.iter().enumerate() {
 			
-			let mut curr_rhs_bbb = rhs.basis_blade_bits.left_contraction_with_basis_blade(&o,  &metric_non_zeros);
+			let curr_rhs_bbb = rhs.basis_blade_bits.left_contraction_with_basis_blade(&o,  &metric_non_zeros);
 			
-			let mut dot_mask = self.basis_blade_bits.intersection(&curr_rhs_bbb);
+			let dot_mask = self.basis_blade_bits.intersection(&curr_rhs_bbb);
 			
 			let total_neg_mask = I::total_negations(&o, &metric_negs);
 

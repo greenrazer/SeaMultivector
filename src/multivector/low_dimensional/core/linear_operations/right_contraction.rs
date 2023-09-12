@@ -16,9 +16,9 @@ impl<T:SeaCoefficient, I:SeaBasisBladeSet> SeaSparseMultivectorLowDimensions<T, 
 		};
 
 		for (out_idx, o) in output_basis_blade_bits.iter().enumerate() {
-			let mut curr_rhs_bbb = rhs.basis_blade_bits.right_contraction_with_basis_blade(&o,  &metric_non_zeros);
+			let curr_rhs_bbb = rhs.basis_blade_bits.right_contraction_with_basis_blade(&o,  &metric_non_zeros);
 			
-			let mut dot_mask = self.basis_blade_bits.intersection(&curr_rhs_bbb);
+			let dot_mask = self.basis_blade_bits.intersection(&curr_rhs_bbb);
 			
 			let total_neg_mask = I::total_negations(&o, &metric_negs);
 
@@ -193,7 +193,7 @@ mod tests{
 		let a = SeaSparseMultivectorLowDimensions::<f32, u64>::from_str(" + 1 + e1 + 2e2 + 3e12 + 4e3 + 5e13 + 6e23 + 7e123 + 8e4 + 9e14 + 10e24 + 11e124 + 12e345 + 13e1345 + 14e2345 + 15e12345 +e6 + 12e126 + 8e46").unwrap();
 		let b = SeaSparseMultivectorLowDimensions::<f32, u64>::from_str("  + 3e13 + 1e4 + 2e124  +4e345 +83e1235 + 70e1245 + 4e1345 + 8e2345 + 12e123456").unwrap();
 
-		let out = SeaSparseMultivectorLowDimensions::<f32, u64>::from_str("115+59e1-105e2+1050e3+1245e4+8e6-71e12-18e35-39e45+13e135+14e235+45e245+15e1235​").unwrap();
+		let out = SeaSparseMultivectorLowDimensions::<f32, u64>::from_str("115+59e1-105e2+1050e3+1245e4+8e6-71e12-18e35-39e45+13e135+14e235+45e245+15e1235\u{200B}").unwrap();
 		assert_eq!(
 			a.right_contraction(&b, &m),
 			out

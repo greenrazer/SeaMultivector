@@ -621,7 +621,7 @@ impl<I: SeaBasisBladeSetUnsigned> SeaBasisBladeSet for I {
 		}
 
 		if metric_has_neg {
-			let metric_neg_mask = Self::dual_metric_negations_mask(&metric_negs);
+			let metric_neg_mask = Self::dual_metric_negations_mask(metric_negs);
 			negations ^= &metric_neg_mask;
 		}
 
@@ -693,11 +693,11 @@ impl<I: SeaBasisBladeSetUnsigned> SeaBasisBladeSet for I {
 	}
 
 	fn dual_index(index:&SeaBasisBladeIndexLow) -> SeaBasisBladeIndexLow {
-		&Self::MAX_BASIS_BLADE_INDEX - &index
+		&Self::MAX_BASIS_BLADE_INDEX - index
 	}
 
 	fn geometric_product_with_basis_blade(&self, index: &SeaBasisBladeIndexLow, metric_non_zeros: &SeaBasisBladeIndexLow) -> Self{
-		let mut curr = self.clone();
+		let mut curr = *self;
 		for i in index {
 			let bv_idx = i+1;
 			curr.geometric_product_with_basis_vec(bv_idx);
@@ -718,7 +718,7 @@ impl<I: SeaBasisBladeSetUnsigned> SeaBasisBladeSet for I {
 	}
 
 	fn outer_product_with_basis_blade(&self, index: &SeaBasisBladeIndexLow) -> Self {
-		let mut curr = *self >> *Self::dual_index(index);
+		let curr = *self >> *Self::dual_index(index);
 		curr & I::outer_product_zeros(index)
 	}
 

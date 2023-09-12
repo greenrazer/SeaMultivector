@@ -139,8 +139,8 @@ impl<T:SeaCoefficient> MultivectorPGA3D<T>{
 
 	pub fn raw(&self) -> (u16, [T;16]) {
 		let mut out_mat = [T::zero(); 16];
-		for i in 0..16 {
-			out_mat[i] = self.0.basis_blade_coefficient(&SeaBasisBladeIndexLow(i as u8))
+		for (i,o) in out_mat.iter_mut().enumerate() {
+			*o = self.0.basis_blade_coefficient(&SeaBasisBladeIndexLow(i as u8))
 		}
 		let out_bbb = self.0.multivector.basis_blade_bits;
 		(out_bbb, out_mat)
@@ -168,6 +168,12 @@ impl<T:SeaCoefficient> MultivectorPGA3D<T>{
 
 	pub fn scalar_product(&self, rhs: &Self) -> T {
 		self.0.scalar_product(&rhs.0)
+	}
+}
+
+impl<T:SeaCoefficient> Default for MultivectorPGA3D<T> {
+	fn default() -> Self {
+		Self(Multivector4D::new(3, 0, 1))
 	}
 }
 
@@ -787,12 +793,12 @@ mod tests {
 			focal_point.simplify();
 
 			let translation_dir = MultivectorPGA3D::new_ideal_line(0.0,0.0,0.0);
-			let mut camera_pos = MultivectorPGA3D::new_motor(&translation_dir, 0.0);
+			let camera_pos = MultivectorPGA3D::new_motor(&translation_dir, 0.0);
 	
 			let rotation_axis = MultivectorPGA3D::new_line(0.0,0.0,0.0);
-			let mut camera_rot = MultivectorPGA3D::new_motor(&rotation_axis, 0.0);
+			let camera_rot = MultivectorPGA3D::new_motor(&rotation_axis, 0.0);
 			
-			let mut camera_trans = SeaMotorPGA3D(camera_rot.into() * camera_pos.into());
+			let camera_trans = SeaMotorPGA3D(camera_rot.into() * camera_pos.into());
 			let camera_trans_inv = camera_trans.inversed();
 
 
@@ -800,7 +806,7 @@ mod tests {
 			let scene_point = MultivectorPGA3D::new_point(-0.08682,0.4924,0.00);
 			let scene_point_trans = camera_trans.into() * scene_point * camera_trans_inv.into();
 
-			let mut screen_point2 = &focal_point & &scene_point_trans;
+			let _screen_point2 = &focal_point & &scene_point_trans;
 
 			let mut screen_point = focal_point&scene_point_trans^image_plane;
 
