@@ -30,8 +30,7 @@ impl Iterator for BasisBladeIndexLowIter {
 #[derive(Debug, PartialEq, Eq, PartialOrd, Ord)]
 pub struct SeaBasisBladeIndexLow(pub u8);
 impl SeaBasisBladeIndexLow {
-	pub const ZERO: Self = SeaBasisBladeIndexLow(0);
-	pub const ONE: Self = SeaBasisBladeIndexLow(1);
+	pub const SCALAR: Self = SeaBasisBladeIndexLow(0);
 	pub const ALL: Self = SeaBasisBladeIndexLow(255);
 
 	pub fn basis_vectors_less_than_or_equal(n: u8) -> Self {
@@ -48,7 +47,7 @@ impl SeaBasisBladeIndexLow {
 	pub fn contains_basis_vectors_greater_than(&self, n: u8) -> bool {
 		let bvgt = Self::basis_vectors_greater_than(n);
 		let a = self & &bvgt;
-		a > Self::ZERO
+		a > Self::SCALAR
 	}
 
 	pub fn has(&self, index: u8) -> bool {
@@ -113,6 +112,12 @@ impl Not for &SeaBasisBladeIndexLow {
 	type Output = SeaBasisBladeIndexLow;
 	fn not(self) -> Self::Output {
 		SeaBasisBladeIndexLow(!**self)
+	}
+}
+impl Not for SeaBasisBladeIndexLow {
+	type Output = SeaBasisBladeIndexLow;
+	fn not(self) -> Self::Output {
+		SeaBasisBladeIndexLow(!*self)
 	}
 }
 

@@ -1,19 +1,19 @@
 use super::*;
 
 // Scalar Norm
-impl<T:SeaCoefficient, I:SeaBasisBladeBitsInner> SeaMultivectorLowSparseCoefficents<T, I> {
+impl<T:SeaCoefficient, I:SeaBasisBladeBits> SeaMultivectorLowSparseCoefficents<T, I> {
 	pub fn scalar_norm(&self, metric: &SeaMetric) -> T {
 		let (_, metric_non_zeros, metric_negs) = Self::metric_product_constants(metric);
 
 		
-		let mut total_neg_mask = Self::total_neg_mask(&SeaBasisBladeIndexLow::ZERO, &metric_negs);
-		total_neg_mask ^= &SeaBasisBladeBits::<I>::REVERSION_NEGATIONS;
+		let mut total_neg_mask = I::total_negations(&SeaBasisBladeIndexLow::SCALAR, &metric_negs);
+		total_neg_mask.symmetric_difference_mut(&I::reversion_negations());
 		
-		let zeros = SeaBasisBladeBits::<I>::zero_mask_for_output_index(&metric_non_zeros);
-		let dot_mask = &self.basis_blade_bits & &zeros;
+		let zeros = I::outer_product_zeros(&metric_non_zeros);
+		let dot_mask = self.basis_blade_bits.intersection(&zeros);
 
 		let mut out = T::zero();
-		for i in &dot_mask {
+		for i in dot_mask.iter() {
 			let idx = self.basis_blade_bits.count_basis_blades_less_than(&i) as usize;
 			let mut c = self.coefficients[idx];
 			c *= c;

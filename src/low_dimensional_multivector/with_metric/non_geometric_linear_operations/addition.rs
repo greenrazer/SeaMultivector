@@ -1,25 +1,25 @@
 use super::*;
 
-impl<T:SeaCoefficient, I:SeaBasisBladeBitsInner> AddAssign<&SeaBasisBladeLow<T>> for SeaMultivectorLowSparseCoefficentsWithMetric<T, I> {
+impl<T:SeaCoefficient, I:SeaBasisBladeBits> AddAssign<&SeaBasisBladeLow<T>> for SeaMultivectorLowSparseCoefficentsWithMetric<T, I> {
 	fn add_assign(&mut self, rhs: &SeaBasisBladeLow<T>) {
 		self.multivector += rhs
 	}
 }
 
-impl<T:SeaCoefficient, I:SeaBasisBladeBitsInner> AddAssign<Self> for SeaMultivectorLowSparseCoefficentsWithMetric<T, I> {
+impl<T:SeaCoefficient, I:SeaBasisBladeBits> AddAssign<Self> for SeaMultivectorLowSparseCoefficentsWithMetric<T, I> {
 	fn add_assign(&mut self, rhs: Self) {
 		*self += &rhs
 	}
 }
 
-impl<T:SeaCoefficient, I:SeaBasisBladeBitsInner> AddAssign<&Self> for SeaMultivectorLowSparseCoefficentsWithMetric<T, I> {
+impl<T:SeaCoefficient, I:SeaBasisBladeBits> AddAssign<&Self> for SeaMultivectorLowSparseCoefficentsWithMetric<T, I> {
 	fn add_assign(&mut self, rhs: &Self) {
 		assert_eq!(self.metric, rhs.metric);
 		self.multivector += &rhs.multivector
 	}
 }
 
-impl<T:SeaCoefficient, I:SeaBasisBladeBitsInner> Add<Self> for SeaMultivectorLowSparseCoefficentsWithMetric<T, I> {
+impl<T:SeaCoefficient, I:SeaBasisBladeBits> Add<Self> for SeaMultivectorLowSparseCoefficentsWithMetric<T, I> {
     type Output = SeaMultivectorLowSparseCoefficentsWithMetric<T, I>;
 
     fn add(self, rhs: Self) -> Self::Output {
@@ -27,7 +27,7 @@ impl<T:SeaCoefficient, I:SeaBasisBladeBitsInner> Add<Self> for SeaMultivectorLow
 	}
 }
 
-impl<T:SeaCoefficient, I:SeaBasisBladeBitsInner> Add<&Self> for SeaMultivectorLowSparseCoefficentsWithMetric<T, I> {
+impl<T:SeaCoefficient, I:SeaBasisBladeBits> Add<&Self> for SeaMultivectorLowSparseCoefficentsWithMetric<T, I> {
     type Output = SeaMultivectorLowSparseCoefficentsWithMetric<T, I>;
 
     fn add(self, rhs: &Self) -> Self::Output {
@@ -35,7 +35,7 @@ impl<T:SeaCoefficient, I:SeaBasisBladeBitsInner> Add<&Self> for SeaMultivectorLo
 	}
 }
 
-impl<T:SeaCoefficient, I:SeaBasisBladeBitsInner> Add<SeaMultivectorLowSparseCoefficentsWithMetric<T, I>> for &SeaMultivectorLowSparseCoefficentsWithMetric<T, I> {
+impl<T:SeaCoefficient, I:SeaBasisBladeBits> Add<SeaMultivectorLowSparseCoefficentsWithMetric<T, I>> for &SeaMultivectorLowSparseCoefficentsWithMetric<T, I> {
     type Output = SeaMultivectorLowSparseCoefficentsWithMetric<T, I>;
 
     fn add(self, rhs: SeaMultivectorLowSparseCoefficentsWithMetric<T, I>) -> Self::Output {
@@ -43,7 +43,7 @@ impl<T:SeaCoefficient, I:SeaBasisBladeBitsInner> Add<SeaMultivectorLowSparseCoef
 	}
 }
 
-impl<T:SeaCoefficient, I:SeaBasisBladeBitsInner> Add<Self> for &SeaMultivectorLowSparseCoefficentsWithMetric<T, I> {
+impl<T:SeaCoefficient, I:SeaBasisBladeBits> Add<Self> for &SeaMultivectorLowSparseCoefficentsWithMetric<T, I> {
     type Output = SeaMultivectorLowSparseCoefficentsWithMetric<T, I>;
 
     fn add(self, rhs: Self) -> Self::Output {

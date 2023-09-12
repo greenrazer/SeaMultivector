@@ -1,15 +1,15 @@
 use super::*;
 
-impl<T:SeaCoefficient, I:SeaBasisBladeBitsInner> SubAssign<&Self> for SeaMultivectorLowSparseCoefficents<T, I> {
+impl<T:SeaCoefficient, I:SeaBasisBladeBits> SubAssign<&Self> for SeaMultivectorLowSparseCoefficents<T, I> {
 	fn sub_assign(&mut self, rhs: &Self) {
-		let bb_out = &self.basis_blade_bits | &rhs.basis_blade_bits;
+		let bb_out = self.basis_blade_bits.union(&rhs.basis_blade_bits);
 
-		let size_diff = bb_out.count_ones() as usize - self.coefficients.len();
+		let size_diff = bb_out.count_basis_blades() as usize - self.coefficients.len();
 		self.coefficients.splice(0..0, repeat(T::zero()).take(size_diff));
 
 		let mut self_idx = 0;
 		let mut rhs_idx = 0;
-		for (i, idx) in bb_out.into_iter().enumerate() {
+		for (i, idx) in bb_out.iter().enumerate() {
 			if self.basis_blade_bits.has(&idx) {
 				self.coefficients.swap(i, size_diff+self_idx);
 				self_idx += 1;
@@ -24,7 +24,7 @@ impl<T:SeaCoefficient, I:SeaBasisBladeBitsInner> SubAssign<&Self> for SeaMultive
 		self.basis_blade_bits = bb_out;
 	}
 }
-impl<T:SeaCoefficient, I:SeaBasisBladeBitsInner> Sub<Self> for &SeaMultivectorLowSparseCoefficents<T, I> {
+impl<T:SeaCoefficient, I:SeaBasisBladeBits> Sub<Self> for &SeaMultivectorLowSparseCoefficents<T, I> {
     type Output = SeaMultivectorLowSparseCoefficents<T, I>;
 
     fn sub(self, rhs: Self) -> Self::Output {

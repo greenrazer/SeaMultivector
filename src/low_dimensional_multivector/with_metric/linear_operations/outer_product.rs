@@ -1,14 +1,12 @@
 use super::*;
 
-impl<T:SeaCoefficient, I:SeaBasisBladeBitsInner> OuterProduct<Self> for SeaMultivectorLowSparseCoefficentsWithMetric<T, I> {
-	type Output = Self;
-	fn outer_product(&self, rhs: Self) -> Self::Output {
+impl<T:SeaCoefficient, I:SeaBasisBladeBits> OuterProduct<Self> for SeaMultivectorLowSparseCoefficentsWithMetric<T, I> {
+	fn outer_product(&self, rhs: Self) -> Self {
 		self.outer_product(&rhs)
 	}
 }
-impl<T:SeaCoefficient, I:SeaBasisBladeBitsInner> OuterProduct<&Self> for SeaMultivectorLowSparseCoefficentsWithMetric<T, I> {
-	type Output = Self;
-	fn outer_product(&self, rhs: &Self) -> Self::Output {
+impl<T:SeaCoefficient, I:SeaBasisBladeBits> OuterProduct<&Self> for SeaMultivectorLowSparseCoefficentsWithMetric<T, I> {
+	fn outer_product(&self, rhs: &Self) -> Self {
 		assert_eq!(self.metric.dimensions, rhs.metric.dimensions);
 		Self {
 			metric: self.metric.clone(),

@@ -1,8 +1,7 @@
 use super::*;
 
-impl<T:SeaCoefficient, I:SeaBasisBladeBitsInner> OuterProduct<&Self> for SeaMultivectorLowSparseCoefficents<T, I> {
-	type Output = Self;
-	fn outer_product(&self, rhs: &Self) -> Self::Output {
+impl<T:SeaCoefficient, I:SeaBasisBladeBits> OuterProduct<&Self> for SeaMultivectorLowSparseCoefficents<T, I> {
+	fn outer_product(&self, rhs: &Self) -> Self {
 		let output_basis_blade_bits = {
 			self.basis_blade_bits.outer_product(&rhs.basis_blade_bits)
 		};
@@ -11,16 +10,15 @@ impl<T:SeaCoefficient, I:SeaBasisBladeBitsInner> OuterProduct<&Self> for SeaMult
 			Self::create_coefficients_array(&output_basis_blade_bits)
 		};
 
-		let reverse_rhs_bbbs = rhs.basis_blade_bits.reverse_bits();
-		let initial_shift = &SeaBasisBladeBits::<I>::NUM_BASIS_BLADES - &SeaBasisBladeIndexLow::ONE;
+		let reverse_rhs_bbbs = rhs.basis_blade_bits.dual();
 
-		for (out_idx, o) in output_basis_blade_bits.into_iter().enumerate() {
-			let cannonical_neg_mask = SeaBasisBladeBits::<I>::cannonical_reordering_neg_mask(&o);
-
-			let mut curr_rhs_bbb = &reverse_rhs_bbbs >> &(&initial_shift - &o);
-			curr_rhs_bbb &= &SeaBasisBladeBits::<I>::zero_mask_for_output_index(&o);
-
-			let dot_mask = &self.basis_blade_bits & &curr_rhs_bbb;
+		for (out_idx, o) in output_basis_blade_bits.iter().enumerate() {
+			
+			let mut curr_rhs_bbb = &reverse_rhs_bbbs.outer_product_with_basis_blade(&o);
+			
+			let dot_mask = self.basis_blade_bits.intersection(&curr_rhs_bbb);
+			
+			let cannonical_neg_mask = I::cannonical_reordering_negations(&o);
 
 			output_coefficients[out_idx] = Self::special_dot_product(
 				self,
@@ -45,6 +43,15 @@ mod tests{
 	use crate::tests::catch_unwind_silent;
 
 	use super::*;
+
+	// #[test]
+	// fn thing() {
+
+	// 	let a = SeaMultivectorLowSparseCoefficents::<f32, u16>::from_str("-1 + 0.8682e14 - 0.4924e24 -1e34").unwrap();
+	// 	let b = SeaMultivectorLowSparseCoefficents::<f32, u16>::from_str("e3").unwrap();
+
+	// 	println!("{:?}", a.outer_product(&b));
+	// }
 
 	#[test]
 	fn works() {

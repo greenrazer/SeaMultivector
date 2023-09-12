@@ -1,6 +1,6 @@
 use super::*;
 
-impl<T:SeaCoefficient, I:SeaBasisBladeBitsInner> SeaMultivectorLowSparseCoefficents<T, I> {
+impl<T:SeaCoefficient, I:SeaBasisBladeBits> SeaMultivectorLowSparseCoefficents<T, I> {
 	pub fn negate(&mut self) {
 		for i in 0..self.coefficients.len() {
 			self.coefficients[i] = -self.coefficients[i]
@@ -13,18 +13,18 @@ impl<T:SeaCoefficient, I:SeaBasisBladeBitsInner> SeaMultivectorLowSparseCoeffice
 		out
 	}
 
-	pub fn negate_basis_blades(&mut self, blade_bits: &SeaBasisBladeBits<I>){
-		let negation_bits = &self.basis_blade_bits & blade_bits;
-		for idx in &negation_bits {
+	pub fn negate_basis_blades(&mut self, blade_bits: &I){
+		let negation_bits = self.basis_blade_bits.intersection(blade_bits);
+		for idx in negation_bits.iter() {
 			let i = self.basis_blade_bits.count_basis_blades_less_than(&idx); 
 			self.coefficients[i as usize] = -self.coefficients[i as usize];
 		}
 	}
 
-	pub fn negated_basis_blades(&self, blade_bits: &SeaBasisBladeBits<I>) -> Self{
+	pub fn negated_basis_blades(&self, blade_bits: &I) -> Self{
 		let mut new_coeffs = self.coefficients.clone();
-		let negation_bits = &self.basis_blade_bits & blade_bits;
-		for idx in &negation_bits {
+		let negation_bits = self.basis_blade_bits.intersection(blade_bits);
+		for idx in negation_bits.iter() {
 			let i = self.basis_blade_bits.count_basis_blades_less_than(&idx); 
 			new_coeffs[i as usize] = -new_coeffs[i as usize];
 		}

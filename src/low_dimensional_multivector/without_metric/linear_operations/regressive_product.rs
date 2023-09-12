@@ -1,7 +1,7 @@
 use super::*;
 
 // Regressive Product
-impl<T:SeaCoefficient, I:SeaBasisBladeBitsInner> SeaMultivectorLowSparseCoefficents<T, I> {
+impl<T:SeaCoefficient, I:SeaBasisBladeBits> SeaMultivectorLowSparseCoefficents<T, I> {
 	pub fn regressive_product(&self, rhs: &Self, metric: &SeaMetric) -> Self {
 		let (a_dual, b_dual) = (self.dual(metric), rhs.dual(metric));
 

@@ -1,7 +1,7 @@
 use super::*;
 
 // Inner Product
-impl<T:SeaCoefficient, I:SeaBasisBladeBitsInner> SeaMultivectorLowSparseCoefficents<T, I> {
+impl<T:SeaCoefficient, I:SeaBasisBladeBits> SeaMultivectorLowSparseCoefficents<T, I> {
 	pub fn inner_product(&self, rhs: &Self, metric: &SeaMetric) -> Self {
 		let (num_metric_non_zeros, metric_non_zeros, metric_negs) = Self::metric_product_constants(metric);
 
@@ -15,17 +15,13 @@ impl<T:SeaCoefficient, I:SeaBasisBladeBitsInner> SeaMultivectorLowSparseCoeffice
 			Self::create_coefficients_array(&output_basis_blade_bits)
 		};
 
-		let mut zero_cache: (SeaBasisBladeIndexLow, SeaBasisBladeBits<I>) = (SeaBasisBladeIndexLow::ZERO, SeaBasisBladeBits::<I>::ONE);
-		for (out_idx, o) in output_basis_blade_bits.into_iter().enumerate() {
-			Self::update_zero_cache(&mut zero_cache, &o, &metric_non_zeros);
+		for (out_idx, o) in output_basis_blade_bits.iter().enumerate() {
 
-			let total_neg_mask = Self::total_neg_mask(&o, &metric_negs);
-
-			let mut left_contraction_rhs_bbb = &rhs.basis_blade_bits >> &o;
-			left_contraction_rhs_bbb.remove_basis_blades_with_any(&o);
-
-			let mut dot_mask_left = &self.basis_blade_bits & &left_contraction_rhs_bbb;
-			dot_mask_left &= &zero_cache.1;
+			let left_contraction_rhs_bbb = rhs.basis_blade_bits.left_contraction_with_basis_blade(&o, &metric_non_zeros);
+			
+			let mut dot_mask_left = self.basis_blade_bits.intersection(&left_contraction_rhs_bbb);
+			
+			let total_neg_mask = I::total_negations(&o, &metric_negs);
 
 			output_coefficients[out_idx] = Self::special_dot_product(
 				self,
@@ -36,11 +32,9 @@ impl<T:SeaCoefficient, I:SeaBasisBladeBitsInner> SeaMultivectorLowSparseCoeffice
 			);
 
 			if !o.is_zero() {
-				let mut right_contraction_rhs_bbb = &rhs.basis_blade_bits << &o;
-				right_contraction_rhs_bbb.remove_basis_blades_without_all(&o);
+				let mut right_contraction_rhs_bbb = rhs.basis_blade_bits.right_contraction_with_basis_blade(&o, &metric_non_zeros);
 
-				let mut dot_mask_right = &self.basis_blade_bits & &right_contraction_rhs_bbb;
-				dot_mask_right &= &zero_cache.1;
+				let mut dot_mask_right = self.basis_blade_bits.intersection(&right_contraction_rhs_bbb);
 
 				output_coefficients[out_idx] += Self::special_dot_product(
 					self,

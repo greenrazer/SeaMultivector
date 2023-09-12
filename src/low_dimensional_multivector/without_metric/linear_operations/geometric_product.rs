@@ -1,6 +1,6 @@
 use super::*;
 
-impl<T:SeaCoefficient, I:SeaBasisBladeBitsInner> SeaMultivectorLowSparseCoefficents<T, I>{ 
+impl<T:SeaCoefficient, I:SeaBasisBladeBits> SeaMultivectorLowSparseCoefficents<T, I>{ 
 	pub fn geometric_product(&self, rhs: &Self, metric: &SeaMetric) -> Self {
 		let (num_metric_non_zeros, metric_non_zeros, metric_negs) = Self::metric_product_constants(metric);
 
@@ -14,17 +14,14 @@ impl<T:SeaCoefficient, I:SeaBasisBladeBitsInner> SeaMultivectorLowSparseCoeffice
 			Self::create_coefficients_array(&output_basis_blade_bits)
 		};
 
-		let mut zero_cache: (SeaBasisBladeIndexLow, SeaBasisBladeBits<I>) = (SeaBasisBladeIndexLow::ZERO, SeaBasisBladeBits::<I>::ONE);
-		for (out_idx, o) in output_basis_blade_bits.into_iter().enumerate() {
-			Self::update_zero_cache(&mut zero_cache, &o, &metric_non_zeros);
+		for (out_idx, o) in output_basis_blade_bits.iter().enumerate() {
+			
+			let curr_rhs_bbb = rhs.basis_blade_bits.geometric_product_with_basis_blade(&o, &metric_non_zeros);
 
-			let total_neg_mask = Self::total_neg_mask(&o, &metric_negs);
-
-			let curr_rhs_bbb = rhs.basis_blade_bits.geometric_product_swap(&o);
-
-			let mut dot_mask = &self.basis_blade_bits & &curr_rhs_bbb;
-			dot_mask &= &zero_cache.1;
-
+			let mut dot_mask = self.basis_blade_bits.intersection(&curr_rhs_bbb);
+			
+			let total_neg_mask = I::total_negations(&o, &metric_negs);
+			
 			output_coefficients[out_idx] = Self::special_dot_product(
 				self,
 				rhs,
@@ -105,6 +102,25 @@ mod tests{
 			a.geometric_product(&b, &m),
 			out
 		);
+
+		let m = SeaMetric::new(4, 0, 0);
+
+		let a = SeaMultivectorLowSparseCoefficents::<f32, u64>::from_str("1 + 1e1 + 2e2 + 3e12 + 4e3 + 5e13 + 6e23 + 7e123").unwrap();
+		let b = SeaMultivectorLowSparseCoefficents::<f32, u64>::from_str("1 + 1e1 + 2e2 + 3e12 + 4e3 + 5e13 + 6e23 + 7e123").unwrap();
+
+		// let now = Instant::now();
+		// let num_iters = 10_000;
+		// let mut t = a.clone();
+		// for _ in 0..num_iters {
+		// 	t = t.geometric_product(&b, &m);
+		// }
+		// let elapsed_time = now.elapsed();
+		//u8 8.612µs
+		//u16 8.625µs
+		//u32 5.222µs
+		//u64 6.029µs
+		//might as well only use 32 bit integers
+		// println!("time time time {:?}", elapsed_time/num_iters);
 	}
 
 	#[test]
