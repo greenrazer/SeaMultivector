@@ -2,25 +2,20 @@
 #![allow(unused_imports)]
 
 mod errors;
-mod metric;
 mod coefficient;
-mod low_dimensional_multivector;
-mod multivector_traits;
-mod multivector_product_traits;
-mod grade;
-mod special_cases;
+mod multivector;
 
 pub mod prelude {
     pub use std::str::FromStr;
-    pub use super::low_dimensional_multivector::{
+    pub use super::multivector::low_dimensional::{
         Multivector3D, 
         Multivector4D, 
         Multivector5D, 
         Multivector6D
     };
-    pub use super::special_cases::pga3d::MultivectorPGA3D;
-    pub use super::special_cases::pga3d::SeaMotorPGA3D;
-    pub use super::low_dimensional_multivector::SeaBasisBladeSet;
+    pub use super::multivector::low_dimensional::pga3d::MultivectorPGA3D;
+    pub use super::multivector::low_dimensional::pga3d::SeaMotorPGA3D;
+    pub use super::multivector::low_dimensional::basis_blade_set::SeaBasisBladeSet;
 }
 
 

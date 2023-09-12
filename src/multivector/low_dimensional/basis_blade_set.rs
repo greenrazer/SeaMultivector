@@ -4,10 +4,10 @@ use std::str::FromStr;
 use funty::{Unsigned, Integral};
 
 use crate::errors::ParseMultivectorError;
-use crate::grade::SeaGrade;
-use crate::multivector_product_traits::{GeometricProduct, LeftContraction, RightContraction, InnerProduct, OuterProduct};
 
-use super::basis_blade_index::SeaBasisBladeIndexLow;
+use crate::multivector::grade::SeaGrade;
+use crate::multivector::multivector_product_traits::{GeometricProduct, LeftContraction, RightContraction, InnerProduct, OuterProduct};
+use crate::multivector::basis_blade_index::SeaBasisBladeIndexLow;
 
 impl From<&SeaBasisBladeIndexLow> for u8 {
 	fn from(index: &SeaBasisBladeIndexLow) -> Self {

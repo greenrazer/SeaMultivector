@@ -9,14 +9,15 @@ use regex::Regex;
 
 use crate::coefficient::SeaCoefficient;
 use crate::errors::ParseMultivectorError;
-use crate::metric::SeaMetric;
-use crate::multivector_traits::{Multivector, MultivectorMut};
-use crate::multivector_product_traits::{LeftContraction, RightContraction, InnerProduct, OuterProduct, GeometricProduct, RegressiveProduct, ScalarProduct};
-use crate::grade::SeaGrade;
+
+use crate::multivector::metric::SeaMetric;
+use crate::multivector::multivector_traits::{Multivector, MultivectorMut};
+use crate::multivector::multivector_product_traits::{LeftContraction, RightContraction, InnerProduct, OuterProduct, GeometricProduct, RegressiveProduct, ScalarProduct};
+use crate::multivector::grade::SeaGrade;
+use crate::multivector::basis_blade::SeaBasisBladeLow;
+use crate::multivector::basis_blade_index::SeaBasisBladeIndexLow;
 
 use super::basis_blade_set::{SeaBasisBladeSet, SeaBasisBladeSetIter};
-use super::basis_blade::SeaBasisBladeLow;
-use super::basis_blade_index::SeaBasisBladeIndexLow;
 
 mod scalar_operations;
 mod basis_blade_operations;

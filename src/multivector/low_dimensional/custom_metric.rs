@@ -2,16 +2,18 @@ use std::str::FromStr;
 use std::ops::{Deref, DerefMut, Shl, Shr, BitOr, BitXor, Mul, Not, BitAnd, Index, AddAssign, Add, Neg, Sub, Div, SubAssign, MulAssign, DivAssign};
 
 use crate::errors::ParseMultivectorError;
-use crate::grade::SeaGrade;
-use crate::metric::SeaMetric;
 use crate::coefficient::SeaCoefficient;
-use crate::multivector_product_traits::{LeftContraction, RightContraction, InnerProduct, OuterProduct, GeometricProduct, RegressiveProduct, ScalarProduct};
-use crate::multivector_traits::{Multivector, MultivectorMut};
 
-use super::basis_blade::SeaBasisBladeLow;
-use super::basis_blade_index::SeaBasisBladeIndexLow;
-use super::without_metric::{SeaMultivectorLowSparseCoefficents, SparseMultivectorIter, SparseMultivectorGradeIter}; 
+use crate::multivector::grade::SeaGrade;
+use crate::multivector::metric::SeaMetric;
+use crate::multivector::multivector_product_traits::{LeftContraction, RightContraction, InnerProduct, OuterProduct, GeometricProduct, RegressiveProduct, ScalarProduct};
+use crate::multivector::multivector_traits::{Multivector, MultivectorMut};
+use crate::multivector::basis_blade_index::SeaBasisBladeIndexLow;
+use crate::multivector::basis_blade::SeaBasisBladeLow;
+
 use super::basis_blade_set::SeaBasisBladeSet;
+
+use super::core::{SeaMultivectorLowSparseCoefficents, SparseMultivectorIter, SparseMultivectorGradeIter}; 
 
 mod linear_operations;
 mod non_geometric_linear_operations;

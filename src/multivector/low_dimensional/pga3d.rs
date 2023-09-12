@@ -1,14 +1,15 @@
 use std::ops::{Deref, DerefMut, Shl, Shr, BitOr, BitXor, Mul, Not, BitAnd, Index, AddAssign, Add, Neg, Sub, Div, SubAssign, MulAssign, DivAssign};
 
 use crate::coefficient::SeaCoefficient;
-use crate::multivector_product_traits::ScalarProduct;
-use crate::multivector_traits::Multivector;
-use crate::grade::SeaGrade;
-use crate::low_dimensional_multivector::Multivector4D;
+use crate::multivector::multivector_traits::{Multivector, MultivectorMut};
+use crate::multivector::multivector_product_traits::ScalarProduct;
+use crate::multivector::grade::SeaGrade;
+use crate::multivector::basis_blade_index::SeaBasisBladeIndexLow;
 
-use crate::low_dimensional_multivector::SeaBasisBladeSet;
-use crate::low_dimensional_multivector::SeaBasisBladeIndexLow;
-use crate::multivector_traits::MultivectorMut;
+use super::basis_blade_set::SeaBasisBladeSet;
+use super::custom_metric::SeaMultivectorLowSparseCoefficentsWithMetric;
+
+type Multivector4D<T> = SeaMultivectorLowSparseCoefficentsWithMetric::<T, u16>;
 
 #[derive(Debug, PartialEq)]
 pub struct SeaMotorPGA3D<T:SeaCoefficient>(pub MultivectorPGA3D<T>);

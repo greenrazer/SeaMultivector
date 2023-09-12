@@ -1,7 +1,7 @@
 use std::ops::{Mul, Add, Sub, Div, Neg, AddAssign, MulAssign, SubAssign, DivAssign};
 
 use crate::coefficient::SeaCoefficient;
-use crate::multivector_product_traits::{GeometricProduct, OuterProduct, InnerProduct, LeftContraction, RightContraction, ScalarProduct, RegressiveProduct};
+use crate::multivector::multivector_product_traits::{GeometricProduct, OuterProduct, InnerProduct, LeftContraction, RightContraction, ScalarProduct, RegressiveProduct};
 
 
 pub trait Multivector<T:SeaCoefficient>: 
