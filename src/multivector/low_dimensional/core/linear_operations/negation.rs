@@ -1,6 +1,6 @@
 use super::*;
 
-impl<T:SeaCoefficient, I:SeaBasisBladeSet> SeaMultivectorLowSparseCoefficents<T, I> {
+impl<T:SeaCoefficient, I:SeaBasisBladeSet> SeaSparseMultivectorLowDimensions<T, I> {
 	pub fn negate(&mut self) {
 		for i in 0..self.coefficients.len() {
 			self.coefficients[i] = -self.coefficients[i]

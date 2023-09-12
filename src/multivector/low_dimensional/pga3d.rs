@@ -7,9 +7,9 @@ use crate::multivector::grade::SeaGrade;
 use crate::multivector::basis_blade_index::SeaBasisBladeIndexLow;
 
 use super::basis_blade_set::SeaBasisBladeSet;
-use super::custom_metric::SeaMultivectorLowSparseCoefficentsWithMetric;
+use super::custom_metric::SeaSparseMultivectorLowDimensionsWithMetric;
 
-type Multivector4D<T> = SeaMultivectorLowSparseCoefficentsWithMetric::<T, u16>;
+type Multivector4D<T> = SeaSparseMultivectorLowDimensionsWithMetric::<T, u16>;
 
 #[derive(Debug, PartialEq)]
 pub struct SeaMotorPGA3D<T:SeaCoefficient>(pub MultivectorPGA3D<T>);

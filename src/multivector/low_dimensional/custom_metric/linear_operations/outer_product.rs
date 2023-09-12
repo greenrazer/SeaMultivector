@@ -1,11 +1,11 @@
 use super::*;
 
-impl<T:SeaCoefficient, I:SeaBasisBladeSet> OuterProduct<Self> for SeaMultivectorLowSparseCoefficentsWithMetric<T, I> {
+impl<T:SeaCoefficient, I:SeaBasisBladeSet> OuterProduct<Self> for SeaSparseMultivectorLowDimensionsWithMetric<T, I> {
 	fn outer_product(&self, rhs: Self) -> Self {
 		self.outer_product(&rhs)
 	}
 }
-impl<T:SeaCoefficient, I:SeaBasisBladeSet> OuterProduct<&Self> for SeaMultivectorLowSparseCoefficentsWithMetric<T, I> {
+impl<T:SeaCoefficient, I:SeaBasisBladeSet> OuterProduct<&Self> for SeaSparseMultivectorLowDimensionsWithMetric<T, I> {
 	fn outer_product(&self, rhs: &Self) -> Self {
 		assert_eq!(self.metric.dimensions, rhs.metric.dimensions);
 		Self {
@@ -23,17 +23,17 @@ mod tests {
 
 	#[test]
 	fn works() {
-		let a = SeaMultivectorLowSparseCoefficentsWithMetric::<f32, u64>::from_str("3,3> + 1 + e1 + 2e2 + 3e12 + 4e3 + 5e13 + 6e23 + 7e123 + 8e4 + 9e14 + 10e24 + 11e124 + 12e345 + 13e1345 + 14e2345 + 15e12345 +e6 + 12e126 + 8e46").unwrap();
-		let b = SeaMultivectorLowSparseCoefficentsWithMetric::<f32, u64>::from_str("3,3>  + 3e13 + 1e4 + 2e124  +4e345 +83e1235 + 70e1245 + 4e1345 + 8e2345 + 12e123456").unwrap();
+		let a = SeaSparseMultivectorLowDimensionsWithMetric::<f32, u64>::from_str("3,3> + 1 + e1 + 2e2 + 3e12 + 4e3 + 5e13 + 6e23 + 7e123 + 8e4 + 9e14 + 10e24 + 11e124 + 12e345 + 13e1345 + 14e2345 + 15e12345 +e6 + 12e126 + 8e46").unwrap();
+		let b = SeaSparseMultivectorLowDimensionsWithMetric::<f32, u64>::from_str("3,3>  + 3e13 + 1e4 + 2e124  +4e345 +83e1235 + 70e1245 + 4e1345 + 8e2345 + 12e123456").unwrap();
 
-		let out = SeaMultivectorLowSparseCoefficentsWithMetric::<f32, u64>::from_str("3,3>e4 +3e13 +e14 +2e24 +4e34 -e46 -6e123 +5e124 +29e134 +3e136 +6e234 +4e345 -15e1234 +83e1235 +70e1245 -14e1246 +8e1345 +24e1346 +16e2345 -4e3456 -372e12345 +83e12356 +70e12456 +4e13456 +8e23456 -700e123456").unwrap();
+		let out = SeaSparseMultivectorLowDimensionsWithMetric::<f32, u64>::from_str("3,3>e4 +3e13 +e14 +2e24 +4e34 -e46 -6e123 +5e124 +29e134 +3e136 +6e234 +4e345 -15e1234 +83e1235 +70e1245 -14e1246 +8e1345 +24e1346 +16e2345 -4e3456 -372e12345 +83e12356 +70e12456 +4e13456 +8e23456 -700e123456").unwrap();
 		assert_eq!(
 			a.outer_product(&b),
 			out
 		);
 
-		let a = SeaMultivectorLowSparseCoefficentsWithMetric::<f32, u64>::from_str("3,3> + 1 + e1 + 2e2 + 3e12 + 4e3 + 5e13 + 6e23 + 7e123 + 8e4 + 9e14 + 10e24 + 11e124 + 12e345 + 13e1345 + 14e2345 + 15e12345 +e6 + 12e126 + 8e46").unwrap();
-		let b = SeaMultivectorLowSparseCoefficentsWithMetric::<f32, u64>::from_str("3,3>  + 3e13 + 1e4 + 2e124  +4e345 +83e1235 + 70e1245 + 4e1345 + 8e2345 + 12e123456").unwrap();
+		let a = SeaSparseMultivectorLowDimensionsWithMetric::<f32, u64>::from_str("3,3> + 1 + e1 + 2e2 + 3e12 + 4e3 + 5e13 + 6e23 + 7e123 + 8e4 + 9e14 + 10e24 + 11e124 + 12e345 + 13e1345 + 14e2345 + 15e12345 +e6 + 12e126 + 8e46").unwrap();
+		let b = SeaSparseMultivectorLowDimensionsWithMetric::<f32, u64>::from_str("3,3>  + 3e13 + 1e4 + 2e124  +4e345 +83e1235 + 70e1245 + 4e1345 + 8e2345 + 12e123456").unwrap();
 		assert_eq!(
 			&a ^&b,
 			out
@@ -44,13 +44,13 @@ mod tests {
 			out
 		);
 
-		let a = SeaMultivectorLowSparseCoefficentsWithMetric::<f32, u64>::from_str("3,3> + 1 + e1 + 2e2 + 3e12 + 4e3 + 5e13 + 6e23 + 7e123 + 8e4 + 9e14 + 10e24 + 11e124 + 12e345 + 13e1345 + 14e2345 + 15e12345 +e6 + 12e126 + 8e46").unwrap();
+		let a = SeaSparseMultivectorLowDimensionsWithMetric::<f32, u64>::from_str("3,3> + 1 + e1 + 2e2 + 3e12 + 4e3 + 5e13 + 6e23 + 7e123 + 8e4 + 9e14 + 10e24 + 11e124 + 12e345 + 13e1345 + 14e2345 + 15e12345 +e6 + 12e126 + 8e46").unwrap();
 		assert_eq!(
 			&a ^b,
 			out
 		);
 
-		let b = SeaMultivectorLowSparseCoefficentsWithMetric::<f32, u64>::from_str("3,3>  + 3e13 + 1e4 + 2e124  +4e345 +83e1235 + 70e1245 + 4e1345 + 8e2345 + 12e123456").unwrap();
+		let b = SeaSparseMultivectorLowDimensionsWithMetric::<f32, u64>::from_str("3,3>  + 3e13 + 1e4 + 2e124  +4e345 +83e1235 + 70e1245 + 4e1345 + 8e2345 + 12e123456").unwrap();
 		assert_eq!(
 			a^b,
 			out
