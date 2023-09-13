@@ -11,9 +11,9 @@ impl<T:SeaCoefficient + 'static> SeaMotorPGA3D<T> {
 
 	fn to_homogeneous_transformation_matrices(&self) -> (Matrix4<T>, Matrix4<T>) {
 		let rw = self.basis_blade_coefficient(&SeaBasisBladeIndexLow::SCALAR);
-		let rz = self.basis_blade_coefficient(&SeaBasisBladeIndexLow::E12);
+		let rz = -self.basis_blade_coefficient(&SeaBasisBladeIndexLow::E12);
 		let ry = self.basis_blade_coefficient(&SeaBasisBladeIndexLow::E13);
-		let rx = self.basis_blade_coefficient(&SeaBasisBladeIndexLow::E23);
+		let rx = -self.basis_blade_coefficient(&SeaBasisBladeIndexLow::E23);
 		let tx = self.basis_blade_coefficient(&SeaBasisBladeIndexLow::E14);
 		let ty = self.basis_blade_coefficient(&SeaBasisBladeIndexLow::E24);
 		let tz = self.basis_blade_coefficient(&SeaBasisBladeIndexLow::E34);
@@ -24,16 +24,16 @@ impl<T:SeaCoefficient + 'static> SeaMotorPGA3D<T> {
 		let two = T::from(2).unwrap();
 
 		let a: Matrix4<T> = Matrix4::new(
-			one - two*(ry*ry + rz*rz), -two*rx*ry, two*rx*rz, two*(ry*tz + rz*ty),
-			-two*rx*ry, one - two*(rx*rx + rz*rz), -two*ry*rz, two*(rx*tz - rz*tx),
-			two*rx*rz, -two*ry*rz, one - two*(rx*rx + ry*ry), -two*(rx*ty + ry*tx),
+			one - two*(ry*ry + rz*rz), two*rx*ry, two*rx*rz, two*(ry*tz - rz*ty),
+			two*rx*ry, one - two*(rx*rx + rz*rz), two*ry*rz, two*(rz*tx - rx*tz),
+			two*rx*rz, two*ry*rz, one - two*(rx*rx + ry*ry), two*(rx*ty - ry*tx),
 			zero, zero, zero, one
 		);
 
 		let b: Matrix4<T> = Matrix4::new(
-			zero, two*rz*rw, two*ry*rw, two*(rw*tx + rx*tw),
-			-two*rz*rw, zero, two*rx*rw, two*(rw*ty - ry*tw),
-			-two*ry*rw, -two*rx*rw, zero, two*(rw*tz + rz*tw),
+			zero, -two*rz*rw, two*ry*rw, two*(rw*tx - rx*tw),
+			two*rz*rw, zero, -two*rx*rw, two*(rw*ty - ry*tw),
+			-two*ry*rw, two*rx*rw, zero, two*(rw*tz - rz*tw),
 			zero, zero, zero, zero
 		);
 
