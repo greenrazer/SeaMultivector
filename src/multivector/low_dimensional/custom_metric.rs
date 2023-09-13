@@ -6,7 +6,23 @@ use crate::coefficient::SeaCoefficient;
 
 use crate::multivector::grade::SeaGrade;
 use crate::multivector::metric::SeaMetric;
-use crate::multivector::multivector_product_traits::{LeftContraction, RightContraction, InnerProduct, OuterProduct, GeometricProduct, RegressiveProduct, ScalarProduct};
+use crate::multivector::multivector_product_traits::{
+	LeftContraction, 
+	RightContraction, 
+	InnerProduct, 
+	OuterProduct, 
+	GeometricProduct, 
+	RegressiveProduct, 
+	ScalarProduct
+};
+use crate::multivector::multivector_unary_traits::{
+	MultivectorConjugation, 
+	MultivectorConjugationMut, 
+	MultivectorDual, 
+	MultivectorDualMut, 
+	MultivectorNorm,
+	MultivectorNormMut
+};
 use crate::multivector::multivector_traits::{Multivector, MultivectorMut};
 use crate::multivector::basis_blade_index::SeaBasisBladeIndexLow;
 use crate::multivector::basis_blade::SeaBasisBladeLow;
@@ -16,6 +32,7 @@ use super::basis_blade_set::SeaBasisBladeSet;
 use super::core::{SeaLowDimensionalSparseMultivector, SparseMultivectorIter, SparseMultivectorGradeIter}; 
 
 mod linear_operations;
+mod non_linear_operations;
 mod non_geometric_linear_operations;
 mod scalar_operations;
 
@@ -84,73 +101,6 @@ impl<T:SeaCoefficient, I:SeaBasisBladeSet> Multivector<T> for SeaLowDimensionalM
 		self.multivector.basis_blade_coefficient(index)
 	}
 
-	fn reversion_conjugated(&self) -> Self {
-		Self {
-			metric: self.metric.clone(),
-			multivector: self.multivector.reversion_conjugated()
-		}
-	}
-	
-	fn involution_conjugated(&self) -> Self {
-		Self {
-			metric: self.metric.clone(),
-			multivector: self.multivector.involution_conjugated()
-		}
-	}
-	
-	fn clifford_conjugated(&self) -> Self {
-		Self {
-			metric: self.metric.clone(),
-			multivector: self.multivector.clifford_conjugated()
-		}
-	}
-
-	fn dual(&self) -> Self {
-		Self {
-			metric: self.metric.clone(),
-			multivector: self.multivector.dual(&self.metric)
-		}
-	}
-
-	fn undual(&self) -> Self {
-		Self {
-			metric: self.metric.clone(),
-			multivector: self.multivector.undual(&self.metric)
-		}
-	}
-
-	fn poincare_dual(&self) -> Self {
-		Self {
-			metric: self.metric.clone(),
-			multivector: self.multivector.poincare_dual()
-		}
-	}
-
-	fn right_complimented(&self) -> Self {
-		Self {
-			metric: self.metric.clone(),
-			multivector: self.multivector.right_complimented()
-		}
-	}
-
-	fn left_complimented(&self) -> Self {
-		Self {
-			metric: self.metric.clone(),
-			multivector: self.multivector.left_complimented()
-		}
-	}
-
-	fn scalar_norm(&self) -> T {
-		self.multivector.scalar_norm(&self.metric)
-	}
-
-	fn scalar_normalized(&self) -> Self {
-		Self { 
-			metric: self.metric.clone(), 
-			multivector: self.multivector.scalar_normalized(&self.metric) 
-		}
-	}
-
 	fn exp(&self) -> Self {
 		Self {
 			metric: self.metric.clone(),
@@ -158,44 +108,7 @@ impl<T:SeaCoefficient, I:SeaBasisBladeSet> Multivector<T> for SeaLowDimensionalM
 		}
 	}
 }
-impl<T:SeaCoefficient, I:SeaBasisBladeSet> MultivectorMut<T> for SeaLowDimensionalMultivectorCustomMetric<T, I> {
-	fn reversion_conjugation(&mut self) {
-		self.multivector.reversion_conjugation()
-	}
-
-	fn involution_conjugation(&mut self) {
-		self.multivector.involution_conjugation()
-	}
-
-	fn clifford_conjugation(&mut self) {
-		self.multivector.clifford_conjugation()
-	}
-
-	
-	fn dualization(&mut self) {
-		self.multivector.dualization(&self.metric);
-	}
-	
-	fn undualization(&mut self) {
-		self.multivector.undualization(&self.metric);
-	}
-	
-	fn poincare_dualization(&mut self) {
-		self.multivector.poincare_dualization()
-	}
-
-	fn right_compliment(&mut self) {
-		self.multivector.right_compliment()
-	}
-
-	fn left_compliment(&mut self) {
-		self.multivector.left_compliment()
-	}
-
-	fn scalar_normalize(&mut self) {
-		self.multivector.scalar_normalize(&self.metric);
-	}
-}
+impl<T:SeaCoefficient, I:SeaBasisBladeSet> MultivectorMut<T> for SeaLowDimensionalMultivectorCustomMetric<T, I> {}
 
 impl<T:SeaCoefficient, I:SeaBasisBladeSet> Not for SeaLowDimensionalMultivectorCustomMetric<T, I> {
 	type Output = SeaLowDimensionalMultivectorCustomMetric<T, I>;

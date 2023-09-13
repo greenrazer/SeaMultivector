@@ -1,12 +1,32 @@
 use std::ops::{Mul, Add, Sub, Div, Neg, AddAssign, MulAssign, SubAssign, DivAssign, Shl, Shr, BitOr, BitXor, BitAnd, Not};
 
 use crate::coefficient::SeaCoefficient;
-use crate::multivector::multivector_product_traits::{GeometricProduct, OuterProduct, InnerProduct, LeftContraction, RightContraction, ScalarProduct, RegressiveProduct};
+use crate::multivector::multivector_product_traits::{
+	GeometricProduct, 
+	OuterProduct, 
+	InnerProduct, 
+	LeftContraction, 
+	RightContraction, 
+	ScalarProduct, 
+	RegressiveProduct
+};
+use crate::multivector::multivector_unary_traits::{
+	MultivectorConjugation, 
+	MultivectorConjugationMut, 
+	MultivectorDual, 
+	MultivectorDualMut, 
+	MultivectorNorm,
+	MultivectorNormMut
+};
 
 
 pub trait Multivector<T:SeaCoefficient>: 
-		Neg + Not
+		Neg 
 		+ Add<T> + Mul<T> + Sub<T> + Div<T>
+		+ MultivectorConjugation
+		+ MultivectorDual
+		+ MultivectorNorm<T>
+		+ Not
 		+ Add<Self> + for<'a> Add<&'a Self>
 		+ Sub<Self> + for<'a> Sub<&'a Self>
 		+ LeftContraction<Self> + for<'a> LeftContraction<&'a Self>
@@ -37,23 +57,14 @@ pub trait Multivector<T:SeaCoefficient>:
 {
 	type MultivectorIndexType;
 	fn basis_blade_coefficient(&self, index: &Self::MultivectorIndexType) -> T;
-	fn reversion_conjugated(&self) -> Self;
-	fn involution_conjugated(&self) -> Self;
-	fn clifford_conjugated(&self) -> Self;
-	
-	fn dual(&self) -> Self;
-	fn undual(&self) -> Self;
-	fn poincare_dual(&self) -> Self;
-	fn right_complimented(&self) -> Self;
-	fn left_complimented(&self) -> Self;
-
-	fn scalar_norm(&self) -> T;
-	fn scalar_normalized(&self) -> Self;
 
 	fn exp(&self) -> Self;
 }
 pub trait MultivectorMut<T:SeaCoefficient>: 
 	Multivector<T>
+	+ MultivectorConjugationMut
+	+ MultivectorDualMut
+	+ MultivectorNormMut
 	+ AddAssign<T> + MulAssign<T> + SubAssign<T> + DivAssign<T>
 	+ AddAssign<Self> + for<'a> AddAssign<&'a Self>
 	+ SubAssign<Self> + for<'a> SubAssign<&'a Self>
@@ -68,19 +79,7 @@ pub trait MultivectorMut<T:SeaCoefficient>:
 							+ BitXor<Self> + BitXor<&'a Self>
 							+ Mul<Self> + Mul<&'a Self>
 							+ BitAnd<Self> + BitAnd<&'a Self>
-{
-	fn reversion_conjugation(&mut self);
-	fn involution_conjugation(&mut self);
-	fn clifford_conjugation(&mut self);
-	
-	fn dualization(&mut self);
-	fn undualization(&mut self);
-	fn poincare_dualization(&mut self);
-	fn right_compliment(&mut self);
-	fn left_compliment(&mut self);
-
-	fn scalar_normalize(&mut self);
-}
+{}
 
 pub trait Versor<T:SeaCoefficient>: 
 	Multivector<T> 

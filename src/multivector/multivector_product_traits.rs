@@ -1,5 +1,3 @@
-use crate::coefficient::SeaCoefficient;
-
 pub trait LeftContraction<Rhs> {
 	type Output;
 

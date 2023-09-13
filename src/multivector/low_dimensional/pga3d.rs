@@ -5,7 +5,23 @@ use nalgebra::{Vector3, Vector4, Matrix4};
 use crate::coefficient::SeaCoefficient;
 use crate::multivector::metric::SeaMetric;
 use crate::multivector::multivector_traits::{Multivector, MultivectorMut, Versor, Motor};
-use crate::multivector::multivector_product_traits::{ScalarProduct, LeftContraction, RightContraction, InnerProduct, OuterProduct, GeometricProduct, RegressiveProduct};
+use crate::multivector::multivector_product_traits::{
+	LeftContraction, 
+	RightContraction, 
+	InnerProduct, 
+	OuterProduct, 
+	GeometricProduct, 
+	RegressiveProduct, 
+	ScalarProduct
+};
+use crate::multivector::multivector_unary_traits::{
+	MultivectorConjugation, 
+	MultivectorConjugationMut, 
+	MultivectorDual, 
+	MultivectorDualMut, 
+	MultivectorNorm,
+	MultivectorNormMut
+};
 use crate::multivector::grade::SeaGrade;
 use crate::multivector::basis_blade_index::SeaBasisBladeIndexLow;
 

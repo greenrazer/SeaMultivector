@@ -2,6 +2,7 @@ use super::*;
 
 mod scalar_operations;
 mod linear_operations;
+mod non_linear_operations;
 mod non_geometric_linear_operations;
 
 type SeaCoreMultivector4D<T> = SeaLowDimensionalSparseMultivector::<T, u16>;
@@ -137,93 +138,11 @@ impl<T:SeaCoefficient> Multivector<T> for SeaMultivectorPGA3D<T> {
 		self.0.basis_blade_coefficient(index)
 	}
 
-
-	fn reversion_conjugated(&self) -> Self {
-		Self(self.0.reversion_conjugated())
-	}
-
-	fn involution_conjugated(&self) -> Self {
-		Self(self.0.involution_conjugated())
-	}
-
-	fn clifford_conjugated(&self) -> Self {
-		Self(self.0.clifford_conjugated())
-	}
-
-
-	fn poincare_dual(&self) -> Self {
-		Self(self.0.poincare_dual())
-	}
-
-	fn right_complimented(&self) -> Self {
-		Self(self.0.right_complimented())
-	}
-
-	fn left_complimented(&self) -> Self {
-		Self(self.0.left_complimented())
-	}
-
-	fn dual(&self) -> Self {
-		Self(self.0.dual(&METRIC))
-	}
-
-	fn undual(&self) -> Self {
-		Self(self.0.undual(&METRIC))
-	}
-
-	fn scalar_norm(&self) -> T {
-		self.0.scalar_norm(&METRIC)
-	}
-
-	fn scalar_normalized(&self) -> Self {
-		Self(self.0.scalar_normalized(&METRIC))
-	}
-
-
 	fn exp(&self) -> Self {
 		Self(self.0.exp(&METRIC))
 	}
 }
-impl<T:SeaCoefficient> MultivectorMut<T> for SeaMultivectorPGA3D<T> {
-	
-	fn reversion_conjugation(&mut self) {
-		self.0.reversion_conjugation()
-	}
-
-	fn involution_conjugation(&mut self) {
-		self.0.involution_conjugation()
-	}
-
-	fn clifford_conjugation(&mut self) {
-		self.0.clifford_conjugation()
-	}
-	
-
-	fn poincare_dualization(&mut self) {
-		self.0.poincare_dualization()
-	}
-
-	fn right_compliment(&mut self) {
-		self.0.right_compliment()
-	}
-
-	fn left_compliment(&mut self) {
-		self.0.left_compliment()
-	}
-
-	fn dualization(&mut self) {
-		self.0.dualization(&METRIC)
-	}
-
-	fn undualization(&mut self) {
-		self.0.undualization(&METRIC)
-	}
-	
-	fn scalar_normalize(&mut self) {
-		self.0.scalar_normalize(&METRIC)
-	}
-
-}
+impl<T:SeaCoefficient> MultivectorMut<T> for SeaMultivectorPGA3D<T> {}
 
 impl<T:SeaCoefficient> Neg for SeaMultivectorPGA3D<T> {
 	type Output = Self;
