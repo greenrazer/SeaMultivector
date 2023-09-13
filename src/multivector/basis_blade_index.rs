@@ -31,8 +31,43 @@ impl Iterator for BasisBladeIndexLowIter {
 pub struct SeaBasisBladeIndexLow(pub u8);
 impl SeaBasisBladeIndexLow {
 	pub const SCALAR: Self = SeaBasisBladeIndexLow(0);
+	pub const E1: Self = SeaBasisBladeIndexLow(1);
+	pub const E2: Self = SeaBasisBladeIndexLow(2);
+	pub const E12: Self = SeaBasisBladeIndexLow(3);
+	pub const E3: Self = SeaBasisBladeIndexLow(4);
+	pub const E13: Self = SeaBasisBladeIndexLow(5);
+	pub const E23: Self = SeaBasisBladeIndexLow(6);
+	pub const E123: Self = SeaBasisBladeIndexLow(7);
+	pub const E4: Self = SeaBasisBladeIndexLow(8);
+	pub const E14: Self = SeaBasisBladeIndexLow(9);
+	pub const E24: Self = SeaBasisBladeIndexLow(10);
+	pub const E124: Self = SeaBasisBladeIndexLow(11);
+	pub const E34: Self = SeaBasisBladeIndexLow(12);
+	pub const E134: Self = SeaBasisBladeIndexLow(13);
+	pub const E234: Self = SeaBasisBladeIndexLow(14);
+	pub const E1234: Self = SeaBasisBladeIndexLow(15);
+	pub const E5: Self = SeaBasisBladeIndexLow(16);
+	pub const E15: Self = SeaBasisBladeIndexLow(17);
+	pub const E25: Self = SeaBasisBladeIndexLow(18);
+	pub const E125: Self = SeaBasisBladeIndexLow(19);
+	pub const E35: Self = SeaBasisBladeIndexLow(20);
+	pub const E135: Self = SeaBasisBladeIndexLow(21);
+	pub const E235: Self = SeaBasisBladeIndexLow(22);
+	pub const E1235: Self = SeaBasisBladeIndexLow(23);
+	pub const E45: Self = SeaBasisBladeIndexLow(24);
+	pub const E145: Self = SeaBasisBladeIndexLow(25);
+	pub const E245: Self = SeaBasisBladeIndexLow(26);
+	pub const E1245: Self = SeaBasisBladeIndexLow(27);
+	pub const E345: Self = SeaBasisBladeIndexLow(28);
+	pub const E1345: Self = SeaBasisBladeIndexLow(29);
+	pub const E2345: Self = SeaBasisBladeIndexLow(30);
+	pub const E12345: Self = SeaBasisBladeIndexLow(31);
+	pub const E6: Self = SeaBasisBladeIndexLow(32);
+	pub const E7: Self = SeaBasisBladeIndexLow(64);
+	pub const E8: Self = SeaBasisBladeIndexLow(128);
 	pub const ALL: Self = SeaBasisBladeIndexLow(255);
-
+}
+impl SeaBasisBladeIndexLow {
 	pub fn basis_vectors_less_than_or_equal(n: u8) -> Self {
 		let inner = 1_u8.checked_shl(n as u32).unwrap_or(0).overflowing_sub(1).0;
 		SeaBasisBladeIndexLow(inner)

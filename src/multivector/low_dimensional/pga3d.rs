@@ -1,5 +1,7 @@
 use std::ops::{Deref, DerefMut, Shl, Shr, BitOr, BitXor, Mul, Not, BitAnd, Index, AddAssign, Add, Neg, Sub, Div, SubAssign, MulAssign, DivAssign};
 
+use nalgebra::{Vector3, Vector4, Matrix4};
+
 use crate::coefficient::SeaCoefficient;
 use crate::multivector::metric::SeaMetric;
 use crate::multivector::multivector_traits::{Multivector, MultivectorMut, Versor, Motor};
@@ -17,118 +19,35 @@ pub use multivector::SeaMultivectorPGA3D;
 pub use motor::SeaMotorPGA3D;
 
 
-// impl<T:SeaCoefficient> From<SeaMotorPGA3D<T>> for SeaMultivectorPGA3D<T> {
-// 	fn from(value: SeaMotorPGA3D<T>) -> Self {
-// 		value.0
-// 	}
-// }
-// impl<T:SeaCoefficient> From<&SeaMotorPGA3D<T>> for SeaMultivectorPGA3D<T> {
-// 	fn from(value: &SeaMotorPGA3D<T>) -> Self {
-// 		value.0.clone()
-// 	}
-// }
-
-// impl<T:SeaCoefficient> Neg for &SeaMultivectorPGA3D<T> {
-// 	type Output = SeaMultivectorPGA3D<T>;
-
-// 	fn neg(self) -> Self::Output {
-// 		SeaMultivectorPGA3D(-&self.0)
-// 	}
-// }
-// impl<T:SeaCoefficient> Neg for SeaMultivectorPGA3D<T> {
-// 	type Output = SeaMultivectorPGA3D<T>;
-
-// 	fn neg(self) -> Self::Output {
-// 		-&self
-// 	}
-// }
-
-// impl<T:SeaCoefficient> AddAssign<T> for SeaMultivectorPGA3D<T> {
-//     fn add_assign(&mut self, rhs: T){
-// 		self.0 += rhs
-// 	}
-// }
-// impl<T:SeaCoefficient> Add<T> for SeaMultivectorPGA3D<T> {
-//     type Output = SeaMultivectorPGA3D<T>;
-
-//     fn add(self, rhs: T) -> Self::Output {
-// 		&self + rhs
-// 	}
-// }
-// impl<T:SeaCoefficient> Add<T> for &SeaMultivectorPGA3D<T> {
-//     type Output = SeaMultivectorPGA3D<T>;
-
-//     fn add(self, rhs: T) -> Self::Output {
-// 		SeaMultivectorPGA3D(&self.0 + rhs)
-// 	}
-// }
-
-// impl<T:SeaCoefficient> SubAssign<T> for SeaMultivectorPGA3D<T> {
-//     fn sub_assign(&mut self, rhs: T){
-// 		self.0 -= rhs
-// 	}
-// }
-// impl<T:SeaCoefficient> Sub<T> for SeaMultivectorPGA3D<T> {
-//     type Output = SeaMultivectorPGA3D<T>;
-
-//     fn sub(self, rhs: T) -> Self::Output {
-// 		&self - rhs
-// 	}
-// }
-// impl<T:SeaCoefficient> Sub<T> for &SeaMultivectorPGA3D<T> {
-//     type Output = SeaMultivectorPGA3D<T>;
-
-//     fn sub(self, rhs: T) -> Self::Output {
-// 		SeaMultivectorPGA3D(&self.0 - rhs)
-// 	}
-// }
-
-// impl<T:SeaCoefficient> MulAssign<T> for SeaMultivectorPGA3D<T> {
-//     fn mul_assign(&mut self, rhs: T){
-// 		self.0 *= rhs
-// 	}
-// }
-// impl<T:SeaCoefficient> Mul<T> for SeaMultivectorPGA3D<T> {
-//     type Output = SeaMultivectorPGA3D<T>;
-
-//     fn mul(self, rhs: T) -> Self::Output {
-// 		&self * rhs
-// 	}
-// }
-// impl<T:SeaCoefficient> Mul<T> for &SeaMultivectorPGA3D<T> {
-//     type Output = SeaMultivectorPGA3D<T>;
-
-//     fn mul(self, rhs: T) -> Self::Output {
-// 		SeaMultivectorPGA3D(&self.0 * rhs)
-// 	}
-// }
-
-// impl<T:SeaCoefficient> DivAssign<T> for SeaMultivectorPGA3D<T> {
-//     fn div_assign(&mut self, rhs: T){
-// 		self.0 /= rhs
-// 	}
-// }
-// impl<T:SeaCoefficient> Div<T> for SeaMultivectorPGA3D<T> {
-//     type Output = SeaMultivectorPGA3D<T>;
-
-//     fn div(self, rhs: T) -> Self::Output {
-// 		&self / rhs
-// 	}
-// }
-// impl<T:SeaCoefficient> Div<T> for &SeaMultivectorPGA3D<T> {
-//     type Output = SeaMultivectorPGA3D<T>;
-
-//     fn div(self, rhs: T) -> Self::Output {
-// 		SeaMultivectorPGA3D(&self.0 / rhs)
-// 	}
-// }
-
-
 #[cfg(test)]
 mod tests {
 	use std::f64::consts::TAU;
 
 	use super::*;
+
+	pub fn assert_approx_eq_vec4<T: SeaCoefficient + 'static>(a:Vector4<T>, b: Vector4<T>) {
+        let epsilon = T::from(1e-14).unwrap();
+		let q = a - b;
+		assert!(q.x.abs() < epsilon, "{:?} not ~= {:?}", a, b);
+		assert!(q.y.abs() < epsilon, "{:?} not ~= {:?}", a, b);
+		assert!(q.z.abs() < epsilon, "{:?} not ~= {:?}", a, b);
+		assert!(q.w.abs() < epsilon, "{:?} not ~= {:?}", a, b);
+    }
+
+	pub fn assert_approx_eq_vec3<T: SeaCoefficient + 'static>(a:Vector3<T>, b: Vector3<T>) {
+        let epsilon = T::from(1e-15).unwrap();
+		let q = a - b;
+		assert!(q.x.abs() < epsilon, "{:?} not ~= {:?}", a, b);
+		assert!(q.y.abs() < epsilon, "{:?} not ~= {:?}", a, b);
+		assert!(q.z.abs() < epsilon, "{:?} not ~= {:?}", a, b);
+    }
+
+	pub fn assert_approx_eq_mat4<T: SeaCoefficient + 'static>(a:Matrix4<T>, b: Matrix4<T>) {
+		assert_approx_eq_vec4(a.row(0).transpose(),b.row(0).transpose());
+		assert_approx_eq_vec4(a.row(1).transpose(),b.row(1).transpose());
+		assert_approx_eq_vec4(a.row(2).transpose(),b.row(2).transpose());
+		assert_approx_eq_vec4(a.row(3).transpose(),b.row(3).transpose());
+    }
 
 	mod camera {
 		use super::*;
@@ -148,15 +67,15 @@ mod tests {
 			let camera_trans_inv = camera_trans.inverse();
 			
 			let scene_point = SeaMultivectorPGA3D::new_point(0.0,3.0,2.0);
-			let scene_point_trans = camera_trans.into() * scene_point * camera_trans_inv.into();
+			let scene_point_trans = camera_trans * scene_point * camera_trans_inv;
 	
 			let fp_to_scene = focal_point&scene_point_trans;
 	
 			let screen_point = fp_to_scene^image_plane;
 	
-			assert_eq!(
+			assert_approx_eq_vec3(
 				screen_point.point_to_euclidean(),
-				[0.0, 1.0, 0.0]
+				Vector3::new(0.0, 1.0, 0.0)
 			);
 		}
 
@@ -175,15 +94,15 @@ mod tests {
 			let camera_trans_inv = camera_trans.inverse();
 			
 			let scene_point = SeaMultivectorPGA3D::new_point(0.0,3.0,2.0);
-			let scene_point_trans = camera_trans.into() * scene_point * camera_trans_inv.into();
+			let scene_point_trans = camera_trans * scene_point * camera_trans_inv;
 	
 			let fp_to_scene = focal_point&scene_point_trans;
 	
 			let screen_point = fp_to_scene^image_plane;
 	
-			assert_eq!(
+			assert_approx_eq_vec3(
 				screen_point.point_to_euclidean(),
-				[-1.0, 0.0, 0.0]
+				Vector3::new(-1.0, 0.0, 0.0)
 			);
 		}
 
@@ -203,7 +122,7 @@ mod tests {
 			let camera_trans_inv = camera_trans.inverse();
 			
 			let scene_point = SeaMultivectorPGA3D::new_point(0.0,3.0,2.0);
-			let scene_point_trans = camera_trans.into() * scene_point * camera_trans_inv.into();
+			let scene_point_trans = camera_trans * scene_point * camera_trans_inv;
 	
 			let fp_to_scene = &focal_point&scene_point_trans;
 	
@@ -211,9 +130,9 @@ mod tests {
 			
 			screen_point.simplify();
 
-			assert_eq!(
+			assert_approx_eq_vec3(
 				screen_point.point_to_euclidean(),
-				[-1.0, 0.0, 0.0]
+				Vector3::new(-1.0, 0.0, 0.0)
 			);
 
 			let image_plane = SeaMultivectorPGA3D::new_plane(0.0,0.0,1.0, 0.0);
@@ -229,15 +148,15 @@ mod tests {
 			let camera_trans_inv = camera_trans.inverse();
 			
 			let scene_point = SeaMultivectorPGA3D::new_point(0.0,3.0,2.0);
-			let scene_point_trans = camera_trans.into() * scene_point * camera_trans_inv.into();
+			let scene_point_trans = camera_trans * scene_point * camera_trans_inv;
 	
 			let fp_to_scene = &focal_point&scene_point_trans;
 	
 			let screen_point = fp_to_scene^&image_plane;
 	
-			assert_eq!(
+			assert_approx_eq_vec3(
 				screen_point.point_to_euclidean(),
-				[0.0, -1.0, 0.0]
+				Vector3::new(0.0, -1.0, 0.0)
 			);
 		}
 
@@ -257,7 +176,7 @@ mod tests {
 			let camera_trans_inv = camera_trans.inverse();
 			
 			let scene_point = SeaMultivectorPGA3D::new_point(0.0,3.0,2.0);
-			let scene_point_trans = camera_trans.into() * scene_point * camera_trans_inv.into();
+			let scene_point_trans = camera_trans * scene_point * camera_trans_inv;
 	
 			let fp_to_scene = &focal_point&scene_point_trans;
 	
@@ -265,9 +184,9 @@ mod tests {
 			
 			screen_point.simplify();
 
-			assert_eq!(
+			assert_approx_eq_vec3(
 				screen_point.point_to_euclidean(),
-				[0.0, -1.0, 0.0]
+				Vector3::new(0.0, -1.0, 0.0)
 			);
 		}
 	
@@ -286,15 +205,15 @@ mod tests {
 			let camera_trans_inv = camera_trans.inverse();
 			
 			let scene_point = SeaMultivectorPGA3D::new_point(0.0,3.0,2.0);
-			let scene_point_trans = camera_trans.into() * scene_point * camera_trans_inv.into();
+			let scene_point_trans = camera_trans * scene_point * camera_trans_inv;
 
 			let mut screen_point = focal_point&scene_point_trans^image_plane;
 
 			screen_point.simplify();
 
-			assert_eq!(
+			assert_approx_eq_vec3(
 				screen_point.point_to_euclidean(),
-				[0.0, -1.0, 0.0]
+				Vector3::new(0.0, -1.0, 0.0)
 			);
 		}
 
@@ -314,7 +233,7 @@ mod tests {
 			let camera_trans_inv = camera_trans.inverse();
 			
 			let scene_point = SeaMultivectorPGA3D::new_point(-0.08682,0.4924,0.00);
-			let scene_point_trans = camera_trans.into() * scene_point * camera_trans_inv.into();
+			let scene_point_trans = camera_trans * scene_point * camera_trans_inv;
 
 			let _screen_point2 = &focal_point & &scene_point_trans;
 
@@ -322,9 +241,9 @@ mod tests {
 
 			screen_point.simplify();
 
-			assert_eq!(
+			assert_approx_eq_vec3(
 				screen_point.point_to_euclidean(),
-				[-0.08682,0.4924, 0.0]
+				Vector3::new(-0.08682,0.4924, 0.0)
 			);
 		}
 	}

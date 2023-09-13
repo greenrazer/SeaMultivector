@@ -8,5 +8,6 @@ edition = "2021"
 [dependencies]
 funty = "2.0.0"
 lazy_static = "1.4.0"
+nalgebra = "0.32.3"
 num-traits = "0.2.16"
 regex = "1.9.3"

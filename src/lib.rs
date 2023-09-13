@@ -23,30 +23,6 @@ pub mod prelude {
     pub use super::multivector::low_dimensional::basis_blade_set::SeaBasisBladeSet;
 }
 
-
-// Multivector core
-// conjugations
-// geometric product
-// BasisBlades LeftContration, RightContraction, Inner, Outer
-// LeftContration, RightContraction
-// Inner
-// Outer ^
-// Mul for all products
-// Some Documentation
-// Dual !
-// grade iterator
-// Add basisblade for multivector
-// Regressive Product
-// Norm
-// exp
-
-// not done:
-
-//Versor/ Motor/Glide Wrappers
-//invere sandwich  logarithm
-//operations of bundles of multivectors with the same metric and basis blade bits
-
-
 #[cfg(test)]
 mod tests {
     use super::prelude::*;

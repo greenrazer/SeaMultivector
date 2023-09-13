@@ -73,39 +73,6 @@ impl<T:SeaCoefficient> SeaMultivectorPGA3D<T>{
 		SeaMotorPGA3D(inner)
 	}
 
-	pub fn point_to_homogeneous(&self) -> [T;4] {
-		let mut out = [
-			-self.0.basis_blade_coefficient(&SeaBasisBladeIndexLow(14)),
-			self.0.basis_blade_coefficient(&SeaBasisBladeIndexLow(13)),
-			-self.0.basis_blade_coefficient(&SeaBasisBladeIndexLow(11)),
-			self.0.basis_blade_coefficient(&SeaBasisBladeIndexLow(7))
-		];
-
-		for o in &mut out {
-			if o.abs() < T::from(1e-15).unwrap() {
-				*o = T::zero()
-			}
-		}
-		out
-	}
-
-	pub fn point_to_euclidean(&self) -> [T;3] {
-		let sf = self.0.basis_blade_coefficient(&SeaBasisBladeIndexLow(7));
-		let mut out = [
-			-self.0.basis_blade_coefficient(&SeaBasisBladeIndexLow(14))/sf,
-			self.0.basis_blade_coefficient(&SeaBasisBladeIndexLow(13))/sf,
-			-self.0.basis_blade_coefficient(&SeaBasisBladeIndexLow(11))/sf,
-		];
-
-		for o in &mut out {
-			if o.abs() < T::from(1e-15).unwrap() {
-				*o = T::zero()
-			}
-		}
-
-		out
-	}
-
 	pub fn is_zero(&self) -> bool{
 		self.0.is_zero()
 	}
@@ -124,6 +91,37 @@ impl<T:SeaCoefficient> SeaMultivectorPGA3D<T>{
 		(out_bbb, out_mat)
 	}
 
+}
+
+impl<T:SeaCoefficient> SeaMultivectorPGA3D<T>{
+	pub fn point_to_homogeneous(&self) -> Vector4<T> {
+		let x = -self.0.basis_blade_coefficient(&SeaBasisBladeIndexLow::E234);
+		let y =  self.0.basis_blade_coefficient(&SeaBasisBladeIndexLow::E134);
+		let z = -self.0.basis_blade_coefficient(&SeaBasisBladeIndexLow::E124);
+		let w =  self.0.basis_blade_coefficient(&SeaBasisBladeIndexLow::E123);
+
+		Vector4::new(x,y,z,w)
+	}
+
+	pub fn point_to_euclidean(&self) -> Vector3<T> {
+		let x = -self.0.basis_blade_coefficient(&SeaBasisBladeIndexLow::E234);
+		let y =  self.0.basis_blade_coefficient(&SeaBasisBladeIndexLow::E134);
+		let z = -self.0.basis_blade_coefficient(&SeaBasisBladeIndexLow::E124);
+		let w =  self.0.basis_blade_coefficient(&SeaBasisBladeIndexLow::E123);
+
+		Vector3::new(x/w, y/w, z/w)
+	}
+}
+
+impl<T:SeaCoefficient> From<SeaMotorPGA3D<T>> for SeaMultivectorPGA3D<T> {
+	fn from(value: SeaMotorPGA3D<T>) -> Self {
+		value.0	
+	}
+}
+impl<T:SeaCoefficient> From<&SeaMotorPGA3D<T>> for SeaMultivectorPGA3D<T> {
+	fn from(value: &SeaMotorPGA3D<T>) -> Self {
+		value.0.clone()
+	}
 }
 
 impl<T:SeaCoefficient> Default for SeaMultivectorPGA3D<T> {
@@ -261,6 +259,8 @@ impl<T:SeaCoefficient> Not for &SeaMultivectorPGA3D<T> {
 mod tests {
 	use std::f64::consts::TAU;
 
+	use super::super::tests::assert_approx_eq_vec3;
+
 	use super::*;
 
     #[test]
@@ -303,9 +303,9 @@ mod tests {
 	fn point_to_vec() {
 		let p1 = SeaMultivectorPGA3D::new_point(1.0,2.0,3.0);
 		let v = p1.point_to_euclidean();
-		assert_eq!(
+		assert_approx_eq_vec3(
 			v,
-			[1.0, 2.0, 3.0]
+			Vector3::new(1.0, 2.0, 3.0)
 		);
 	}
 
@@ -315,8 +315,8 @@ mod tests {
 		let p = SeaMultivectorPGA3D::new_point(1.0,1.0,1.0);
 		let proj = (&plane|p)*plane;
 		
-		let out = [0.0, 1.0, 1.0];
-		assert_eq!(
+		let out = Vector3::new(0.0, 1.0, 1.0);
+		assert_approx_eq_vec3(
 			proj.point_to_euclidean(),
 			out
 		);
@@ -325,8 +325,8 @@ mod tests {
 		let p = SeaMultivectorPGA3D::new_point(1.0,1.0,1.0);
 		let proj = (&plane|p)*plane;
 		
-		let out = [1.0, 0.0, 1.0];
-		assert_eq!(
+		let out = Vector3::new(1.0, 0.0, 1.0);
+		assert_approx_eq_vec3(
 			proj.point_to_euclidean(),
 			out
 		);
@@ -335,8 +335,8 @@ mod tests {
 		let p = SeaMultivectorPGA3D::new_point(1.0,1.0,1.0);
 		let proj = (&plane|p)*plane;
 		
-		let out = [1.0, 1.0, 0.0];
-		assert_eq!(
+		let out = Vector3::new(1.0, 1.0, 0.0);
+		assert_approx_eq_vec3(
 			proj.point_to_euclidean(),
 			out
 		);
@@ -345,8 +345,8 @@ mod tests {
 		let p4 = SeaMultivectorPGA3D::new_point(0.0,0.0,0.0);
 		let proj = (&plane|p4)*plane;
 
-		let out = [0.0945945945945946, 0.04054054054054054, -0.05405405405405406];
-		assert_eq!(
+		let out = Vector3::new(0.0945945945945946, 0.04054054054054054, -0.05405405405405406);
+		assert_approx_eq_vec3(
 			proj.point_to_euclidean(),
 			out
 		);
@@ -355,8 +355,8 @@ mod tests {
 		let p4 = SeaMultivectorPGA3D::new_point(100.0,0.0,0.0);
 		let proj = (&plane|p4)*plane;
 
-		let out = [1.0, 0.0, 0.0];
-		assert_eq!(
+		let out = Vector3::new(1.0, 0.0, 0.0);
+		assert_approx_eq_vec3(
 			proj.point_to_euclidean(),
 			out
 		);
@@ -367,10 +367,10 @@ mod tests {
 		let l = SeaMultivectorPGA3D::new_line(5.0,3.0,2.0);
 		let r = SeaMultivectorPGA3D::new_motor(&l, TAU/1.6);
 		let r_inv = r.inverse();
-		let mut approx_one = r.into() * r_inv.into();
+		let mut approx_one = r * r_inv;
 		approx_one.simplify();
 		assert_eq!(
-			approx_one,
+			SeaMultivectorPGA3D::from(approx_one),
 			SeaMultivectorPGA3D::new_lifted_scalar(1.0),
 		);
 
@@ -379,11 +379,11 @@ mod tests {
 		let r = SeaMultivectorPGA3D::new_motor(&l, TAU/2.0);
 		let r_inv = r.inverse();
 		let p = SeaMultivectorPGA3D::new_point(1.0, 0.0, 0.0);
-		let p_rot = r.into() * p * r_inv.into();
+		let p_rot = r * p * r_inv;
 
-		let out = [-1.0, 0.0, 0.0];
+		let out = Vector3::new(-1.0, 0.0, 0.0);
 
-		assert_eq!(
+		assert_approx_eq_vec3(
 			p_rot.point_to_euclidean(),
 			out
 		)
@@ -397,10 +397,10 @@ mod tests {
 		let l = SeaMultivectorPGA3D::new_ideal_line(2.0,3.0,5.0);
 		let r = SeaMultivectorPGA3D::new_motor(&l, TAU/3.2);
 		let r_inv = r.inverse();
-		let mut approx_one = r.into() * r_inv.into();
+		let mut approx_one = r * r_inv;
 		approx_one.simplify();
 		assert_eq!(
-			approx_one,
+			SeaMultivectorPGA3D::from(approx_one),
 			SeaMultivectorPGA3D::new_lifted_scalar(1.0),
 		);
 
@@ -409,11 +409,11 @@ mod tests {
 		let r = SeaMultivectorPGA3D::new_motor(&l, 4.0);
 		let r_inv = r.inverse();
 		let p = SeaMultivectorPGA3D::new_point(0.0, 0.0, 0.0);
-		let p_trans = r.into() * p * r_inv.into();
+		let p_trans = r * p * r_inv;
 
-		let out = [4.0, 0.0, 0.0];
+		let out = Vector3::new(4.0, 0.0, 0.0);
 
-		assert_eq!(
+		assert_approx_eq_vec3(
 			p_trans.point_to_euclidean(),
 			out
 		)
