@@ -5,20 +5,20 @@ impl<T:SeaCoefficient, I:SeaBasisBladeSet> SeaLowDimensionalSparseMultivector<T,
 	pub fn right_contraction(&self, rhs: &Self, metric: &SeaMetric) -> Self {
 		let (num_metric_non_zeros, metric_non_zeros, metric_negs) = Self::metric_product_constants(metric);
 
-		let output_basis_blade_bits = {
-			self.basis_blade_bits.right_contraction(
-				(&rhs.basis_blade_bits, num_metric_non_zeros)
+		let output_basis_blade_set = {
+			self.basis_blade_set.right_contraction(
+				(&rhs.basis_blade_set, num_metric_non_zeros)
 			)
 		};
 
 		let mut output_coefficients = unsafe {
-			Self::create_coefficients_array(&output_basis_blade_bits)
+			Self::create_coefficients_array(&output_basis_blade_set)
 		};
 
-		for (out_idx, o) in output_basis_blade_bits.iter().enumerate() {
-			let curr_rhs_bbb = rhs.basis_blade_bits.right_contraction_with_basis_blade(&o,  &metric_non_zeros);
+		for (out_idx, o) in output_basis_blade_set.iter().enumerate() {
+			let curr_rhs_bbb = rhs.basis_blade_set.right_contraction_with_basis_blade(&o,  &metric_non_zeros);
 			
-			let dot_mask = self.basis_blade_bits.intersection(&curr_rhs_bbb);
+			let dot_mask = self.basis_blade_set.intersection(&curr_rhs_bbb);
 			
 			let total_neg_mask = I::total_negations(&o, &metric_negs);
 
@@ -32,7 +32,7 @@ impl<T:SeaCoefficient, I:SeaBasisBladeSet> SeaLowDimensionalSparseMultivector<T,
 		}
 
 		Self {
-			basis_blade_bits: output_basis_blade_bits,
+			basis_blade_set: output_basis_blade_set,
 			coefficients: output_coefficients
 		}
 	}

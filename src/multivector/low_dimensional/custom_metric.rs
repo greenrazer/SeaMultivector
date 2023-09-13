@@ -28,7 +28,7 @@ impl<T:SeaCoefficient, I:SeaBasisBladeSet> SeaLowDimensionalMultivectorCustomMet
 	pub fn new(p:u8, n:u8, z:u8) -> Self {
 		Self {
 			metric: SeaMetric::new(p,n,z),
-			multivector: SeaLowDimensionalSparseMultivector::<T, I>::new()
+			multivector: SeaLowDimensionalSparseMultivector::<T, I>::default()
 		}
 	}
 
@@ -399,7 +399,7 @@ mod tests {
 			SeaLowDimensionalMultivectorCustomMetric{
 				metric: SeaMetric::new(3,0,0),
 				multivector: SeaLowDimensionalSparseMultivector { 
-					basis_blade_bits: 255, 
+					basis_blade_set: 255, 
 					coefficients: vec![1_f32, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0] 
 				}
 			}
@@ -411,7 +411,7 @@ mod tests {
 			SeaLowDimensionalMultivectorCustomMetric{
 				metric: SeaMetric::new(2,2,0),
 				multivector: SeaLowDimensionalSparseMultivector { 
-					basis_blade_bits: 65535, 
+					basis_blade_set: 65535, 
 					coefficients: vec![1_f32, -1.0, 2.0, -3.0, 4.0, -5.0, 6.0, -7.0, 8.0, -9.0, 10.0, -11.0, 12.0, -13.0, 14.0, -15.0] 
 				}
 			}
@@ -423,7 +423,7 @@ mod tests {
 			SeaLowDimensionalMultivectorCustomMetric{
 				metric: SeaMetric::new(0,0,4),
 				multivector: SeaLowDimensionalSparseMultivector { 
-					basis_blade_bits: 65535, 
+					basis_blade_set: 65535, 
 					coefficients: vec![1_f32, -1.0, 2.0, -3.0, 4.0, -5.0, 6.0, -7.0, 8.0, -9.0, 10.0, -11.0, 12.0, -13.0, 14.0, -15.0] 
 				}
 			}

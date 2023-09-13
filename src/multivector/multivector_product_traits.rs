@@ -1,15 +1,21 @@
 use crate::coefficient::SeaCoefficient;
 
 pub trait LeftContraction<Rhs> {
-	fn left_contraction(&self, rhs: Rhs) -> Self;
+	type Output;
+
+	fn left_contraction(&self, rhs: Rhs) -> Self::Output;
 }
 
 pub trait RightContraction<Rhs> {
-	fn right_contraction(&self, rhs: Rhs) -> Self;
+	type Output;
+
+	fn right_contraction(&self, rhs: Rhs) -> Self::Output;
 }
 
 pub trait InnerProduct<Rhs> {
-	fn inner_product(&self, rhs: Rhs) -> Self;
+	type Output;
+
+	fn inner_product(&self, rhs: Rhs) -> Self::Output;
 }
 
 pub trait ScalarProduct<Rhs> {
@@ -19,13 +25,19 @@ pub trait ScalarProduct<Rhs> {
 }
 
 pub trait OuterProduct<Rhs> {
-	fn outer_product(&self, rhs: Rhs) -> Self;
+	type Output;
+
+	fn outer_product(&self, rhs: Rhs) -> Self::Output;
 }
 
 pub trait RegressiveProduct<Rhs> {
-	fn regressive_product(&self, rhs: Rhs) -> Self;
+	type Output;
+
+	fn regressive_product(&self, rhs: Rhs) -> Self::Output;
 }
 
 pub trait GeometricProduct<Rhs> {
-	fn geometric_product(&self, rhs: Rhs) -> Self;
+	type Output;
+
+	fn geometric_product(&self, rhs: Rhs) -> Self::Output;
 }

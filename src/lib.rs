@@ -7,12 +7,17 @@ mod multivector;
 
 pub mod prelude {
     pub use std::str::FromStr;
+    
+    pub use super::multivector::multivector_traits::*;
+    pub use super::multivector::multivector_product_traits::*;
+
     pub use super::multivector::low_dimensional::{
         SeaMultivector3D, 
         SeaMultivector4D, 
         SeaMultivector5D, 
         SeaMultivector6D
     };
+
     pub use super::multivector::low_dimensional::pga3d::SeaMultivectorPGA3D;
     pub use super::multivector::low_dimensional::pga3d::SeaMotorPGA3D;
     pub use super::multivector::low_dimensional::basis_blade_set::SeaBasisBladeSet;

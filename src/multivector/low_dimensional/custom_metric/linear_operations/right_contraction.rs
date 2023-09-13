@@ -1,12 +1,16 @@
 use super::*;
 
 impl<T:SeaCoefficient, I:SeaBasisBladeSet> RightContraction<Self> for SeaLowDimensionalMultivectorCustomMetric<T, I> {
-	fn right_contraction(&self, rhs: Self) -> Self {
+	type Output = Self;
+
+	fn right_contraction(&self, rhs: Self) -> Self::Output {
 		self.right_contraction(&rhs)
 	}
 }
 impl<T:SeaCoefficient, I:SeaBasisBladeSet> RightContraction<&Self> for SeaLowDimensionalMultivectorCustomMetric<T, I> {
-	fn right_contraction(&self, rhs: &Self) -> Self {
+	type Output = Self;
+
+	fn right_contraction(&self, rhs: &Self) -> Self::Output {
 		assert_eq!(self.metric, rhs.metric);
 		Self {
 			metric: self.metric.clone(),

@@ -5,15 +5,15 @@ impl<T:SeaCoefficient, I:SeaBasisBladeSet> SeaLowDimensionalSparseMultivector<T,
 	pub fn scalar_product(&self, rhs: &Self, metric: &SeaMetric) -> T {
 		let (_, metric_non_zeros, metric_negs) = Self::metric_product_constants(metric);
 			
-		let mut dot_mask = self.basis_blade_bits.intersection(&rhs.basis_blade_bits);
+		let mut dot_mask = self.basis_blade_set.intersection(&rhs.basis_blade_set);
 		dot_mask.intersection_mut(&I::outer_product_zeros(&metric_non_zeros));
 		
 		let total_neg_mask = I::total_negations(&SeaBasisBladeIndexLow::SCALAR, &metric_negs);
 
 		let mut out = T::zero();
 		for i in dot_mask.iter() {
-			let a_idx = self.basis_blade_bits.count_basis_blades_less_than(&i) as usize;
-			let b_idx = rhs.basis_blade_bits.count_basis_blades_less_than(&i) as usize;
+			let a_idx = self.basis_blade_set.count_basis_blades_less_than(&i) as usize;
+			let b_idx = rhs.basis_blade_set.count_basis_blades_less_than(&i) as usize;
 			let c_a = self.coefficients[a_idx];
 			let c_b = rhs.coefficients[b_idx];
 			let c = c_a*c_b;

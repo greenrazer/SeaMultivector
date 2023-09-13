@@ -7,7 +7,7 @@ use lazy_static::lazy_static;
 use num_traits::{Zero, ToPrimitive};
 use regex::Regex;
 
-use crate::coefficient::SeaCoefficient;
+use crate::coefficient::{SeaCoefficient, self};
 use crate::errors::ParseMultivectorError;
 
 use crate::multivector::metric::SeaMetric;
@@ -33,7 +33,7 @@ impl<'a, T:SeaCoefficient, I:SeaBasisBladeSet> SparseMultivectorIter<'a, T, I> {
 	pub fn new(multivector: &'a SeaLowDimensionalSparseMultivector<T,I>) -> Self{
 		SparseMultivectorIter {
 			multivector,
-			curr_iter: multivector.basis_blade_bits.iter()
+			curr_iter: multivector.basis_blade_set.iter()
 		}
 	}
 }
@@ -65,7 +65,7 @@ pub struct SparseMultivectorGradeIter<'a, T:SeaCoefficient, I:SeaBasisBladeSet>{
 }
 impl<'a, T:SeaCoefficient, I:SeaBasisBladeSet> SparseMultivectorGradeIter<'a, T, I> {
 	pub fn new(multivector: &'a SeaLowDimensionalSparseMultivector<T,I>, grade: &SeaGrade) -> Self{
-		let iter_bits =  multivector.basis_blade_bits.intersection(&I::grade(grade));
+		let iter_bits =  multivector.basis_blade_set.intersection(&I::grade(grade));
 		SparseMultivectorGradeIter {
 			multivector,
 			curr_iter: iter_bits.iter()
@@ -97,34 +97,41 @@ impl<'a, T:SeaCoefficient, I:SeaBasisBladeSet> Iterator for SparseMultivectorGra
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct SeaLowDimensionalSparseMultivector<T:SeaCoefficient, I:SeaBasisBladeSet>{
-	pub basis_blade_bits: I,
+	pub basis_blade_set: I,
 	pub coefficients: Vec<T>
 }
 // New
 impl<T:SeaCoefficient, I:SeaBasisBladeSet> SeaLowDimensionalSparseMultivector<T, I> {
-	pub fn new() -> Self {
+	pub fn new(basis_blade_set: I, coefficients: Vec<T>) -> Self {
 		Self { 
-			basis_blade_bits: SeaBasisBladeSet::EMPTY, 
-			coefficients: vec![]
+			basis_blade_set, 
+			coefficients
 		}
+	}
+}
+
+// size queries
+impl<T:SeaCoefficient, I:SeaBasisBladeSet> SeaLowDimensionalSparseMultivector<T, I> {
+	pub fn is_zero(&self) -> bool {
+		self.basis_blade_set.is_empty()
 	}
 }
 
 // simplify
 impl<T:SeaCoefficient, I:SeaBasisBladeSet> SeaLowDimensionalSparseMultivector<T, I> {	
 	pub fn remove_zeros(&mut self) {
-		for (i, idx) in self.basis_blade_bits.iter().enumerate(){
+		for (i, idx) in self.basis_blade_set.iter().enumerate(){
 			if self.coefficients[i].is_zero() {
-				self.basis_blade_bits.toggle(&idx);		
+				self.basis_blade_set.toggle(&idx);		
 			}
 		}
 		self.coefficients.retain(|x| !x.is_zero())
 	}
 
 	pub fn remove_approx_zeros(&mut self, epsilon: T) {
-		for (i, idx) in self.basis_blade_bits.iter().enumerate(){
+		for (i, idx) in self.basis_blade_set.iter().enumerate(){
 			if self.coefficients[i].abs() < epsilon {
-				self.basis_blade_bits.toggle(&idx);
+				self.basis_blade_set.toggle(&idx);
 			}
 		}
 
@@ -142,10 +149,10 @@ impl<T:SeaCoefficient, I:SeaBasisBladeSet> SeaLowDimensionalSparseMultivector<T,
 // Multivector Index
 impl<T:SeaCoefficient, I:SeaBasisBladeSet> SeaLowDimensionalSparseMultivector<T, I> {	
 	pub fn basis_blade_coefficient(&self, index: &SeaBasisBladeIndexLow) -> T {
-		if !self.basis_blade_bits.has(index) {
+		if !self.basis_blade_set.has(index) {
 			return T::zero();
 		}
-		let coeff_idx = self.basis_blade_bits.count_basis_blades_less_than(index);
+		let coeff_idx = self.basis_blade_set.count_basis_blades_less_than(index);
 		self.coefficients[coeff_idx as usize]
 	}
 }
@@ -166,9 +173,9 @@ impl<T:SeaCoefficient, I:SeaBasisBladeSet> SeaLowDimensionalSparseMultivector<T,
 	fn special_dot_product(&self, rhs: &Self, dot_mask: &I, neg_mask: &I, output_index: &SeaBasisBladeIndexLow) -> T {
 		let mut out = T::zero();
 		for i in dot_mask.iter() {
-			let a_idx = self.basis_blade_bits.count_basis_blades_less_than(&i) as usize;
+			let a_idx = self.basis_blade_set.count_basis_blades_less_than(&i) as usize;
 			let b_look_at_idx_offset = &i ^ output_index;
-			let b_idx = rhs.basis_blade_bits.count_basis_blades_less_than(&b_look_at_idx_offset) as usize;
+			let b_idx = rhs.basis_blade_set.count_basis_blades_less_than(&b_look_at_idx_offset) as usize;
 			let c_a = self.coefficients[a_idx];
 			let c_b = rhs.coefficients[b_idx];
 			let mut c = c_a * c_b;
@@ -184,18 +191,18 @@ impl<T:SeaCoefficient, I:SeaBasisBladeSet> SeaLowDimensionalSparseMultivector<T,
 	}
 	
 	#[allow(clippy::uninit_vec)]
-	unsafe fn create_coefficients_array(output_basis_blade_bits: &I) -> Vec<T> {
-		let output_num_coeffs = output_basis_blade_bits.count_basis_blades() as usize;
+	unsafe fn create_coefficients_array(output_basis_blade_set: &I) -> Vec<T> {
+		let output_num_coeffs = output_basis_blade_set.count_basis_blades() as usize;
 		let mut output_coefficients = Vec::<T>::with_capacity(output_num_coeffs);
 		unsafe { output_coefficients.set_len(output_num_coeffs)}
 		output_coefficients
 	}
 
 	fn is_scalar(&self) -> bool{
-		return if self.basis_blade_bits.is_scalar() {
+		return if self.basis_blade_set.is_scalar() {
 			true
 		}
-		else if self.basis_blade_bits.has(&SeaBasisBladeIndexLow::SCALAR){
+		else if self.basis_blade_set.has(&SeaBasisBladeIndexLow::SCALAR){
 			self.coefficients[1..].iter().all(|x| x == &T::zero())
 		}
 		else {
@@ -217,7 +224,10 @@ impl<T:SeaCoefficient, I:SeaBasisBladeSet> SeaLowDimensionalSparseMultivector<T,
 
 impl<T:SeaCoefficient, I:SeaBasisBladeSet> Default for SeaLowDimensionalSparseMultivector<T, I> {
 	fn default() -> Self {
-		Self::new()
+		Self { 
+			basis_blade_set: SeaBasisBladeSet::EMPTY, 
+			coefficients: vec![]
+		}
 	}
 }
 
@@ -256,7 +266,7 @@ impl<T:SeaCoefficient, I:SeaBasisBladeSet> FromStr for SeaLowDimensionalSparseMu
 		}
 
 		Ok(Self {
-			basis_blade_bits: out_bbbs,
+			basis_blade_set: out_bbbs,
 			coefficients: basis_blades.iter().map(|i| i.coefficient).collect()
 		})
 
@@ -291,7 +301,7 @@ mod tests{
 		assert_eq!(
 			a,
 			SeaLowDimensionalSparseMultivector { 
-				basis_blade_bits: 255, 
+				basis_blade_set: 255, 
 				coefficients: vec![1_f32, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0] 
 			}
 		);
@@ -300,7 +310,7 @@ mod tests{
 		assert_eq!(
 			a,
 			SeaLowDimensionalSparseMultivector { 
-				basis_blade_bits: 65535, 
+				basis_blade_set: 65535, 
 				coefficients: vec![1_f32, -1.0, 2.0, -3.0, 4.0, -5.0, 6.0, -7.0, 8.0, -9.0, 10.0, -11.0, 12.0, -13.0, 14.0, -15.0] 
 			}
 		);

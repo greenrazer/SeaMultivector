@@ -1,22 +1,24 @@
 use super::*;
 
 impl<T:SeaCoefficient, I:SeaBasisBladeSet> OuterProduct<&Self> for SeaLowDimensionalSparseMultivector<T, I> {
-	fn outer_product(&self, rhs: &Self) -> Self {
-		let output_basis_blade_bits = {
-			self.basis_blade_bits.outer_product(&rhs.basis_blade_bits)
+	type Output = Self;
+
+	fn outer_product(&self, rhs: &Self) -> Self::Output {
+		let output_basis_blade_set = {
+			self.basis_blade_set.outer_product(&rhs.basis_blade_set)
 		};
 
 		let mut output_coefficients = unsafe {
-			Self::create_coefficients_array(&output_basis_blade_bits)
+			Self::create_coefficients_array(&output_basis_blade_set)
 		};
 
-		let reverse_rhs_bbbs = rhs.basis_blade_bits.dual();
+		let reverse_rhs_bbbs = rhs.basis_blade_set.dual();
 
-		for (out_idx, o) in output_basis_blade_bits.iter().enumerate() {
+		for (out_idx, o) in output_basis_blade_set.iter().enumerate() {
 			
 			let curr_rhs_bbb = &reverse_rhs_bbbs.outer_product_with_basis_blade(&o);
 			
-			let dot_mask = self.basis_blade_bits.intersection(curr_rhs_bbb);
+			let dot_mask = self.basis_blade_set.intersection(curr_rhs_bbb);
 			
 			let cannonical_neg_mask = I::cannonical_reordering_negations(&o);
 
@@ -30,7 +32,7 @@ impl<T:SeaCoefficient, I:SeaBasisBladeSet> OuterProduct<&Self> for SeaLowDimensi
 		}
 
 		Self {
-			basis_blade_bits: output_basis_blade_bits,
+			basis_blade_set: output_basis_blade_set,
 			coefficients: output_coefficients
 		}
 	}

@@ -515,16 +515,16 @@ impl<I: SeaBasisBladeSetUnsigned> Iterator for SeaBasisBladeSetIter<I> {
 pub trait SeaBasisBladeSet:
 	From<SeaBasisBladeIndexLow> + for<'a> From<&'a SeaBasisBladeIndexLow> 
 	+ Clone
-	+ LeftContraction<(Self, u8)>
-	+ for<'a> LeftContraction<(&'a Self, u8)>
-	+ RightContraction<(Self, u8)>
-	+ for<'a> RightContraction<(&'a Self, u8)>
-	+ InnerProduct<(Self, u8)>
-	+ for<'a> InnerProduct<(&'a Self, u8)>
-	+ OuterProduct<Self>
-	+ for<'a> OuterProduct<&'a Self>
-	+ GeometricProduct<(Self, u8)>
-	+ for<'a> GeometricProduct<(&'a Self, u8)>
+	+ LeftContraction<(Self, u8), Output=Self>
+	+ for<'a> LeftContraction<(&'a Self, u8), Output=Self>
+	+ RightContraction<(Self, u8), Output=Self>
+	+ for<'a> RightContraction<(&'a Self, u8), Output=Self>
+	+ InnerProduct<(Self, u8), Output=Self>
+	+ for<'a> InnerProduct<(&'a Self, u8), Output=Self>
+	+ OuterProduct<Self, Output=Self>
+	+ for<'a> OuterProduct<&'a Self, Output=Self>
+	+ GeometricProduct<(Self, u8), Output=Self>
+	+ for<'a> GeometricProduct<(&'a Self, u8), Output=Self>
 		where
 			Self: Sized
 {
@@ -765,7 +765,9 @@ impl<I: SeaBasisBladeSetUnsigned> SeaBasisBladeSet for I {
 }
 
 impl<I: SeaBasisBladeSetUnsigned> LeftContraction<(&SeaBasisBladeIndexLow, u8)> for I {
-	fn left_contraction(&self, (index, num_metric_non_zeros): (&SeaBasisBladeIndexLow, u8)) -> Self {
+	type Output = Self;
+
+	fn left_contraction(&self, (index, num_metric_non_zeros): (&SeaBasisBladeIndexLow, u8)) -> Self::Output {
 		if index.contains_basis_vectors_greater_than(num_metric_non_zeros) {
 			return Self::ZERO
 		}
@@ -778,6 +780,8 @@ impl<I: SeaBasisBladeSetUnsigned> LeftContraction<(&SeaBasisBladeIndexLow, u8)> 
 	}
 }
 impl<I: SeaBasisBladeSetUnsigned> LeftContraction<(&Self, u8)> for I {
+	type Output = Self;
+
 	fn left_contraction(&self, (rhs, num_metric_non_zeros): (&Self, u8)) -> Self {
 		let mut curr = Self::ZERO;
 		for i in self.iter() {
@@ -787,12 +791,16 @@ impl<I: SeaBasisBladeSetUnsigned> LeftContraction<(&Self, u8)> for I {
 	}
 }
 impl<I: SeaBasisBladeSetUnsigned> LeftContraction<(Self, u8)> for I {
+	type Output = Self;
+
 	fn left_contraction(&self, (rhs, num_metric_non_zeros): (Self, u8)) -> Self {
 		self.left_contraction((&rhs, num_metric_non_zeros))
 	}
 }
 
 impl<I: SeaBasisBladeSetUnsigned> RightContraction<(&SeaBasisBladeIndexLow, u8)> for I {
+	type Output = Self;
+
 	fn right_contraction(&self, (index, num_metric_non_zeros): (&SeaBasisBladeIndexLow, u8)) -> Self {
 		let mut curr = self.dual() >> (I::NUM_BASIS_BLADES - 1 - **index as usize);
 		for i in 0..I::DIMENSIONS {
@@ -810,33 +818,45 @@ impl<I: SeaBasisBladeSetUnsigned> RightContraction<(&SeaBasisBladeIndexLow, u8)>
 	}
 }
 impl<I: SeaBasisBladeSetUnsigned> RightContraction<(&Self, u8)> for I {
+	type Output = Self;
+
 	fn right_contraction(&self, (rhs, num_metric_non_zeros): (&Self, u8)) -> Self {
 		rhs.left_contraction((self, num_metric_non_zeros))
 	}
 }
 impl<I: SeaBasisBladeSetUnsigned> RightContraction<(Self, u8)> for I {
+	type Output = Self;
+
 	fn right_contraction(&self, (rhs, num_metric_non_zeros): (Self, u8)) -> Self {
 		self.right_contraction((&rhs, num_metric_non_zeros))
 	}
 }
 
 impl<I: SeaBasisBladeSetUnsigned> InnerProduct<(&SeaBasisBladeIndexLow, u8)> for I {
+	type Output = Self;
+
 	fn inner_product(&self, (index, num_metric_non_zeros): (&SeaBasisBladeIndexLow, u8)) -> Self {
 		self.left_contraction((index, num_metric_non_zeros)) | self.right_contraction((index, num_metric_non_zeros))
 	}
 }
 impl<I: SeaBasisBladeSetUnsigned> InnerProduct<(&Self, u8)> for I {
+	type Output = Self;
+
 	fn inner_product(&self, (rhs, num_metric_non_zeros): (&Self, u8)) -> Self {
 		self.left_contraction((rhs, num_metric_non_zeros)) | self.right_contraction((rhs, num_metric_non_zeros))
 	}
 }
 impl<I: SeaBasisBladeSetUnsigned> InnerProduct<(Self, u8)> for I {
+	type Output = Self;
+
 	fn inner_product(&self, (rhs, num_metric_non_zeros): (Self, u8)) -> Self {
 		self.inner_product((&rhs, num_metric_non_zeros))
 	}
 }
 
 impl<I: SeaBasisBladeSetUnsigned> OuterProduct<&SeaBasisBladeIndexLow> for I {
+	type Output = Self;
+
 	fn outer_product(&self, index: &SeaBasisBladeIndexLow) -> Self {
 		let mut curr = *self << index.0;
 		for i in index {
@@ -847,6 +867,8 @@ impl<I: SeaBasisBladeSetUnsigned> OuterProduct<&SeaBasisBladeIndexLow> for I {
 	}
 }
 impl<I: SeaBasisBladeSetUnsigned> OuterProduct<&Self> for I {
+	type Output = Self;
+
 	fn outer_product(&self, rhs: &Self) -> Self {
 		let mut curr = Self::ZERO;
 		for i in self.iter() {
@@ -856,12 +878,16 @@ impl<I: SeaBasisBladeSetUnsigned> OuterProduct<&Self> for I {
 	}
 }
 impl<I: SeaBasisBladeSetUnsigned> OuterProduct<Self> for I {
+	type Output = Self;
+
 	fn outer_product(&self, rhs: Self) -> Self {
 		self.outer_product(&rhs)
 	}
 }
 
 impl<I: SeaBasisBladeSetUnsigned> GeometricProduct<(&SeaBasisBladeIndexLow, u8)> for I {
+	type Output = Self;
+
 	fn geometric_product(&self, (index, num_metric_non_zeros): (&SeaBasisBladeIndexLow, u8)) -> Self {
 		let mut curr = *self;
 		for i in index {
@@ -875,6 +901,8 @@ impl<I: SeaBasisBladeSetUnsigned> GeometricProduct<(&SeaBasisBladeIndexLow, u8)>
 	}
 }
 impl<I: SeaBasisBladeSetUnsigned> GeometricProduct<(&Self, u8)> for I {
+	type Output = Self;
+
 	fn geometric_product(&self, (rhs, num_metric_non_zeros): (&Self, u8)) -> Self {
 		let mut curr = Self::ZERO;
 		for i in self.iter() {
@@ -884,6 +912,8 @@ impl<I: SeaBasisBladeSetUnsigned> GeometricProduct<(&Self, u8)> for I {
 	}
 }
 impl<I: SeaBasisBladeSetUnsigned> GeometricProduct<(Self, u8)> for I {
+	type Output = Self;
+	
 	fn geometric_product(&self, (rhs, num_metric_non_zeros): (Self, u8)) -> Self {
 		self.geometric_product((&rhs, num_metric_non_zeros))
 	}

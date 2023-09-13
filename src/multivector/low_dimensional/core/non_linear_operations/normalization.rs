@@ -10,11 +10,11 @@ impl<T:SeaCoefficient, I:SeaBasisBladeSet> SeaLowDimensionalSparseMultivector<T,
 		total_neg_mask.symmetric_difference_mut(&I::reversion_negations());
 		
 		let zeros = I::outer_product_zeros(&metric_non_zeros);
-		let dot_mask = self.basis_blade_bits.intersection(&zeros);
+		let dot_mask = self.basis_blade_set.intersection(&zeros);
 
 		let mut out = T::zero();
 		for i in dot_mask.iter() {
-			let idx = self.basis_blade_bits.count_basis_blades_less_than(&i) as usize;
+			let idx = self.basis_blade_set.count_basis_blades_less_than(&i) as usize;
 			let mut c = self.coefficients[idx];
 			c *= c;
 			out += if total_neg_mask.has(&i) {-c} else {c};

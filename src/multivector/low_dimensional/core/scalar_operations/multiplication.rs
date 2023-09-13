@@ -17,7 +17,7 @@ impl<T:SeaCoefficient, I:SeaBasisBladeSet> Mul<T> for &SeaLowDimensionalSparseMu
 	type Output = SeaLowDimensionalSparseMultivector<T, I>;
 	fn mul(self, rhs: T) -> Self::Output {
 		SeaLowDimensionalSparseMultivector {
-			basis_blade_bits: self.basis_blade_bits.clone(),
+			basis_blade_set: self.basis_blade_set.clone(),
 			coefficients: self.coefficients.iter().map(|x| *x*rhs).collect()
 		}
 	}

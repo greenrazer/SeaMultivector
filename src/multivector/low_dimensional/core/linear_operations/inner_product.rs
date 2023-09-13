@@ -5,21 +5,21 @@ impl<T:SeaCoefficient, I:SeaBasisBladeSet> SeaLowDimensionalSparseMultivector<T,
 	pub fn inner_product(&self, rhs: &Self, metric: &SeaMetric) -> Self {
 		let (num_metric_non_zeros, metric_non_zeros, metric_negs) = Self::metric_product_constants(metric);
 
-		let output_basis_blade_bits = {
-			self.basis_blade_bits.inner_product(
-				(&rhs.basis_blade_bits, num_metric_non_zeros)
+		let output_basis_blade_set = {
+			self.basis_blade_set.inner_product(
+				(&rhs.basis_blade_set, num_metric_non_zeros)
 			)
 		};
 
 		let mut output_coefficients = unsafe {
-			Self::create_coefficients_array(&output_basis_blade_bits)
+			Self::create_coefficients_array(&output_basis_blade_set)
 		};
 
-		for (out_idx, o) in output_basis_blade_bits.iter().enumerate() {
+		for (out_idx, o) in output_basis_blade_set.iter().enumerate() {
 
-			let left_contraction_rhs_bbb = rhs.basis_blade_bits.left_contraction_with_basis_blade(&o, &metric_non_zeros);
+			let left_contraction_rhs_bbb = rhs.basis_blade_set.left_contraction_with_basis_blade(&o, &metric_non_zeros);
 			
-			let dot_mask_left = self.basis_blade_bits.intersection(&left_contraction_rhs_bbb);
+			let dot_mask_left = self.basis_blade_set.intersection(&left_contraction_rhs_bbb);
 			
 			let total_neg_mask = I::total_negations(&o, &metric_negs);
 
@@ -32,9 +32,9 @@ impl<T:SeaCoefficient, I:SeaBasisBladeSet> SeaLowDimensionalSparseMultivector<T,
 			);
 
 			if !o.is_zero() {
-				let right_contraction_rhs_bbb = rhs.basis_blade_bits.right_contraction_with_basis_blade(&o, &metric_non_zeros);
+				let right_contraction_rhs_bbb = rhs.basis_blade_set.right_contraction_with_basis_blade(&o, &metric_non_zeros);
 
-				let dot_mask_right = self.basis_blade_bits.intersection(&right_contraction_rhs_bbb);
+				let dot_mask_right = self.basis_blade_set.intersection(&right_contraction_rhs_bbb);
 
 				output_coefficients[out_idx] += Self::special_dot_product(
 					self,
@@ -47,7 +47,7 @@ impl<T:SeaCoefficient, I:SeaBasisBladeSet> SeaLowDimensionalSparseMultivector<T,
 		}
 
 		Self {
-			basis_blade_bits: output_basis_blade_bits,
+			basis_blade_set: output_basis_blade_set,
 			coefficients: output_coefficients
 		}
 	}

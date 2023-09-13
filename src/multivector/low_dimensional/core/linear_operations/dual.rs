@@ -4,7 +4,7 @@ use super::*;
 impl<T:SeaCoefficient, I:SeaBasisBladeSet> SeaLowDimensionalSparseMultivector<T, I> {
 	pub fn poincare_dual(&self) -> Self {
 		Self { 
-			basis_blade_bits: self.basis_blade_bits.dual(), 
+			basis_blade_set: self.basis_blade_set.dual(), 
 			coefficients: self.coefficients.iter().copied().rev().collect()
 		}
 	}
@@ -38,7 +38,7 @@ impl<T:SeaCoefficient, I:SeaBasisBladeSet> SeaLowDimensionalSparseMultivector<T,
 //Dual Mut
 impl<T:SeaCoefficient, I:SeaBasisBladeSet> SeaLowDimensionalSparseMultivector<T, I> {
 	pub fn poincare_dualization(&mut self){
-		self.basis_blade_bits = self.basis_blade_bits.dual();
+		self.basis_blade_set = self.basis_blade_set.dual();
 		self.coefficients.reverse();
 	}
 

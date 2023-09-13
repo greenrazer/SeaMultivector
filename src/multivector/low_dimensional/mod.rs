@@ -6,7 +6,7 @@
 // pub use basis_blade_index::SeaBasisBladeIndexLow;
 
 mod core;
-mod custom_metric;
+pub mod custom_metric;
 pub mod pga3d;
 pub mod basis_blade_set;
 
