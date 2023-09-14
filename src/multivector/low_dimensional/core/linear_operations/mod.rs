@@ -12,3 +12,4 @@ mod outer_product;
 mod regressive_product;
 mod geometric_product;
 mod scalar_product;
+mod sandwich_product;

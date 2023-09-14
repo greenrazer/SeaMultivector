@@ -171,13 +171,25 @@ impl<T:SeaCoefficient, I:SeaBasisBladeSet> SeaLowDimensionalSparseMultivector<T,
 	/// based on a product mask and a neg mask telling what to negate
 	/// allong with the current output coefficent index
 	fn special_dot_product(&self, rhs: &Self, dot_mask: &I, neg_mask: &I, output_index: &SeaBasisBladeIndexLow) -> T {
+		Self::special_dot_product_raw(
+			&self.basis_blade_set, 
+			&self.coefficients,
+			&rhs.basis_blade_set,
+			&rhs.coefficients,
+			dot_mask,
+			neg_mask,
+			output_index
+		)
+	}
+
+	fn special_dot_product_raw(a_bbs: &I, a_coeff: &Vec<T>, b_bbs: &I, b_coeff: &Vec<T>, dot_mask: &I, neg_mask: &I, output_index: &SeaBasisBladeIndexLow) -> T {
 		let mut out = T::zero();
 		for i in dot_mask.iter() {
-			let a_idx = self.basis_blade_set.count_basis_blades_less_than(&i) as usize;
+			let a_idx = a_bbs.count_basis_blades_less_than(&i) as usize;
 			let b_look_at_idx_offset = &i ^ output_index;
-			let b_idx = rhs.basis_blade_set.count_basis_blades_less_than(&b_look_at_idx_offset) as usize;
-			let c_a = self.coefficients[a_idx];
-			let c_b = rhs.coefficients[b_idx];
+			let b_idx = b_bbs.count_basis_blades_less_than(&b_look_at_idx_offset) as usize;
+			let c_a = a_coeff[a_idx];
+			let c_b = b_coeff[b_idx];
 			let mut c = c_a * c_b;
 			
 			if neg_mask.has(&i){
