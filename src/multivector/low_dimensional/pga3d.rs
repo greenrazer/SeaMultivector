@@ -25,6 +25,7 @@ use crate::multivector::multivector_unary_traits::{
 };
 use crate::multivector::grade::SeaGrade;
 use crate::multivector::basis_blade_index::SeaBasisBladeIndexLow;
+use crate::multivector::settings::MotorCreationOrder;
 
 use super::basis_blade_set::SeaBasisBladeSet;
 use super::core::SeaLowDimensionalSparseMultivector;

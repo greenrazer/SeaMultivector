@@ -5,4 +5,5 @@ pub mod basis_blade;
 pub mod multivector_traits;
 pub mod multivector_product_traits;
 pub mod multivector_unary_traits;
+pub mod settings;
 pub mod low_dimensional;

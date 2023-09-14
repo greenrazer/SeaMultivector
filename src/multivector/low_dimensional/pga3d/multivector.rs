@@ -58,6 +58,25 @@ impl<T:SeaCoefficient> SeaMultivectorPGA3D<T>{
 		SeaMotorPGA3D(inner)
 	}
 
+	pub fn new_translation_motor(x:T, y:T, z:T) -> SeaMotorPGA3D<T> {
+		let line = Self::new_ideal_line(x, y, z);
+		Self::new_motor(&line, T::one())
+	}
+
+	pub fn new_rotation_motor(rx:T, ry:T, rz:T) -> SeaMotorPGA3D<T> {
+		let line = Self::new_line(rx, ry, rz);
+		Self::new_motor(&line, T::one())
+	}
+
+	pub fn new_combined_motor(x:T, y:T, z:T, rx:T, ry:T, rz:T, order: MotorCreationOrder) -> SeaMotorPGA3D<T> {
+		let motor_trans = Self::new_translation_motor(x, y, z);
+		let motor_rot = Self::new_rotation_motor(rx, ry, rz);
+		match order {
+			MotorCreationOrder::TranslationFirst => motor_rot * motor_trans,
+			MotorCreationOrder::RotationFirst => motor_trans * motor_rot
+		}
+	}
+
 	pub fn is_zero(&self) -> bool{
 		self.0.is_zero()
 	}
