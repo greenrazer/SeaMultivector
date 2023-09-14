@@ -39,3 +39,9 @@ pub trait GeometricProduct<Rhs> {
 
 	fn geometric_product(&self, rhs: Rhs) -> Self::Output;
 }
+
+pub trait SandwichProduct<Rhs> {
+	type Output;
+
+	fn sandwich_product(&self, rhs: Rhs) -> Self::Output;
+}

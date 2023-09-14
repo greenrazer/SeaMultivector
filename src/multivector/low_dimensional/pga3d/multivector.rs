@@ -5,13 +5,6 @@ mod linear_operations;
 mod non_linear_operations;
 mod non_geometric_linear_operations;
 
-type SeaCoreMultivector4D<T> = SeaLowDimensionalSparseMultivector::<T, u16>;
-
-const METRIC: SeaMetric = SeaMetric{positive:3, negitive:0, zero:1, dimensions:4};
-
-const LINE_BASIS_BLADES: u16 = 0x0068;
-const IDEAL_LINE_BASIS_BLADES: u16 = 0x1600;
-
 #[derive(Debug, PartialEq, Clone)]
 pub struct SeaMultivectorPGA3D<T:SeaCoefficient>(SeaCoreMultivector4D<T>);
 impl<T:SeaCoefficient> SeaMultivectorPGA3D<T>{
@@ -54,15 +47,6 @@ impl<T:SeaCoefficient> SeaMultivectorPGA3D<T>{
 		let mut mv = SeaCoreMultivector4D::<T>::new(
 			IDEAL_LINE_BASIS_BLADES,
 			vec![x,y,z]
-		);
-		mv.remove_zeros();
-		Self(mv)
-	}
-
-	pub fn new_combined_line(x:T, y:T, z:T, rx:T, ry:T, rz:T) -> Self {
-		let mut mv = SeaCoreMultivector4D::<T>::new(
-			SeaBasisBladeSet::grade(&SeaGrade(2)),
-			vec![rz, -ry, rx, x,y,z]
 		);
 		mv.remove_zeros();
 		Self(mv)
@@ -122,6 +106,27 @@ impl<T:SeaCoefficient> From<SeaMotorPGA3D<T>> for SeaMultivectorPGA3D<T> {
 impl<T:SeaCoefficient> From<&SeaMotorPGA3D<T>> for SeaMultivectorPGA3D<T> {
 	fn from(value: &SeaMotorPGA3D<T>) -> Self {
 		value.0.clone()
+	}
+}
+impl<T:SeaCoefficient> From<SeaCoreMultivector4D<T>> for SeaMultivectorPGA3D<T> {
+	fn from(value: SeaCoreMultivector4D<T>) -> Self {
+		Self(value)
+	}
+}
+impl<T:SeaCoefficient> From<&SeaCoreMultivector4D<T>> for SeaMultivectorPGA3D<T> {
+	fn from(value: &SeaCoreMultivector4D<T>) -> Self {
+		Self(value.clone())
+	}
+}
+
+impl<T: SeaCoefficient> Into<SeaCoreMultivector4D<T>> for SeaMultivectorPGA3D<T> {
+	fn into(self) -> SeaCoreMultivector4D<T> {
+		self.0
+	}
+}
+impl<'a, T: SeaCoefficient> Into<&'a SeaCoreMultivector4D<T>> for &'a SeaMultivectorPGA3D<T> {
+	fn into(self) -> &'a SeaCoreMultivector4D<T> {
+		&self.0
 	}
 }
 

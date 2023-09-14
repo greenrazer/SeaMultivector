@@ -12,7 +12,8 @@ use crate::multivector::multivector_product_traits::{
 	OuterProduct, 
 	GeometricProduct, 
 	RegressiveProduct, 
-	ScalarProduct
+	ScalarProduct,
+	SandwichProduct
 };
 use crate::multivector::multivector_unary_traits::{
 	MultivectorConjugation, 
@@ -27,12 +28,19 @@ use crate::multivector::basis_blade_index::SeaBasisBladeIndexLow;
 
 use super::basis_blade_set::SeaBasisBladeSet;
 use super::core::SeaLowDimensionalSparseMultivector;
+use super::SeaMultivector4D;
 
 mod multivector;
 mod motor;
 
 pub use multivector::SeaMultivectorPGA3D;
 pub use motor::SeaMotorPGA3D;
+
+type SeaCoreMultivector4D<T> = SeaLowDimensionalSparseMultivector::<T, u16>;
+const METRIC: SeaMetric = SeaMetric{positive:3, negitive:0, zero:1, dimensions:4};
+
+const LINE_BASIS_BLADES: u16 = 0x0068;
+const IDEAL_LINE_BASIS_BLADES: u16 = 0x1600;
 
 
 #[cfg(test)]

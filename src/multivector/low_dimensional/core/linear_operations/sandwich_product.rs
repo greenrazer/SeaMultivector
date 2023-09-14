@@ -1,7 +1,7 @@
 use super::*;
 
 impl<T:SeaCoefficient, I:SeaBasisBladeSet> SeaLowDimensionalSparseMultivector<T, I>{
-	pub fn sandwich_product_versor(&self, rhs: &Self, metric: &SeaMetric) -> Self {
+	pub fn sandwich_product(&self, rhs: &Self, metric: &SeaMetric) -> Self {
 		let (num_metric_non_zeros, metric_non_zeros, metric_negs) = Self::metric_product_constants(metric);
 
 		let stage_1_output_basis_blade_set = {
@@ -94,7 +94,7 @@ mod tests{
 		let out = SeaLowDimensionalSparseMultivector::<f32, u8>::from_str("3e12").unwrap();
 		//774ns
 		assert_eq!(
-			a.sandwich_product_versor(&b, &m),
+			a.sandwich_product(&b, &m),
 			out
 		);
 
@@ -104,7 +104,7 @@ mod tests{
 		let out = SeaLowDimensionalSparseMultivector::<f32, u8>::from_str("2e1 - 2e3").unwrap();
 		//3.382µs
 		assert_eq!(
-			a.sandwich_product_versor(&b, &m),
+			a.sandwich_product(&b, &m),
 			out
 		);
 
@@ -113,7 +113,7 @@ mod tests{
 
 		let out = SeaLowDimensionalSparseMultivector::<f32, u8>::from_str("2 + e1 + 2e3 + 3e12 + 6e23 + 6e123").unwrap();
 		assert_eq!(
-			a.sandwich_product_versor(&b, &m),
+			a.sandwich_product(&b, &m),
 			out
 		);
 
@@ -123,7 +123,7 @@ mod tests{
 		let out = SeaLowDimensionalSparseMultivector::<f32, u8>::from_str("4 +2e1  -8e2 +8e12 -14e13 -4e23 -4e123").unwrap();
 		//7.542µs
 		assert_eq!(
-			a.sandwich_product_versor(&b, &m),
+			a.sandwich_product(&b, &m),
 			out
 		);
 
@@ -136,7 +136,7 @@ mod tests{
 		//21.11µs
 		//10.495µs
 		assert_eq!(
-			a.sandwich_product_versor(&b, &m),
+			a.sandwich_product(&b, &m),
 			out
 		);
 
@@ -149,7 +149,7 @@ mod tests{
 		// let num_iters = 10_000;
 		// let mut t = a.clone();
 		// for _ in 0..num_iters {
-		// 	t = t.sandwich_product_versor(&b, &m);
+		// 	t = t.sandwich_product(&b, &m);
 		// }
 		// let elapsed_time = now.elapsed();
 		//u8 8.612µs
@@ -169,7 +169,7 @@ mod tests{
 
 		let out = SeaLowDimensionalSparseMultivector::<f32, u8>::from_str("4 +2e1  -8e2 +8e12 -14e13 -4e23 -4e123").unwrap();
 		assert_eq!(
-			a.sandwich_product_versor(&b, &m),
+			a.sandwich_product(&b, &m),
 			out
 		);
 
@@ -178,7 +178,7 @@ mod tests{
 
 		let out = SeaLowDimensionalSparseMultivector::<f32, u16>::from_str("+4e24 + 8e134").unwrap();
 		assert_eq!(
-			a.sandwich_product_versor(&b, &m),
+			a.sandwich_product(&b, &m),
 			out
 		);
 
@@ -188,7 +188,7 @@ mod tests{
 		let out = SeaLowDimensionalSparseMultivector::<f32, u16>::from_str("5e4 + 16e14 - 6e24 + 20e34 + 12e12 - 9e13 - 12e23 + 16e124 + 16e134 - 6e234 - 12e123").unwrap();
 		//12.67µs
 		assert_eq!(
-			a.sandwich_product_versor(&b, &m),
+			a.sandwich_product(&b, &m),
 			out
 		);
 
@@ -198,7 +198,7 @@ mod tests{
 		let out = SeaLowDimensionalSparseMultivector::<f32, u16>::from_str("- 5e4 - 12e14 + 6e24 + 20e34 - 9e13 + 12e23 - 16e124 ").unwrap();
 		//8.403µs
 		assert_eq!(
-			a.sandwich_product_versor(&b, &m),
+			a.sandwich_product(&b, &m),
 			out
 		);
 	}
@@ -212,7 +212,7 @@ mod tests{
 
 		let out = SeaLowDimensionalSparseMultivector::<f32, u16>::from_str("4 + 2e1 - 8e2 + 8e12 - 14e13 - 4e23 - 4e123").unwrap();
 		assert_eq!(
-			a.sandwich_product_versor(&b, &m),
+			a.sandwich_product(&b, &m),
 			out
 		);
 
@@ -221,7 +221,7 @@ mod tests{
 
 		let out = SeaLowDimensionalSparseMultivector::<f32, u16>::from_str(" - 4e3 - 5e4 + 8e12 - 5e13 - 12e14 + 20e23 + 10e24 + 12e34 - 8e123 - 20e124 + 8e134").unwrap();
 		assert_eq!(
-			a.sandwich_product_versor(&b, &m),
+			a.sandwich_product(&b, &m),
 			out
 		);
 
@@ -230,7 +230,7 @@ mod tests{
 
 		let out = SeaLowDimensionalSparseMultivector::<f32, u16>::from_str(" - 744 - 738e1 + 100e2 - 40e3 + e4 - 164e12 - 109e13 + 320e14 - 2454e23 + 2078e24 - 2610e34 - 2452e123 + 2102e124 - 2608e134 + 146e234 + 14e1234").unwrap();
 		assert_eq!(
-			a.sandwich_product_versor(&b, &m),
+			a.sandwich_product(&b, &m),
 			out
 		);
 	}

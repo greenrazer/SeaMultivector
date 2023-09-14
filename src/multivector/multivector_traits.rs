@@ -8,7 +8,8 @@ use crate::multivector::multivector_product_traits::{
 	LeftContraction, 
 	RightContraction, 
 	ScalarProduct, 
-	RegressiveProduct
+	RegressiveProduct,
+	SandwichProduct
 };
 use crate::multivector::multivector_unary_traits::{
 	MultivectorConjugation, 
@@ -82,7 +83,7 @@ pub trait MultivectorMut<T:SeaCoefficient>:
 {}
 
 pub trait Versor<T:SeaCoefficient>: 
-	Multivector<T> 
+	Multivector<T> + SandwichProduct<Self>
 		where 
 			for<'a> &'a Self: Neg + Not
 				+ Add<T> + Mul<T> + Sub<T> + Div<T>

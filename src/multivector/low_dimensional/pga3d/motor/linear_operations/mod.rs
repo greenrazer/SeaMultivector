@@ -7,5 +7,7 @@ mod right_contraction;
 mod outer_product;
 mod regressive_product;
 mod scalar_product;
+mod sandwich_product;
+
 mod dual;
 mod conjugation;
