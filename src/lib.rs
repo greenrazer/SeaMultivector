@@ -9,6 +9,7 @@ pub mod prelude {
     pub use std::str::FromStr;
     
     pub use super::multivector::multivector_traits::*;
+    pub use super::multivector::multivector_unary_traits::*;
     pub use super::multivector::multivector_product_traits::*;
 
     pub use super::multivector::low_dimensional::{
