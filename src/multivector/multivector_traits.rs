@@ -20,6 +20,8 @@ use crate::multivector::multivector_unary_traits::{
 	MultivectorNormMut
 };
 
+use super::grade::SeaGrade;
+
 
 pub trait Multivector<T:SeaCoefficient>: 
 		Neg 
@@ -57,7 +59,14 @@ pub trait Multivector<T:SeaCoefficient>:
 								+ BitAnd<Self> + BitAnd<&'a Self>
 {
 	type MultivectorIndexType;
+	type GeneralMultivectorOutput;
+	
 	fn basis_blade_coefficient(&self, index: &Self::MultivectorIndexType) -> T;
+	
+	fn scalar(&self) -> T;
+	fn pseudoscalar(&self) -> Self::GeneralMultivectorOutput;
+
+	fn grade(&self, grade: &SeaGrade) -> Self::GeneralMultivectorOutput;
 
 	fn exp(&self) -> Self;
 }

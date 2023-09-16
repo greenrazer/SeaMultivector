@@ -1,6 +1,8 @@
 use std::str::FromStr;
 use crate::errors::ParseMetricError;
 
+use super::basis_blade_index::SeaBasisBladeIndexLow;
+
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct SeaMetric {
@@ -42,6 +44,10 @@ impl SeaMetric {
 	pub fn pseudoscalar_inverse_negitive(&self) -> bool {
 		let reversion_swaps = (self.dimensions*(self.dimensions - 1)) >> 1;
 		(reversion_swaps + self.negitive) % 2 == 1
+	}
+
+	pub fn pseudoscalar_index(&self) -> SeaBasisBladeIndexLow {
+		SeaBasisBladeIndexLow::basis_vectors_less_than_or_equal(self.dimensions)
 	}
 }
 

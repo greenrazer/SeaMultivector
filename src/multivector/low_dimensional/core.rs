@@ -234,6 +234,22 @@ impl<T:SeaCoefficient, I:SeaBasisBladeSet> SeaLowDimensionalSparseMultivector<T,
 	}
 }
 
+// Grade
+impl<T:SeaCoefficient, I:SeaBasisBladeSet> SeaLowDimensionalSparseMultivector<T, I> {
+	pub fn grade(&self, grade: &SeaGrade) -> Self {
+		let mut out_basis_blade_set = I::EMPTY;
+		let mut out_coefficients = Vec::<T>::new(); 
+		for bb in self.grade_iter(grade) {
+			out_basis_blade_set.union_mut(&I::from(bb.index));
+			out_coefficients.push(bb.coefficient);
+		}
+		Self {
+			basis_blade_set: out_basis_blade_set,
+			coefficients: out_coefficients
+		}
+	}
+}
+
 impl<T:SeaCoefficient, I:SeaBasisBladeSet> Default for SeaLowDimensionalSparseMultivector<T, I> {
 	fn default() -> Self {
 		Self { 

@@ -1,3 +1,5 @@
+use std::f64::consts::TAU;
+
 use super::*;
 
 mod scalar_operations;
@@ -7,6 +9,31 @@ mod non_geometric_linear_operations;
 
 #[derive(Debug, PartialEq)]
 pub struct SeaMotorPGA3D<T:SeaCoefficient>(pub SeaMultivectorPGA3D<T>);
+impl<T:SeaCoefficient> SeaMotorPGA3D<T> {
+	fn log(&self) -> SeaMultivectorPGA3D<T> {
+		let b = &self.grade(&SeaGrade(2));
+		let s = (-b | b).scalar().sqrt();
+
+		// pure translation
+		if s.is_zero(){
+			return (&**self)/self.scalar() - T::one();
+		}
+
+		// turn
+		if self.scalar().is_zero() {
+			let tau_div_4 = T::from(TAU/4.0).unwrap();
+			return -self.pseudoscalar()/s + tau_div_4;
+		}
+
+		let two = T::from(2.0).unwrap();
+		let p = &( (-b ^ b) / (two*s) );
+		
+		let lhs = (p / self.scalar()) + (s / self.scalar()).atan();
+		let rhs = b*((-p+s)/(s*s));
+
+		lhs * rhs
+	}
+}
 impl<T:SeaCoefficient + 'static> SeaMotorPGA3D<T> {
 
 	fn to_homogeneous_transformation_matrices(&self) -> (Matrix4<T>, Matrix4<T>) {
@@ -66,9 +93,22 @@ impl<T:SeaCoefficient> Versor<T> for SeaMotorPGA3D<T> {
 
 impl<T:SeaCoefficient> Multivector<T> for SeaMotorPGA3D<T> {
 	type MultivectorIndexType = SeaBasisBladeIndexLow;
+	type GeneralMultivectorOutput = SeaMultivectorPGA3D<T>;
 
 	fn basis_blade_coefficient(&self, index: &Self::MultivectorIndexType) -> T {
 		(**self).basis_blade_coefficient(index)
+	}
+
+	fn scalar(&self) -> T {
+		(**self).scalar()
+	}
+
+	fn pseudoscalar(&self) -> Self::GeneralMultivectorOutput {
+		(**self).pseudoscalar()
+	}
+
+	fn grade(&self, grade: &SeaGrade) -> Self::GeneralMultivectorOutput {
+		(**self).grade(grade)
 	}
 
 	fn exp(&self) -> Self {
@@ -113,6 +153,7 @@ mod tests {
 	
 	use super::super::tests::assert_approx_eq_vec4;
 	use super::super::tests::assert_approx_eq_mat4;
+	use super::multivector::tests::assert_approx_eq_mv;
 
 	use super::*;
 
@@ -270,5 +311,36 @@ mod tests {
 				p_trans2.point_to_homogeneous()
 			);
 		}
+	}
+
+	#[test]
+	fn log() {
+		let l = SeaMultivectorPGA3D::new_ideal_line(1.0,TAU/4.0,10.0);
+		let r = SeaMultivectorPGA3D::new_motor(&l, 2.0);
+
+		let mut lout = r.log();
+
+		lout.simplify();
+
+		assert_approx_eq_mv(l, lout);
+
+		let l = SeaMultivectorPGA3D::new_line(0.0,TAU/4.0,0.0);
+		let r = SeaMultivectorPGA3D::new_motor(&l, 2.0);
+
+		let mut lout = r.log();
+
+		lout.simplify();
+
+		assert_approx_eq_mv(l, lout);
+
+		let mut l = SeaMultivectorPGA3D::new_line(TAU/8.0,TAU/4.0,TAU/3.2);
+		l.scalar_normalize();
+		let r = SeaMultivectorPGA3D::new_motor(&l, 2.0);
+
+		let mut lout = r.log();
+
+		lout.simplify();
+
+		assert_approx_eq_mv(l, lout);
 	}
 }

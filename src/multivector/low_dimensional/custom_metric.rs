@@ -96,9 +96,25 @@ impl<T:SeaCoefficient, I:SeaBasisBladeSet> FromStr for SeaLowDimensionalMultivec
 
 impl<T:SeaCoefficient, I:SeaBasisBladeSet> Multivector<T> for SeaLowDimensionalMultivectorCustomMetric<T, I> {
 	type MultivectorIndexType = SeaBasisBladeIndexLow;
+	type GeneralMultivectorOutput = Self;
 
 	fn basis_blade_coefficient(&self, index: &Self::MultivectorIndexType) -> T {
 		self.multivector.basis_blade_coefficient(index)
+	}
+
+	fn scalar(&self) -> T {
+		self.basis_blade_coefficient(&SeaBasisBladeIndexLow::SCALAR)
+	}
+
+	fn pseudoscalar(&self) -> Self {
+		self.grade(&SeaGrade(self.metric.dimensions))
+	}
+
+	fn grade(&self, grade: &SeaGrade) -> Self {
+		Self {
+			metric: self.metric.clone(),
+			multivector: self.multivector.grade(grade)
+		}
 	}
 
 	fn exp(&self) -> Self {

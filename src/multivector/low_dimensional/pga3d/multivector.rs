@@ -157,9 +157,22 @@ impl<T:SeaCoefficient> Default for SeaMultivectorPGA3D<T> {
 
 impl<T:SeaCoefficient> Multivector<T> for SeaMultivectorPGA3D<T> {
 	type MultivectorIndexType = SeaBasisBladeIndexLow;
+	type GeneralMultivectorOutput = Self;
 
 	fn basis_blade_coefficient(&self, index: &Self::MultivectorIndexType) -> T {
 		self.0.basis_blade_coefficient(index)
+	}
+
+	fn scalar(&self) -> T {
+		self.basis_blade_coefficient(&SeaBasisBladeIndexLow::SCALAR)
+	}
+
+	fn pseudoscalar(&self) -> Self {
+		self.grade(&SeaGrade(METRIC.dimensions))
+	}
+
+	fn grade(&self, grade: &SeaGrade) -> Self {
+		Self(self.0.grade(grade))
 	}
 
 	fn exp(&self) -> Self {
@@ -199,12 +212,19 @@ impl<T:SeaCoefficient> Not for &SeaMultivectorPGA3D<T> {
 }
 
 #[cfg(test)]
-mod tests {
+pub mod tests {
 	use std::f64::consts::TAU;
 
 	use super::super::tests::assert_approx_eq_vec3;
 
 	use super::*;
+
+	pub fn assert_approx_eq_mv<T: SeaCoefficient>(a: SeaMultivectorPGA3D<T>, b: SeaMultivectorPGA3D<T>) {
+		assert_eq!(a.0.basis_blade_set, b.0.basis_blade_set, "{:?} != {:?}", a, b);
+		for (ca, cb) in a.0.coefficients.iter().zip(&b.0.coefficients) {
+			assert!((*ca - *cb).abs() < T::from(1e-14).unwrap(), "{:?} != {:?}", a, b)
+		}
+	}
 
     #[test]
     fn create_plane_from_points() {
