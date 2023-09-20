@@ -21,7 +21,7 @@ use crate::multivector::multivector_unary_traits::{
 };
 
 use super::grade::SeaGrade;
-
+use super::metric::SeaMetric;
 
 pub trait Multivector<T:SeaCoefficient>: 
 		Neg 
@@ -137,3 +137,7 @@ pub trait Flector<T:SeaCoefficient>:
 				+ Mul<Self> + Mul<&'a Self>
 				+ BitAnd<Self> + BitAnd<&'a Self>
 {}
+
+pub trait MultivectorConstMetric<T:SeaCoefficient>: From<T> {
+	const METRIC: SeaMetric;
+}

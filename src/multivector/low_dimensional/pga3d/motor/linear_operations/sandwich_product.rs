@@ -8,7 +8,7 @@ impl<T:SeaCoefficient> SandwichProduct<Self> for SeaMotorPGA3D<T> {
 		let b_mv: SeaCoreMultivector4D<T> = rhs.0.into();
 		Self(
 			SeaMultivectorPGA3D::from(
-				a_mv.sandwich_product(&b_mv, &METRIC)
+				a_mv.sandwich_product(&b_mv, &Self::METRIC)
 			)
 		)
 	}
@@ -21,7 +21,7 @@ impl<T:SeaCoefficient> SandwichProduct<&Self> for SeaMotorPGA3D<T> {
 		let b_mv: &SeaCoreMultivector4D<T> = (&**rhs).into();
 		Self(
 			SeaMultivectorPGA3D::from(
-				a_mv.sandwich_product(&b_mv, &METRIC)
+				a_mv.sandwich_product(&b_mv, &Self::METRIC)
 			)
 		)
 	}
@@ -58,7 +58,7 @@ impl<T:SeaCoefficient> SandwichProduct<SeaMultivectorPGA3D<T>> for SeaMotorPGA3D
 	fn sandwich_product(&self, rhs: SeaMultivectorPGA3D<T>) -> Self::Output {
 		let a_mv: &SeaCoreMultivector4D<T> = (&**self).into();
 		let b_mv: SeaCoreMultivector4D<T> = rhs.into();
-		let out_mv = a_mv.sandwich_product(&b_mv, &METRIC);
+		let out_mv = a_mv.sandwich_product(&b_mv, &Self::METRIC);
 		SeaMultivectorPGA3D::from(out_mv)
 	}
 }
@@ -68,7 +68,7 @@ impl<T:SeaCoefficient> SandwichProduct<&SeaMultivectorPGA3D<T>> for SeaMotorPGA3
 	fn sandwich_product(&self, rhs: &SeaMultivectorPGA3D<T>) -> Self::Output {
 		let a_mv: &SeaCoreMultivector4D<T> = (&**self).into();
 		let b_mv: &SeaCoreMultivector4D<T> = (&*rhs).into();
-		let out_mv = a_mv.sandwich_product(&b_mv, &METRIC);
+		let out_mv = a_mv.sandwich_product(&b_mv, &Self::METRIC);
 		SeaMultivectorPGA3D::from(out_mv)
 	}
 }

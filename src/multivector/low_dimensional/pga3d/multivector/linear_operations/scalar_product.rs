@@ -4,14 +4,14 @@ impl<T:SeaCoefficient> ScalarProduct<Self> for SeaMultivectorPGA3D<T> {
 	type Output = T;
 
 	fn scalar_product(&self, rhs: Self) -> Self::Output {
-		self.0.scalar_product(&rhs.0, &METRIC)
+		self.0.scalar_product(&rhs.0, &Self::METRIC)
 	}
 }
 impl<T:SeaCoefficient> ScalarProduct<&Self> for SeaMultivectorPGA3D<T> {
 	type Output = T;
 
 	fn scalar_product(&self, rhs: &Self) -> Self::Output {
-		self.0.scalar_product(&rhs.0, &METRIC)
+		self.0.scalar_product(&rhs.0, &Self::METRIC)
 	}
 }
 

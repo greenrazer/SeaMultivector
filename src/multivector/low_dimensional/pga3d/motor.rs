@@ -7,8 +7,38 @@ mod linear_operations;
 mod non_linear_operations;
 mod non_geometric_linear_operations;
 
-#[derive(Debug, PartialEq)]
+
+#[derive(Debug, Clone, PartialEq)]
 pub struct SeaMotorPGA3D<T:SeaCoefficient>(pub SeaMultivectorPGA3D<T>);
+impl<T:SeaCoefficient> SeaMotorPGA3D<T> {
+	fn from_quaternion(qx: T,qy: T,qz: T,qw: T) -> Self{
+		let mut mv = SeaCoreMultivector4D::<T>::new(
+			ROTATION_MOTOR_BASIS_BLADES,
+			vec![qw, qx, -qy, qz]
+		);
+		mv.remove_zeros();
+		Self(mv.into())
+	}
+
+	fn from_dual_quaternion(dx: T,dy: T,dz: T,dw: T) -> Self{
+		let mut mv = SeaCoreMultivector4D::<T>::new(
+			TRANSLATION_MOTOR_BASIS_BLADES,
+			vec![dx, dy, dz, dw]
+		);
+		mv.remove_zeros();
+		Self(mv.into())
+	}
+
+	fn from_combined_quaternion(dx: T,dy: T,dz: T,dw: T, qx: T,qy: T,qz: T,qw: T) -> Self{
+		let mut mv = SeaCoreMultivector4D::<T>::new(
+			COMBINED_MOTOR_BASIS_BLADES,
+			vec![qw, qx, -qy, qz, dx, dy, dz, dw]
+		);
+		mv.remove_zeros();
+		Self(mv.into())
+	}
+}
+
 impl<T:SeaCoefficient> SeaMotorPGA3D<T> {
 	fn log(&self) -> SeaMultivectorPGA3D<T> {
 		let b = &self.grade(&SeaGrade(2));
@@ -70,7 +100,23 @@ impl<T:SeaCoefficient + 'static> SeaMotorPGA3D<T> {
 		(m, m_inv)
 	}
 
+	fn to_dual_quaternion(&self) -> DualQuaternion<T> {
+		let rw = self.basis_blade_coefficient(&SeaBasisBladeIndexLow::SCALAR);
+		let rz = -self.basis_blade_coefficient(&SeaBasisBladeIndexLow::E12);
+		let ry = self.basis_blade_coefficient(&SeaBasisBladeIndexLow::E13);
+		let rx = -self.basis_blade_coefficient(&SeaBasisBladeIndexLow::E23);
+		let tx = self.basis_blade_coefficient(&SeaBasisBladeIndexLow::E14);
+		let ty = self.basis_blade_coefficient(&SeaBasisBladeIndexLow::E24);
+		let tz = self.basis_blade_coefficient(&SeaBasisBladeIndexLow::E34);
+		let tw = self.basis_blade_coefficient(&SeaBasisBladeIndexLow::E1234);
+
+		let real = Quaternion::new(rx, ry, rz, rw);
+		let dual = Quaternion::new(tx, ty, tz, tw);
+
+		DualQuaternion::from_real_and_dual(real, dual)
+	}
 }
+
 impl<T: SeaCoefficient> Deref for SeaMotorPGA3D<T> {
 	type Target = SeaMultivectorPGA3D<T>;
 	fn deref(&self) -> &Self::Target {
@@ -116,6 +162,16 @@ impl<T:SeaCoefficient> Multivector<T> for SeaMotorPGA3D<T> {
 	}
 }
 impl<T:SeaCoefficient> MultivectorMut<T> for SeaMotorPGA3D<T> {}
+
+impl<T: SeaCoefficient> MultivectorConstMetric<T> for SeaMotorPGA3D<T> {
+	const METRIC: SeaMetric = SeaMultivectorPGA3D::<T>::METRIC;
+}
+
+impl<T:SeaCoefficient> From<T> for SeaMotorPGA3D<T> {
+	fn from(value: T) -> Self {
+		SeaMotorPGA3D(SeaMultivectorPGA3D::<T>::new_lifted_scalar(value))	
+	}
+}
 
 impl<T:SeaCoefficient> Neg for SeaMotorPGA3D<T> {
 	type Output = Self;

@@ -1,10 +1,11 @@
 use std::ops::{Deref, DerefMut, Shl, Shr, BitOr, BitXor, Mul, Not, BitAnd, Index, AddAssign, Add, Neg, Sub, Div, SubAssign, MulAssign, DivAssign};
 
 use nalgebra::{Vector3, Vector4, Matrix4};
+use nalgebra::geometry::{Quaternion, DualQuaternion};
 
 use crate::coefficient::SeaCoefficient;
 use crate::multivector::metric::SeaMetric;
-use crate::multivector::multivector_traits::{Multivector, MultivectorMut, Versor, Motor};
+use crate::multivector::multivector_traits::{Multivector, MultivectorMut, Versor, Motor, MultivectorConstMetric};
 use crate::multivector::multivector_product_traits::{
 	LeftContraction, 
 	RightContraction, 
@@ -38,10 +39,13 @@ pub use multivector::SeaMultivectorPGA3D;
 pub use motor::SeaMotorPGA3D;
 
 type SeaCoreMultivector4D<T> = SeaLowDimensionalSparseMultivector::<T, u16>;
-const METRIC: SeaMetric = SeaMetric{positive:3, negitive:0, zero:1, dimensions:4};
+const METRIC_PGA3D: SeaMetric = SeaMetric{positive:3, negitive:0, zero:1, dimensions:4};
 
 const LINE_BASIS_BLADES: u16 = 0x0068;
 const IDEAL_LINE_BASIS_BLADES: u16 = 0x1600;
+const ROTATION_MOTOR_BASIS_BLADES: u16 = 0x0069;
+const TRANSLATION_MOTOR_BASIS_BLADES: u16 = 0x9600;
+const COMBINED_MOTOR_BASIS_BLADES: u16 = 0x9669;
 
 
 #[cfg(test)]

@@ -137,6 +137,12 @@ impl<T:SeaCoefficient> From<&SeaCoreMultivector4D<T>> for SeaMultivectorPGA3D<T>
 		Self(value.clone())
 	}
 }
+impl<T:SeaCoefficient> From<T> for SeaMultivectorPGA3D<T> {
+	fn from(value: T) -> Self {
+		Self::new_lifted_scalar(value)	
+	}
+}
+
 
 impl<T: SeaCoefficient> Into<SeaCoreMultivector4D<T>> for SeaMultivectorPGA3D<T> {
 	fn into(self) -> SeaCoreMultivector4D<T> {
@@ -168,7 +174,7 @@ impl<T:SeaCoefficient> Multivector<T> for SeaMultivectorPGA3D<T> {
 	}
 
 	fn pseudoscalar(&self) -> Self {
-		self.grade(&SeaGrade(METRIC.dimensions))
+		self.grade(&SeaGrade(Self::METRIC.dimensions))
 	}
 
 	fn grade(&self, grade: &SeaGrade) -> Self {
@@ -176,10 +182,14 @@ impl<T:SeaCoefficient> Multivector<T> for SeaMultivectorPGA3D<T> {
 	}
 
 	fn exp(&self) -> Self {
-		Self(self.0.exp(&METRIC))
+		Self(self.0.exp(&Self::METRIC))
 	}
 }
 impl<T:SeaCoefficient> MultivectorMut<T> for SeaMultivectorPGA3D<T> {}
+
+impl<T: SeaCoefficient> MultivectorConstMetric<T> for SeaMultivectorPGA3D<T> {
+	const METRIC: SeaMetric = METRIC_PGA3D;
+}
 
 impl<T:SeaCoefficient> Neg for SeaMultivectorPGA3D<T> {
 	type Output = Self;

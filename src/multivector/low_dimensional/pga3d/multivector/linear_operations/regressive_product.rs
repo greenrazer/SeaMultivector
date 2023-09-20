@@ -4,14 +4,14 @@ impl<T:SeaCoefficient> RegressiveProduct<Self> for SeaMultivectorPGA3D<T> {
 	type Output = Self;
 
 	fn regressive_product(&self, rhs: Self) -> Self::Output {
-		Self(self.0.regressive_product(&rhs.0, &METRIC))
+		Self(self.0.regressive_product(&rhs.0, &Self::METRIC))
 	}
 }
 impl<T:SeaCoefficient> RegressiveProduct<&Self> for SeaMultivectorPGA3D<T> {
 	type Output = Self;
 
 	fn regressive_product(&self, rhs: &Self) -> Self::Output {
-		Self(self.0.regressive_product(&rhs.0, &METRIC))
+		Self(self.0.regressive_product(&rhs.0, &Self::METRIC))
 	}
 }
 impl<T:SeaCoefficient> BitAnd<Self> for SeaMultivectorPGA3D<T> {

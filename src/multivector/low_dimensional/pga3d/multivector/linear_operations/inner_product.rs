@@ -4,14 +4,14 @@ impl<T:SeaCoefficient> InnerProduct<Self> for SeaMultivectorPGA3D<T> {
 	type Output = Self;
 
 	fn inner_product(&self, rhs: Self) -> Self::Output {
-		Self(self.0.inner_product(&rhs.0, &METRIC))
+		Self(self.0.inner_product(&rhs.0, &Self::METRIC))
 	}
 }
 impl<T:SeaCoefficient> InnerProduct<&Self> for SeaMultivectorPGA3D<T> {
 	type Output = Self;
 
 	fn inner_product(&self, rhs: &Self) -> Self::Output {
-		Self(self.0.inner_product(&rhs.0, &METRIC))
+		Self(self.0.inner_product(&rhs.0, &Self::METRIC))
 	}
 }
 impl<T:SeaCoefficient> BitOr<Self> for SeaMultivectorPGA3D<T> {

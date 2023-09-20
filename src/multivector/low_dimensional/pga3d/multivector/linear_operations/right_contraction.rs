@@ -4,14 +4,14 @@ impl<T:SeaCoefficient> RightContraction<Self> for SeaMultivectorPGA3D<T> {
 	type Output = Self;
 
 	fn right_contraction(&self, rhs: Self) -> Self {
-		Self(self.0.right_contraction(&rhs.0, &METRIC))
+		Self(self.0.right_contraction(&rhs.0, &Self::METRIC))
 	}
 }
 impl<T:SeaCoefficient> RightContraction<&Self> for SeaMultivectorPGA3D<T> {
 	type Output = Self;
 
 	fn right_contraction(&self, rhs: &Self) -> Self {
-		Self(self.0.right_contraction(&rhs.0, &METRIC))
+		Self(self.0.right_contraction(&rhs.0, &Self::METRIC))
 	}
 }
 impl<T:SeaCoefficient> Shr<Self> for SeaMultivectorPGA3D<T> {
