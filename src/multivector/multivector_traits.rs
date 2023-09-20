@@ -138,6 +138,19 @@ pub trait Flector<T:SeaCoefficient>:
 				+ BitAnd<Self> + BitAnd<&'a Self>
 {}
 
-pub trait MultivectorConstMetric<T:SeaCoefficient>: From<T> {
+pub trait MultivectorConstMetric<T:SeaCoefficient>: 
+	From<T> + Multivector<T> 
+		where 
+			for<'a> &'a Self: Neg + Not
+				+ Add<T> + Mul<T> + Sub<T> + Div<T>
+				+ Add<Self> + Add<&'a Self> 
+				+ Sub<Self> + Sub<&'a Self>
+				+ Shl<Self> + Shl<&'a Self>
+				+ Shr<Self> + Shr<&'a Self>
+				+ BitOr<Self> + BitOr<&'a Self>
+				+ BitXor<Self> + BitXor<&'a Self>
+				+ Mul<Self> + Mul<&'a Self>
+				+ BitAnd<Self> + BitAnd<&'a Self>
+{
 	const METRIC: SeaMetric;
 }
