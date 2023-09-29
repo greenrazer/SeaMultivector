@@ -36,6 +36,7 @@ mod non_linear_operations;
 mod non_geometric_linear_operations;
 mod scalar_operations;
 
+
 #[derive(Debug, PartialEq, Clone)]
 pub struct SeaLowDimensionalMultivectorCustomMetric<T:SeaCoefficient, I:SeaBasisBladeSet>{
 	pub metric: SeaMetric,
@@ -124,7 +125,11 @@ impl<T:SeaCoefficient, I:SeaBasisBladeSet> Multivector<T> for SeaLowDimensionalM
 		}
 	}
 }
-impl<T:SeaCoefficient, I:SeaBasisBladeSet> MultivectorMut<T> for SeaLowDimensionalMultivectorCustomMetric<T, I> {}
+impl<T:SeaCoefficient, I:SeaBasisBladeSet> MultivectorMut<T> for SeaLowDimensionalMultivectorCustomMetric<T, I> {
+	fn negate(&mut self) {
+		self.multivector.negate();
+	}
+}
 
 impl<T:SeaCoefficient, I:SeaBasisBladeSet> Not for SeaLowDimensionalMultivectorCustomMetric<T, I> {
 	type Output = SeaLowDimensionalMultivectorCustomMetric<T, I>;

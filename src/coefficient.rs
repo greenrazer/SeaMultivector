@@ -10,6 +10,18 @@ pub trait SeaCoefficient:
 	+ One + Zero + Real
 	+ AddAssign + SubAssign + MulAssign + DivAssign
 {
+	fn two() -> Self {
+		Self::from(2).unwrap()
+	}
+
+	fn three() -> Self {
+		Self::from(3).unwrap()
+	}
+
+	fn four() -> Self {
+		Self::from(4).unwrap()
+	}
+
 	fn factorial(a: u64) -> Self {
 		let o: u64 = (1..=a).product();
 		Self::from(o).unwrap()

@@ -22,6 +22,8 @@ pub mod prelude {
     pub use super::multivector::low_dimensional::pga3d::SeaMultivectorPGA3D;
     pub use super::multivector::low_dimensional::pga3d::SeaMotorPGA3D;
     pub use super::multivector::low_dimensional::basis_blade_set::SeaBasisBladeSet;
+
+    pub use nalgebra::{Matrix4, Vector3};
 }
 
 #[cfg(test)]

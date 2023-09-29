@@ -120,7 +120,7 @@ mod tests {
 
 		assert_approx_eq_vec3(
 			scene_point_trans.point_to_euclidean(),
-			Vector3::new(-3.0, 0.0, 2.0)
+			Vector3::new(3.0, 0.0, 2.0)
 		);
 	}
 
@@ -158,7 +158,7 @@ mod tests {
 
 		assert_approx_eq_vec3(
 			scene_point_trans.point_to_euclidean(),
-			Vector3::new(-1.0, 0.0, 0.0) 
+			Vector3::new(1.0, 0.0, 0.0) 
 		);
 	}
 }

@@ -37,7 +37,7 @@ impl<T:SeaCoefficient> SeaMultivectorPGA3D<T>{
 	pub fn new_line(x:T, y:T, z:T) -> Self {
 		let mut mv = SeaCoreMultivector4D::<T>::new(
 			LINE_BASIS_BLADES,
-			vec![z,-y,x]
+			vec![-z,y,-x]
 		);
 		mv.remove_zeros();
 		Self(mv)
@@ -53,7 +53,7 @@ impl<T:SeaCoefficient> SeaMultivectorPGA3D<T>{
 	}
 
 	pub fn new_motor(line:&Self, value:T) -> SeaMotorPGA3D<T> {
-		let two = T::from(2.0).unwrap();
+		let two = T::two();
 		let inner = (line*value/two).exp();
 		SeaMotorPGA3D(inner)
 	}
@@ -77,12 +77,21 @@ impl<T:SeaCoefficient> SeaMultivectorPGA3D<T>{
 		}
 	}
 
+	pub fn identity() -> Self {
+		Self::from(T::one())
+	}
+
 	pub fn is_zero(&self) -> bool{
 		self.0.is_zero()
 	}
 
 	pub fn simplify(&mut self) {
 		self.0.remove_approx_zeros(T::from(1e-15).unwrap());
+		self.0.round_to_decimals(14);
+	}
+
+	pub fn simplify_epsilon(&mut self, epsilon: T) {
+		self.0.remove_approx_zeros(epsilon);
 		self.0.round_to_decimals(14);
 	}
 
@@ -185,7 +194,21 @@ impl<T:SeaCoefficient> Multivector<T> for SeaMultivectorPGA3D<T> {
 		Self(self.0.exp(&Self::METRIC))
 	}
 }
-impl<T:SeaCoefficient> MultivectorMut<T> for SeaMultivectorPGA3D<T> {}
+impl<T:SeaCoefficient> MultivectorMut<T> for SeaMultivectorPGA3D<T> {
+	fn negate(&mut self) {
+		self.0.negate();
+	}
+}
+
+impl<'a, T:SeaCoefficient> IntoIterator for &'a SeaMultivectorPGA3D<T> {
+	type IntoIter =  SeaCoreSparseMultivectorIter4D<'a, T>;
+	type Item = SeaBasisBladeLow<T>;
+
+	fn into_iter(self) -> Self::IntoIter {
+		self.0.iter()
+	}
+
+}
 
 impl<T: SeaCoefficient> MultivectorConstMetric<T> for SeaMultivectorPGA3D<T> {
 	const METRIC: SeaMetric = METRIC_PGA3D;

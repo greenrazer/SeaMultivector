@@ -1,6 +1,6 @@
 use std::ops::{Deref, DerefMut, Shl, Shr, BitOr, BitXor, Mul, Not, BitAnd, Index, AddAssign, Add, Neg, Sub, Div, SubAssign, MulAssign, DivAssign};
 
-use nalgebra::{Vector3, Vector4, Matrix4};
+use nalgebra::{Vector3, Vector4, Matrix4, Matrix3, Matrix4x3, Matrix3x4};
 use nalgebra::geometry::{Quaternion, DualQuaternion};
 
 use crate::coefficient::SeaCoefficient;
@@ -22,14 +22,15 @@ use crate::multivector::multivector_unary_traits::{
 	MultivectorDual, 
 	MultivectorDualMut, 
 	MultivectorNorm,
-	MultivectorNormMut
+	MultivectorNormMut,
 };
 use crate::multivector::grade::SeaGrade;
 use crate::multivector::basis_blade_index::SeaBasisBladeIndexLow;
+use crate::multivector::basis_blade::SeaBasisBladeLow;
 use crate::multivector::settings::MotorCreationOrder;
 
 use super::basis_blade_set::SeaBasisBladeSet;
-use super::core::SeaLowDimensionalSparseMultivector;
+use super::core::{SeaLowDimensionalSparseMultivector, SparseMultivectorIter, SparseMultivectorGradeIter}; 
 use super::SeaMultivector4D;
 
 mod multivector;
@@ -39,6 +40,8 @@ pub use multivector::SeaMultivectorPGA3D;
 pub use motor::SeaMotorPGA3D;
 
 type SeaCoreMultivector4D<T> = SeaLowDimensionalSparseMultivector::<T, u16>;
+type SeaCoreSparseMultivectorIter4D<'a, T> = SparseMultivectorIter::<'a, T, u16>;
+type SeaCoreSparseMultivectorGradeIter4D<'a, T> = SparseMultivectorGradeIter::<'a, T, u16>;
 const METRIC_PGA3D: SeaMetric = SeaMetric{positive:3, negitive:0, zero:1, dimensions:4};
 
 const LINE_BASIS_BLADES: u16 = 0x0068;
@@ -161,7 +164,7 @@ mod tests {
 
 			assert_approx_eq_vec3(
 				screen_point.point_to_euclidean(),
-				Vector3::new(-1.0, 0.0, 0.0)
+				Vector3::new(1.0, 0.0, 0.0)
 			);
 
 			let image_plane = SeaMultivectorPGA3D::new_plane(0.0,0.0,1.0, 0.0);
@@ -171,7 +174,7 @@ mod tests {
 			let camera_pos = SeaMultivectorPGA3D::new_motor(&translation_dir, 0.0);
 	
 			let rotation_axis = SeaMultivectorPGA3D::new_line(0.0,0.0,1.0);
-			let camera_rot = SeaMultivectorPGA3D::new_motor(&rotation_axis, -TAU/2.0);
+			let camera_rot = SeaMultivectorPGA3D::new_motor(&rotation_axis, TAU/2.0);
 	
 			let camera_trans = camera_rot * camera_pos;
 			let camera_trans_inv = camera_trans.inverse();
@@ -215,34 +218,7 @@ mod tests {
 
 			assert_approx_eq_vec3(
 				screen_point.point_to_euclidean(),
-				Vector3::new(0.0, -1.0, 0.0)
-			);
-		}
-	
-		#[test]
-		fn precomputed() {
-			let image_plane = SeaMultivectorPGA3D::new_plane(0.0,0.0,1.0, 0.0);
-			let focal_point = SeaMultivectorPGA3D::new_point(0.0, 0.0, -1.0);
-	
-			let translation_dir = SeaMultivectorPGA3D::new_ideal_line(1.0,1.0,0.0);
-			let camera_pos = SeaMultivectorPGA3D::new_motor(&translation_dir, -3.0);
-	
-			let rotation_axis = SeaMultivectorPGA3D::new_line(0.0,0.0,1.0);
-			let camera_rot = SeaMultivectorPGA3D::new_motor(&rotation_axis, -TAU/4.0);
-			
-			let camera_trans = camera_rot * camera_pos;
-			let camera_trans_inv = camera_trans.inverse();
-			
-			let scene_point = SeaMultivectorPGA3D::new_point(0.0,3.0,2.0);
-			let scene_point_trans = camera_trans * scene_point * camera_trans_inv;
-
-			let mut screen_point = focal_point&scene_point_trans^image_plane;
-
-			screen_point.simplify();
-
-			assert_approx_eq_vec3(
-				screen_point.point_to_euclidean(),
-				Vector3::new(0.0, -1.0, 0.0)
+				Vector3::new(0.0, 1.0, 0.0)
 			);
 		}
 

@@ -17,7 +17,7 @@ use crate::multivector::multivector_unary_traits::{
 	MultivectorDual, 
 	MultivectorDualMut, 
 	MultivectorNorm,
-	MultivectorNormMut
+	MultivectorNormMut,
 };
 
 use super::grade::SeaGrade;
@@ -57,6 +57,8 @@ pub trait Multivector<T:SeaCoefficient>:
 								+ BitXor<Self> + BitXor<&'a Self>
 								+ Mul<Self> + Mul<&'a Self>
 								+ BitAnd<Self> + BitAnd<&'a Self>
+								// + IntoIterator
+								
 {
 	type MultivectorIndexType;
 	type GeneralMultivectorOutput;
@@ -67,6 +69,10 @@ pub trait Multivector<T:SeaCoefficient>:
 	fn pseudoscalar(&self) -> Self::GeneralMultivectorOutput;
 
 	fn grade(&self, grade: &SeaGrade) -> Self::GeneralMultivectorOutput;
+
+	// fn iter(&self) -> <&Self as IntoIterator>::IntoIter;
+
+	// fn grade_iter(&self) -> Self::MultivectorGradeIter;
 
 	fn exp(&self) -> Self;
 }
@@ -89,7 +95,19 @@ pub trait MultivectorMut<T:SeaCoefficient>:
 							+ BitXor<Self> + BitXor<&'a Self>
 							+ Mul<Self> + Mul<&'a Self>
 							+ BitAnd<Self> + BitAnd<&'a Self>
-{}
+			// 				+ IntoIterator,
+			// for<'a> &'a mut Self: 
+			// 				IntoIterator
+{
+	// type MultivectorBasisBladeIterMut: Iterator;
+	// type MultivectorGradeIterMut: Iterator;
+
+	fn negate(&mut self);
+
+	// fn iter_mut(&mut self) -> <&mut Self as IntoIterator>::IntoIter;
+
+	// fn grade_iter_mut(&self) -> Self::MultivectorGradeIterMut;
+}
 
 pub trait Versor<T:SeaCoefficient>: 
 	Multivector<T> + SandwichProduct<Self>

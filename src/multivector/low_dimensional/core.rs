@@ -14,7 +14,7 @@ use crate::multivector::metric::SeaMetric;
 use crate::multivector::multivector_traits::{Multivector, MultivectorMut};
 use crate::multivector::multivector_product_traits::{LeftContraction, RightContraction, InnerProduct, OuterProduct, GeometricProduct, RegressiveProduct, ScalarProduct};
 use crate::multivector::grade::SeaGrade;
-use crate::multivector::basis_blade::SeaBasisBladeLow;
+use crate::multivector::basis_blade::{SeaBasisBladeLow, SeaBasisBladeLowRef, SeaBasisBladeLowRefMut};
 use crate::multivector::basis_blade_index::SeaBasisBladeIndexLow;
 
 use super::basis_blade_set::{SeaBasisBladeSet, SeaBasisBladeSetIter};
@@ -58,6 +58,40 @@ impl<'a, T:SeaCoefficient, I:SeaBasisBladeSet> Iterator for SparseMultivectorIte
 		self.curr_iter.count()
 	} 
 }
+
+// pub struct SparseMultivectorIterMut<'a, T:SeaCoefficient, I:SeaBasisBladeSet>{
+// 	multivector: &'a mut SeaLowDimensionalSparseMultivector<T,I>,
+// 	curr_iter: I::IntoIterType
+// }
+// impl<'a, T:SeaCoefficient, I:SeaBasisBladeSet> SparseMultivectorIterMut<'a, T, I> {
+// 	pub fn new(multivector: &'a mut SeaLowDimensionalSparseMultivector<T,I>) -> Self{
+// 		SparseMultivectorIter {
+// 			multivector,
+// 			curr_iter: multivector.basis_blade_set.iter()
+// 		}
+// 	}
+// }
+// impl<'a, T:SeaCoefficient, I:SeaBasisBladeSet> Iterator for SparseMultivectorIterMut<'a, T, I> {
+// 	type Item = SeaBasisBladeLow<T>;
+// 	fn next(&mut self) -> Option<Self::Item> {
+// 		let next_index = self.curr_iter.next()?;
+// 		let coeff = self.multivector.basis_blade_coefficient(&next_index);
+// 		Some(SeaBasisBladeLow {
+// 			index: next_index,
+// 			coefficient: coeff
+// 		})
+// 	}
+
+// 	fn size_hint(&self) -> (usize, Option<usize>) {
+// 		self.curr_iter.size_hint()
+// 	}
+
+// 	fn count(self) -> usize
+// 		where
+// 			Self: Sized, {
+// 		self.curr_iter.count()
+// 	} 
+// }
 
 pub struct SparseMultivectorGradeIter<'a, T:SeaCoefficient, I:SeaBasisBladeSet>{
 	multivector: &'a SeaLowDimensionalSparseMultivector<T,I>,
@@ -229,7 +263,7 @@ impl<T:SeaCoefficient, I:SeaBasisBladeSet> SeaLowDimensionalSparseMultivector<T,
 		SparseMultivectorIter::new(self)
 	}
 
-	pub fn grade_iter<'a>(&'a self, grade: &SeaGrade) -> SparseMultivectorGradeIter<'a, T, I> {
+	pub fn grade_iter(&self, grade: &SeaGrade) -> SparseMultivectorGradeIter<'_, T, I> {
 		SparseMultivectorGradeIter::new(self, grade)
 	}
 }

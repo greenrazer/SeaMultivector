@@ -1,4 +1,4 @@
-use std::f64::consts::TAU;
+use std::{f64::consts::TAU, arch::x86_64::_MM_FLUSH_ZERO_MASK};
 
 use super::*;
 
@@ -11,16 +11,22 @@ mod non_geometric_linear_operations;
 #[derive(Debug, Clone, PartialEq)]
 pub struct SeaMotorPGA3D<T:SeaCoefficient>(pub SeaMultivectorPGA3D<T>);
 impl<T:SeaCoefficient> SeaMotorPGA3D<T> {
-	fn from_quaternion(qx: T,qy: T,qz: T,qw: T) -> Self{
+	pub fn identity() -> Self {
+		Self::from(T::one())
+	}
+
+	pub fn from_quaternion(qx: T,qy: T,qz: T,qw: T) -> Self{
+		// println!("{} {} {} {}", qx, qy, qz, qw);
+		// println!("{} {} {} {}", -qx, qy, -qz, qw);
 		let mut mv = SeaCoreMultivector4D::<T>::new(
 			ROTATION_MOTOR_BASIS_BLADES,
-			vec![qw, qx, -qy, qz]
+			vec![qw, qz, qy, qx]
 		);
 		mv.remove_zeros();
 		Self(mv.into())
 	}
 
-	fn from_dual_quaternion(dx: T,dy: T,dz: T,dw: T) -> Self{
+	pub fn from_dual_quaternion(dx: T,dy: T,dz: T,dw: T) -> Self{
 		let mut mv = SeaCoreMultivector4D::<T>::new(
 			TRANSLATION_MOTOR_BASIS_BLADES,
 			vec![dx, dy, dz, dw]
@@ -29,18 +35,40 @@ impl<T:SeaCoefficient> SeaMotorPGA3D<T> {
 		Self(mv.into())
 	}
 
-	fn from_combined_quaternion(dx: T,dy: T,dz: T,dw: T, qx: T,qy: T,qz: T,qw: T) -> Self{
+	pub fn from_combined_quaternion(dx: T,dy: T,dz: T,dw: T, qx: T,qy: T,qz: T,qw: T) -> Self{
 		let mut mv = SeaCoreMultivector4D::<T>::new(
 			COMBINED_MOTOR_BASIS_BLADES,
-			vec![qw, qx, -qy, qz, dx, dy, dz, dw]
+			vec![qw, qx, qy, qz, dx, dy, dz, dw]
 		);
 		mv.remove_zeros();
 		Self(mv.into())
 	}
+
+	pub fn quaternion_angle_positivize(&mut self) {
+		if self.scalar().is_sign_negative() {
+			self.negate();
+		}
+	}
+
+	pub fn quaternion_angle_positivized(&self) -> Self{
+		let mut out = self.clone();
+		out.quaternion_angle_positivize();
+		out
+	}
+
+	pub fn quaternion_mirror_y_axis(&mut self){
+		
+	}
+
+	pub fn quaternion_mirrored_y_axis(&self) -> Self{
+		let mut out = self.clone();
+		out.quaternion_mirror_y_axis();
+		out
+	}
 }
 
 impl<T:SeaCoefficient> SeaMotorPGA3D<T> {
-	fn log(&self) -> SeaMultivectorPGA3D<T> {
+	pub fn log(&self) -> SeaMultivectorPGA3D<T> {
 		let b = &self.grade(&SeaGrade(2));
 		let s = (-b | b).scalar().sqrt();
 
@@ -66,7 +94,7 @@ impl<T:SeaCoefficient> SeaMotorPGA3D<T> {
 }
 impl<T:SeaCoefficient + 'static> SeaMotorPGA3D<T> {
 
-	fn to_homogeneous_transformation_matrices(&self) -> (Matrix4<T>, Matrix4<T>) {
+	pub fn to_homogeneous_transformation_matrices(&self) -> (Matrix4<T>, Matrix4<T>) {
 		let rw = self.basis_blade_coefficient(&SeaBasisBladeIndexLow::SCALAR);
 		let rz = -self.basis_blade_coefficient(&SeaBasisBladeIndexLow::E12);
 		let ry = self.basis_blade_coefficient(&SeaBasisBladeIndexLow::E13);
@@ -129,6 +157,12 @@ impl<T: SeaCoefficient> DerefMut for SeaMotorPGA3D<T> {
 	}
 }
 
+impl<T:SeaCoefficient> Default for SeaMotorPGA3D<T> {
+	fn default() -> Self {
+		Self(SeaMultivectorPGA3D::<T>::default())
+	}
+}
+
 impl<T:SeaCoefficient> Motor<T> for SeaMotorPGA3D<T> {}
 
 impl<T:SeaCoefficient> Versor<T> for SeaMotorPGA3D<T> {
@@ -161,7 +195,11 @@ impl<T:SeaCoefficient> Multivector<T> for SeaMotorPGA3D<T> {
 		Self((**self).exp())
 	}
 }
-impl<T:SeaCoefficient> MultivectorMut<T> for SeaMotorPGA3D<T> {}
+impl<T:SeaCoefficient> MultivectorMut<T> for SeaMotorPGA3D<T> {
+	fn negate(&mut self) {
+		self.0.negate();
+	}
+}
 
 impl<T: SeaCoefficient> MultivectorConstMetric<T> for SeaMotorPGA3D<T> {
 	const METRIC: SeaMetric = SeaMultivectorPGA3D::<T>::METRIC;
@@ -170,6 +208,70 @@ impl<T: SeaCoefficient> MultivectorConstMetric<T> for SeaMotorPGA3D<T> {
 impl<T:SeaCoefficient> From<T> for SeaMotorPGA3D<T> {
 	fn from(value: T) -> Self {
 		SeaMotorPGA3D(SeaMultivectorPGA3D::<T>::new_lifted_scalar(value))	
+	}
+}
+
+impl<T:SeaCoefficient + 'static> From<Matrix3<T>> for SeaMotorPGA3D<T> {
+	fn from(rot: Matrix3<T>) -> Self {
+		Self::from(&rot)
+	}		
+}
+impl<T:SeaCoefficient + 'static> From<&Matrix3<T>> for SeaMotorPGA3D<T> {
+	fn from(rot: &Matrix3<T>) -> Self {
+
+		let two = T::two();
+		let four = T::four();
+
+		let trace = rot.trace();
+		let mut quat = [T::zero(); 4];
+		if trace > T::zero() {
+			let s = T::one() / (two*(trace + T::one()).sqrt());
+			quat[0] = ( rot[(2, 1)] - rot[(1, 2)] ) * s;
+			quat[1] = ( rot[(0, 2)] - rot[(2, 0)] ) * s;
+			quat[2] = ( rot[(1, 0)] - rot[(0, 1)] ) * s; 
+			quat[3] = T::one() / (four*s);
+		}
+		else if rot[(0, 0)] > rot[(1, 1)] && rot[(0, 0)] > rot[(2,2)] {
+			let s = two * ( T::one() + rot[(0,0)] - rot[(1,1)] - rot[(2,2)]).sqrt();
+			quat[0] = s / four;
+			quat[1] = ( rot[(0, 1)] + rot[(1, 0)] ) / s; 
+			quat[2] = ( rot[(0, 2)] + rot[(2, 0)] ) / s;
+			quat[3] = ( rot[(2, 1)] - rot[(1,2)] ) / s;
+			
+		}
+		else if rot[(1, 1)] > rot[(2, 2)] {
+			let s = two * ( T::one() + rot[(1,1)] - rot[(0,0)] - rot[(2,2)]).sqrt();
+			quat[0] = ( rot[(0, 1)] + rot[(1, 0)] ) / s;
+			quat[1] = s / four; 
+			quat[2] = ( rot[(1, 2)] + rot[(2,1)] ) / s;
+			quat[3] = ( rot[(0, 2)] - rot[(2, 0)] ) / s;
+		}
+		else {
+			let s = two * ( T::one() + rot[(2,2)] - rot[(0,0)] - rot[(1,1)]).sqrt();
+			quat[0] = ( rot[(0, 2)] + rot[(2, 0)] ) / s;
+			quat[1] = ( rot[(1, 2)] + rot[(2, 1)] ) / s;
+			quat[2] = s / four;
+			quat[3] = ( rot[(1, 0)] - rot[(0, 1)] ) / s; 
+		}
+
+		let mut q = Self::from_quaternion(-quat[0], quat[1], -quat[2], quat[3]);
+		q.quaternion_angle_positivize();
+		q
+	}
+}
+impl<T:SeaCoefficient + 'static> From<Matrix4<T>> for SeaMotorPGA3D<T> {
+	fn from(value: Matrix4<T>) -> Self {
+		Self::from(&value)
+	}
+}
+impl<T:SeaCoefficient + 'static> From<&Matrix4<T>> for SeaMotorPGA3D<T> {
+	fn from(value: &Matrix4<T>) -> Self {
+		let rot_mat = Matrix3x4::identity() * (value * Matrix4x3::identity());
+		let rot_mot = Self::from(rot_mat);
+
+		let trans_mot = SeaMultivectorPGA3D::new_translation_motor(value[(0,3)], value[(1,3)], value[(2,3)]);
+
+		trans_mot * rot_mot
 	}
 }
 
@@ -213,7 +315,7 @@ mod tests {
 
 	use super::*;
 
-	mod to_matrix{
+	mod matrix{
 		use super::*;
 
 		#[test]
@@ -367,8 +469,420 @@ mod tests {
 				p_trans2.point_to_homogeneous()
 			);
 		}
+
+		
+		#[test]
+		fn from_matrix3() {
+			let rot_mat = Matrix4::from_euler_angles(TAU/4.0, 0.0, 0.0);
+			let rot_quat = SeaMotorPGA3D::<f64>::from(rot_mat);
+
+			let p = SeaMultivectorPGA3D::new_point(1.0, 2.0, 3.0);
+
+			let p_vec = p.point_to_homogeneous();
+
+			let p_mat = rot_mat * p_vec;
+			let p_mv = rot_quat / p;
+
+			assert_approx_eq_vec4(
+				p_mv.point_to_homogeneous(),
+				p_mat
+			);
+
+			let rot_mat = Matrix4::from_euler_angles(0.0, TAU/4.0, 0.0);
+			let rot_quat = SeaMotorPGA3D::<f64>::from(rot_mat);
+
+			let p = SeaMultivectorPGA3D::new_point(1.0, 2.0, 3.0);
+
+			let p_vec = p.point_to_homogeneous();
+
+			let p_mat = rot_mat * p_vec;
+			let p_mv = rot_quat / p;
+
+			assert_approx_eq_vec4(
+				p_mv.point_to_homogeneous(),
+				p_mat
+			);
+
+			let rot_mat = Matrix4::from_euler_angles(0.0, 0.0, TAU/4.0);
+			let rot_quat = SeaMotorPGA3D::<f64>::from(rot_mat);
+
+			let p = SeaMultivectorPGA3D::new_point(1.0, 2.0, 3.0);
+
+			let p_vec = p.point_to_homogeneous();
+
+			let p_mat = rot_mat * p_vec;
+			let p_mv = rot_quat / p;
+
+			assert_approx_eq_vec4(
+				p_mv.point_to_homogeneous(),
+				p_mat
+			);
+
+			let rot_mat = Matrix4::from_euler_angles(-TAU/3.1, TAU/4.9,-TAU/2.8);
+			let rot_quat = SeaMotorPGA3D::<f64>::from(rot_mat);
+
+			let p = SeaMultivectorPGA3D::new_point(1.0, 2.0, 3.0);
+
+			let p_vec = p.point_to_homogeneous();
+
+			let p_mat = rot_mat * p_vec;
+			let p_mv = rot_quat / p;
+
+			assert_approx_eq_vec4(
+				p_mv.point_to_homogeneous(),
+				p_mat
+			);
+		}
+
+		#[test]
+		fn from_matrix4() {
+			let rot_mat = Matrix4::from_euler_angles(TAU/3.1, TAU/4.9,TAU/2.8);
+			let trans_mat = Matrix4::new_translation(&Vector3::new(1.2, 2.3, 3.4));
+			let full_mat = trans_mat * rot_mat;
+			let trans_mot = SeaMotorPGA3D::<f64>::from(full_mat);
+
+			let p = SeaMultivectorPGA3D::new_point(1.0, 2.0, 3.0);
+
+			let p_vec = p.point_to_homogeneous();
+
+			let p_mat = full_mat * p_vec;
+			let p_mv = trans_mot / p;
+
+			assert_approx_eq_vec4(
+				p_mv.point_to_homogeneous(),
+				p_mat
+			);
+		}
 	}
 
+	mod quaternion{
+		use super::*;
+		
+		#[test]
+		fn roll() {
+			let rot_mat = Matrix4::from_euler_angles(TAU/3.1,0.0,0.0);
+			let rot_mat_quat = SeaMotorPGA3D::<f64>::from(rot_mat);
+			let rot_quat = {
+				SeaMultivectorPGA3D::new_rotation_motor(TAU/3.1,0.0, 0.0) // pos neg
+			}; 
+
+			assert_approx_eq_mv(rot_mat_quat.into(), rot_quat.into());
+
+			let rot_mat = Matrix4::from_euler_angles(-TAU/3.1,0.0,0.0);
+			let rot_mat_quat = SeaMotorPGA3D::<f64>::from(rot_mat);
+			let rot_quat = {
+				SeaMultivectorPGA3D::new_rotation_motor(-TAU/3.1,0.0, 0.0) // pos pos
+			}; 
+
+			assert_approx_eq_mv(rot_mat_quat.into(), rot_quat.into());
+		}
+
+		#[test]
+		fn pitch() {
+			let rot_mat = Matrix4::from_euler_angles(0.0,TAU/4.9,0.0);
+			let rot_mat_quat = SeaMotorPGA3D::<f64>::from(rot_mat);
+			let rot_quat = {
+				SeaMultivectorPGA3D::new_rotation_motor(0.0,TAU/4.9, 0.0) // pos pos
+			}; 
+
+			assert_approx_eq_mv(rot_mat_quat.into(), rot_quat.into());
+
+			let rot_mat = Matrix4::from_euler_angles(0.0,-TAU/4.9,0.0);
+			let rot_mat_quat = SeaMotorPGA3D::<f64>::from(rot_mat);
+			let rot_quat = {
+				SeaMultivectorPGA3D::new_rotation_motor(0.0,-TAU/4.9, 0.0) //pos neg
+			}; 
+
+			assert_approx_eq_mv(rot_mat_quat.into(), rot_quat.into());
+		}
+
+		#[test]
+		fn yaw() {
+			let rot_mat = Matrix4::from_euler_angles(0.0,0.0 ,TAU/2.8);
+			let rot_mat_quat = SeaMotorPGA3D::<f64>::from(rot_mat);
+			let rot_quat = {
+				SeaMultivectorPGA3D::new_rotation_motor(0.0,0.0, TAU/2.8) // pos neg
+			}; 
+
+			assert_approx_eq_mv(rot_mat_quat.into(), rot_quat.into());
+
+			let rot_mat = Matrix4::from_euler_angles(0.0,0.0 ,TAU/2.8);
+			// dbg!(rot_mat);
+			let rot_mat_quat = SeaMotorPGA3D::<f64>::from(rot_mat); // neg neg
+			let rot_quat = {
+				SeaMultivectorPGA3D::new_rotation_motor(0.0,0.0, TAU/2.8) // pos pos
+			}; 
+
+			assert_approx_eq_mv(rot_mat_quat.into(), rot_quat.into());
+		}
+
+		#[test]
+		fn roll_pitch() {
+			let roll_mat = Matrix4::from_euler_angles(TAU/3.1,TAU/4.9,0.0);
+
+			let rot_mat_quat = SeaMotorPGA3D::<f64>::from(roll_mat);
+			let rot_quat = {
+				SeaMultivectorPGA3D::new_rotation_motor(0.0,TAU/4.9, 0.0)
+				*
+				SeaMultivectorPGA3D::new_rotation_motor(TAU/3.1,0.0, 0.0)
+			}; 
+
+			assert_approx_eq_mv(rot_mat_quat.into(), rot_quat.into());
+
+			let roll_mat = Matrix4::from_euler_angles(-TAU/3.1,TAU/4.9,0.0);
+
+			let rot_mat_quat = SeaMotorPGA3D::<f64>::from(roll_mat);
+			let rot_quat = {
+				SeaMultivectorPGA3D::new_rotation_motor(0.0,TAU/4.9, 0.0)
+				*
+				SeaMultivectorPGA3D::new_rotation_motor(-TAU/3.1,0.0, 0.0)
+			}; 
+
+			assert_approx_eq_mv(rot_mat_quat.into(), rot_quat.into());
+
+			let roll_mat = Matrix4::from_euler_angles(TAU/3.1,-TAU/4.9,0.0);
+
+			let rot_mat_quat = SeaMotorPGA3D::<f64>::from(roll_mat);
+			let rot_quat = {
+				SeaMultivectorPGA3D::new_rotation_motor(0.0,-TAU/4.9, 0.0)
+				*
+				SeaMultivectorPGA3D::new_rotation_motor(TAU/3.1,0.0, 0.0)
+			}; 
+
+			assert_approx_eq_mv(rot_mat_quat.into(), rot_quat.into());
+
+			let roll_mat = Matrix4::from_euler_angles(-TAU/3.1,-TAU/4.9,0.0);
+
+			let rot_mat_quat = SeaMotorPGA3D::<f64>::from(roll_mat);
+			let rot_quat = {
+				SeaMultivectorPGA3D::new_rotation_motor(0.0,-TAU/4.9, 0.0)
+				*
+				SeaMultivectorPGA3D::new_rotation_motor(-TAU/3.1,0.0, 0.0)
+			}; 
+
+			assert_approx_eq_mv(rot_mat_quat.into(), rot_quat.into());
+		}
+
+		#[test]
+		fn roll_yaw() {
+			let roll_mat = Matrix4::from_euler_angles(TAU/3.1,0.0,TAU/2.8);
+
+			let rot_mat_quat = SeaMotorPGA3D::<f64>::from(roll_mat);
+			let rot_quat = {
+				SeaMultivectorPGA3D::new_rotation_motor(0.0,0.0, TAU/2.8)
+				*
+				SeaMultivectorPGA3D::new_rotation_motor(TAU/3.1,0.0, 0.0)
+			}; 
+
+			assert_approx_eq_mv(rot_mat_quat.into(), rot_quat.into());
+
+			let roll_mat = Matrix4::from_euler_angles(-TAU/3.1,0.0,TAU/2.8);
+
+			let rot_mat_quat = SeaMotorPGA3D::<f64>::from(roll_mat);
+			let rot_quat = {
+				SeaMultivectorPGA3D::new_rotation_motor(0.0,0.0, TAU/2.8)
+				*
+				SeaMultivectorPGA3D::new_rotation_motor(-TAU/3.1,0.0, 0.0)
+			}; 
+
+			assert_approx_eq_mv(rot_mat_quat.into(), rot_quat.into());
+
+			let roll_mat = Matrix4::from_euler_angles(TAU/3.1,0.0,-TAU/2.8);
+
+			let rot_mat_quat = SeaMotorPGA3D::<f64>::from(roll_mat);
+			let rot_quat = {
+				SeaMultivectorPGA3D::new_rotation_motor(0.0,0.0, -TAU/2.8)
+				*
+				SeaMultivectorPGA3D::new_rotation_motor(TAU/3.1,0.0, 0.0)
+			}; 
+
+			assert_approx_eq_mv(rot_mat_quat.into(), rot_quat.into());
+
+			let roll_mat = Matrix4::from_euler_angles(-TAU/3.1,0.0,-TAU/2.8);
+
+			let rot_mat_quat = SeaMotorPGA3D::<f64>::from(roll_mat);
+			let rot_quat = {
+				SeaMultivectorPGA3D::new_rotation_motor(0.0,0.0, -TAU/2.8)
+				*
+				SeaMultivectorPGA3D::new_rotation_motor(-TAU/3.1,0.0, 0.0)
+			}; 
+
+			assert_approx_eq_mv(rot_mat_quat.into(), rot_quat.into());
+		}
+
+		#[test]
+		fn pitch_yaw() {
+			let roll_mat = Matrix4::from_euler_angles(TAU/3.1,TAU/4.9,0.0);
+
+			let rot_mat_quat = SeaMotorPGA3D::<f64>::from(roll_mat);
+			let rot_quat = {
+				SeaMultivectorPGA3D::new_rotation_motor(0.0,TAU/4.9, 0.0)
+				*
+				SeaMultivectorPGA3D::new_rotation_motor(TAU/3.1,0.0, 0.0)
+			}; 
+
+			assert_approx_eq_mv(rot_mat_quat.into(), rot_quat.into());
+
+			let roll_mat = Matrix4::from_euler_angles(-TAU/3.1,TAU/4.9,0.0);
+
+			let rot_mat_quat = SeaMotorPGA3D::<f64>::from(roll_mat);
+			let rot_quat = {
+				SeaMultivectorPGA3D::new_rotation_motor(0.0,TAU/4.9, 0.0)
+				*
+				SeaMultivectorPGA3D::new_rotation_motor(-TAU/3.1,0.0, 0.0)
+			}; 
+
+			assert_approx_eq_mv(rot_mat_quat.into(), rot_quat.into());
+
+			let roll_mat = Matrix4::from_euler_angles(TAU/3.1,-TAU/4.9,0.0);
+
+			let rot_mat_quat = SeaMotorPGA3D::<f64>::from(roll_mat);
+			let rot_quat = {
+				SeaMultivectorPGA3D::new_rotation_motor(0.0,-TAU/4.9, 0.0)
+				*
+				SeaMultivectorPGA3D::new_rotation_motor(TAU/3.1,0.0, 0.0)
+			}; 
+
+			assert_approx_eq_mv(rot_mat_quat.into(), rot_quat.into());
+
+			let roll_mat = Matrix4::from_euler_angles(-TAU/3.1,-TAU/4.9,0.0);
+
+			let rot_mat_quat = SeaMotorPGA3D::<f64>::from(roll_mat);
+			let rot_quat = {
+				SeaMultivectorPGA3D::new_rotation_motor(0.0,-TAU/4.9, 0.0)
+				*
+				SeaMultivectorPGA3D::new_rotation_motor(-TAU/3.1,0.0, 0.0)
+			}; 
+
+			assert_approx_eq_mv(rot_mat_quat.into(), rot_quat.into());
+		}
+
+		#[test]
+		fn roll_pitch_yaw() {
+			let roll_mat = Matrix4::from_euler_angles(TAU/4.0,TAU/4.0, TAU/4.0);
+
+			let rot_mat_quat = SeaMotorPGA3D::<f64>::from(roll_mat);
+
+			let mut rot_quat = {
+				SeaMultivectorPGA3D::new_rotation_motor(0.0,0.0, TAU/4.0)
+				*
+				SeaMultivectorPGA3D::new_rotation_motor(0.0,TAU/4.0, 0.0)
+				*
+				SeaMultivectorPGA3D::new_rotation_motor(TAU/4.0,0.0, 0.0)
+			}; 
+
+			rot_quat.quaternion_angle_positivize();
+
+			assert_approx_eq_mv(rot_mat_quat.into(), rot_quat.into());
+
+			let roll_mat = Matrix4::from_euler_angles(-TAU/3.1,TAU/4.9,TAU/2.8);
+
+			let rot_mat_quat = SeaMotorPGA3D::<f64>::from(roll_mat);
+			let mut rot_quat = {
+				SeaMultivectorPGA3D::new_rotation_motor(0.0,0.0, TAU/2.8)
+				*
+				SeaMultivectorPGA3D::new_rotation_motor(0.0,TAU/4.9, 0.0)
+				*
+				SeaMultivectorPGA3D::new_rotation_motor(-TAU/3.1,0.0, 0.0)
+			}; 
+
+			rot_quat.quaternion_angle_positivize();
+
+			assert_approx_eq_mv(rot_mat_quat.into(), rot_quat.into());
+
+			let roll_mat = Matrix4::from_euler_angles(TAU/3.1,-TAU/4.9,TAU/2.8);
+
+			let rot_mat_quat = SeaMotorPGA3D::<f64>::from(roll_mat);
+			let mut rot_quat = {
+				SeaMultivectorPGA3D::new_rotation_motor(0.0,0.0, TAU/2.8)
+				*
+				SeaMultivectorPGA3D::new_rotation_motor(0.0,-TAU/4.9, 0.0)
+				*
+				SeaMultivectorPGA3D::new_rotation_motor(TAU/3.1,0.0, 0.0)
+			};
+
+			rot_quat.quaternion_angle_positivize();
+
+			assert_approx_eq_mv(rot_mat_quat.into(), rot_quat.into());
+
+			let roll_mat = Matrix4::from_euler_angles(-TAU/3.1,-TAU/4.9,TAU/2.8);
+
+			let rot_mat_quat = SeaMotorPGA3D::<f64>::from(roll_mat);
+			let mut rot_quat = {
+				SeaMultivectorPGA3D::new_rotation_motor(0.0,0.0, TAU/2.8)
+				*
+				SeaMultivectorPGA3D::new_rotation_motor(0.0,-TAU/4.9, 0.0)
+				*
+				SeaMultivectorPGA3D::new_rotation_motor(-TAU/3.1,0.0, 0.0)
+			}; 
+			
+			rot_quat.quaternion_angle_positivize();
+
+			assert_approx_eq_mv(rot_mat_quat.into(), rot_quat.into());
+
+			let roll_mat = Matrix4::from_euler_angles(TAU/3.1,TAU/4.9,-TAU/2.8);
+
+			let rot_mat_quat = SeaMotorPGA3D::<f64>::from(roll_mat);
+			let mut rot_quat = {
+				SeaMultivectorPGA3D::new_rotation_motor(0.0,0.0, -TAU/2.8)
+				*
+				SeaMultivectorPGA3D::new_rotation_motor(0.0,TAU/4.9, 0.0)
+				*
+				SeaMultivectorPGA3D::new_rotation_motor(TAU/3.1,0.0, 0.0)
+			}; 
+			
+			rot_quat.quaternion_angle_positivize();
+
+			assert_approx_eq_mv(rot_mat_quat.into(), rot_quat.into());
+
+			let roll_mat = Matrix4::from_euler_angles(-TAU/3.1,TAU/4.9,-TAU/2.8);
+
+			let rot_mat_quat = SeaMotorPGA3D::<f64>::from(roll_mat);
+			let mut rot_quat = {
+				SeaMultivectorPGA3D::new_rotation_motor(0.0,0.0, -TAU/2.8)
+				*
+				SeaMultivectorPGA3D::new_rotation_motor(0.0,TAU/4.9, 0.0)
+				*
+				SeaMultivectorPGA3D::new_rotation_motor(-TAU/3.1,0.0, 0.0)
+			}; 
+			
+			rot_quat.quaternion_angle_positivize();
+
+			assert_approx_eq_mv(rot_mat_quat.into(), rot_quat.into());
+
+			let roll_mat = Matrix4::from_euler_angles(TAU/3.1,-TAU/4.9,-TAU/2.8);
+
+			let rot_mat_quat = SeaMotorPGA3D::<f64>::from(roll_mat);
+			let mut rot_quat = {
+				SeaMultivectorPGA3D::new_rotation_motor(0.0,0.0, -TAU/2.8)
+				*
+				SeaMultivectorPGA3D::new_rotation_motor(0.0,-TAU/4.9, 0.0)
+				*
+				SeaMultivectorPGA3D::new_rotation_motor(TAU/3.1,0.0, 0.0)
+			}; 
+			
+			rot_quat.quaternion_angle_positivize();
+
+			assert_approx_eq_mv(rot_mat_quat.into(), rot_quat.into());
+
+			let roll_mat = Matrix4::from_euler_angles(-TAU/3.1,-TAU/4.9,-TAU/2.8);
+
+			let rot_mat_quat = SeaMotorPGA3D::<f64>::from(roll_mat);
+			let mut rot_quat = {
+				SeaMultivectorPGA3D::new_rotation_motor(0.0,0.0, -TAU/2.8)
+				*
+				SeaMultivectorPGA3D::new_rotation_motor(0.0,-TAU/4.9, 0.0)
+				*
+				SeaMultivectorPGA3D::new_rotation_motor(-TAU/3.1,0.0, 0.0)
+			}; 
+			
+			rot_quat.quaternion_angle_positivize();
+
+			assert_approx_eq_mv(rot_mat_quat.into(), rot_quat.into());
+		}
+
+	}
+	
 	#[test]
 	fn log() {
 		let l = SeaMultivectorPGA3D::new_ideal_line(1.0,TAU/4.0,10.0);

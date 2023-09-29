@@ -51,6 +51,17 @@ impl<T: SeaCoefficient> FromStr for SeaBasisBladeLow<T> {
 	}
 }
 
+#[derive(Debug, PartialEq)]
+pub struct SeaBasisBladeLowRef<'a, T: SeaCoefficient>{
+	pub index: SeaBasisBladeIndexLow,
+	pub coefficient: &'a T
+}
+
+#[derive(Debug, PartialEq)]
+pub struct SeaBasisBladeLowRefMut<'a, T: SeaCoefficient>{
+	pub index: SeaBasisBladeIndexLow,
+	pub coefficient: &'a mut T
+}
 
 #[cfg(test)]
 mod tests {
