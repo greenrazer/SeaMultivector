@@ -1,6 +1,6 @@
 use std::cmp::Ordering;
 use std::iter::repeat;
-use std::ops::{Add, AddAssign, BitXor, Neg, Index, Mul, MulAssign, Sub, Div, DivAssign, SubAssign};
+use std::ops::{Add, AddAssign, BitXor, Neg, Index, Mul, MulAssign, Sub, Div, DivAssign, SubAssign, Deref, DerefMut};
 use std::str::FromStr;
 
 use lazy_static::lazy_static;
@@ -33,6 +33,14 @@ impl<'a, T:SeaCoefficient, I:SeaBasisBladeSet> SparseMultivectorIter<'a, T, I> {
 		SparseMultivectorIter {
 			multivector,
 			curr_iter: multivector.basis_blade_set.iter()
+		}
+	}
+
+	pub fn new_grade_iter(multivector: &'a SeaLowDimensionalSparseMultivector<T,I>, grade: &SeaGrade) -> SparseMultivectorIter<'a, T, I>{
+		let iter_bits =  multivector.basis_blade_set.intersection(&I::grade(grade));
+		SparseMultivectorIter {
+			multivector,
+			curr_iter: iter_bits.iter()
 		}
 	}
 }
@@ -70,6 +78,14 @@ impl<'a, T:SeaCoefficient, I:SeaBasisBladeSet> SparseMultivectorIterMut<'a, T, I
 			curr_iter
 		}
 	}
+
+	pub fn new_grade_iter(multivector: &'a mut SeaLowDimensionalSparseMultivector<T,I>, grade: &SeaGrade) -> SparseMultivectorIterMut<'a, T, I>{
+		let iter_bits =  multivector.basis_blade_set.intersection(&I::grade(grade));
+		SparseMultivectorIterMut {
+			multivector,
+			curr_iter: iter_bits.iter()
+		}
+	}
 }
 impl<'a, T:SeaCoefficient, I:SeaBasisBladeSet> Iterator for SparseMultivectorIterMut<'a, T, I> {
 	type Item = SeaBasisBladeLowRefMut<'a, T>;
@@ -79,41 +95,6 @@ impl<'a, T:SeaCoefficient, I:SeaBasisBladeSet> Iterator for SparseMultivectorIte
 			&mut *(self.multivector.basis_blade_coefficient_ref_mut(&next_index).unwrap() as *mut T)
 		};
 		Some(SeaBasisBladeLowRefMut::<'a, T> {
-			index: next_index,
-			coefficient: coeff
-		})
-	}
-
-	fn size_hint(&self) -> (usize, Option<usize>) {
-		self.curr_iter.size_hint()
-	}
-
-	fn count(self) -> usize
-		where
-			Self: Sized, {
-		self.curr_iter.count()
-	} 
-}
-
-pub struct SparseMultivectorGradeIter<'a, T:SeaCoefficient, I:SeaBasisBladeSet>{
-	multivector: &'a SeaLowDimensionalSparseMultivector<T,I>,
-	curr_iter: I::IntoIterType
-}
-impl<'a, T:SeaCoefficient, I:SeaBasisBladeSet> SparseMultivectorGradeIter<'a, T, I> {
-	pub fn new(multivector: &'a SeaLowDimensionalSparseMultivector<T,I>, grade: &SeaGrade) -> Self{
-		let iter_bits =  multivector.basis_blade_set.intersection(&I::grade(grade));
-		SparseMultivectorGradeIter {
-			multivector,
-			curr_iter: iter_bits.iter()
-		}
-	}
-}
-impl<'a, T:SeaCoefficient, I:SeaBasisBladeSet> Iterator for SparseMultivectorGradeIter<'a, T, I> {
-	type Item = SeaBasisBladeLowRef<'a, T>;
-	fn next(&mut self) -> Option<Self::Item> {
-		let next_index = self.curr_iter.next()?;
-		let coeff = self.multivector.basis_blade_coefficient_ref(&next_index).unwrap();
-		Some(SeaBasisBladeLowRef {
 			index: next_index,
 			coefficient: coeff
 		})
@@ -285,8 +266,12 @@ impl<T:SeaCoefficient, I:SeaBasisBladeSet> SeaLowDimensionalSparseMultivector<T,
 		SparseMultivectorIterMut::new(self)
 	}
 
-	pub fn grade_iter(&self, grade: &SeaGrade) -> SparseMultivectorGradeIter<'_, T, I> {
-		SparseMultivectorGradeIter::new(self, grade)
+	pub fn grade_iter(&self, grade: &SeaGrade) -> SparseMultivectorIter<'_, T, I> {
+		SparseMultivectorIter::new_grade_iter(self, grade)
+	}
+
+	pub fn grade_iter_mut(&mut self, grade: &SeaGrade) -> SparseMultivectorIterMut<'_, T, I> {
+		SparseMultivectorIterMut::new_grade_iter(self, grade)
 	}
 }
 
@@ -617,6 +602,25 @@ mod tests{
 		let mut iter = a.grade_iter(&SeaGrade(4));
 		assert_eq!(iter.next().unwrap(), SeaBasisBladeLow::from_str("15e1234").unwrap());
 		assert_eq!(iter.next(), None);
+	}
+
+	#[test]
+	fn grade_iter_mut() {
+		let mut a = SeaLowDimensionalSparseMultivector::<f32, u16>::from_str("1 + e1 + 2e2 + 3e12 + 4e3 + 5e13 + 6e23 + 7e123 + 8e4 + 9e14 + 10e24 + 11e124 + 12e34 + 13e134 + 14e234 + 15e1234").unwrap();
+		let iter = a.grade_iter_mut(&SeaGrade(2));
+		for i in iter {
+			*i.coefficient = 1.12334;
+		}
+		let out = SeaLowDimensionalSparseMultivector::<f32, u16>::from_str("1 + e1 + 2e2 + 1.12334e12 + 4e3 + 1.12334e13 + 1.12334e23 + 7e123 + 8e4 + 1.12334e14 + 1.12334e24 + 11e124 + 1.12334e34 + 13e134 + 14e234 + 15e1234").unwrap();
+		assert_eq!(a, out);
+
+		let mut a = SeaLowDimensionalSparseMultivector::<f32, u16>::from_str(" e1 + 3e12 + 4e3 + 13e134 + 15e1234").unwrap();
+		let iter = a.grade_iter_mut(&SeaGrade(2));
+		for i in iter {
+			*i.coefficient = 4.3342;
+		}
+		let out = SeaLowDimensionalSparseMultivector::<f32, u16>::from_str(" e1 + 4.3342e12 + 4e3 + 13e134 + 15e1234").unwrap();
+		assert_eq!(a, out);
 	}
 
 	#[test]

@@ -9,6 +9,11 @@ use crate::multivector::metric::SeaMetric;
 use crate::multivector::multivector_traits::{
 	Multivector, 
 	MultivectorMut,
+	MultivectorIter,
+	MultivectorIterMut,
+	MultivectorGradeIntoIterator,
+	MultivectorGradeIter,
+	MultivectorGradeIterMut,
 	MultivectorConjugation, 
 	MultivectorConjugationMut, 
 	MultivectorDual, 
@@ -28,7 +33,7 @@ use crate::multivector::basis_blade::{SeaBasisBladeLow, SeaBasisBladeLowRef, Sea
 
 use super::basis_blade_set::SeaBasisBladeSet;
 
-use super::core::{SeaLowDimensionalSparseMultivector, SparseMultivectorIter, SparseMultivectorIterMut, SparseMultivectorGradeIter}; 
+use super::core::{SeaLowDimensionalSparseMultivector, SparseMultivectorIter, SparseMultivectorIterMut}; 
 
 mod linear_operations;
 mod non_linear_operations;
@@ -47,10 +52,6 @@ impl<T:SeaCoefficient, I:SeaBasisBladeSet> SeaLowDimensionalMultivectorCustomMet
 			metric: SeaMetric::new(p,n,z),
 			multivector: SeaLowDimensionalSparseMultivector::<T, I>::default()
 		}
-	}
-
-	pub fn grade_iter(&self, grade: &SeaGrade) -> SparseMultivectorGradeIter<'_, T, I> {
-		self.multivector.grade_iter(grade)
 	}
 
 	pub fn remove_zeros(&mut self) {
@@ -113,10 +114,6 @@ impl<T:SeaCoefficient, I:SeaBasisBladeSet> Multivector<T> for SeaLowDimensionalM
 		}
 	}
 
-	fn iter(&self) -> SparseMultivectorIter<'_, T, I> {
-		self.into_iter()
-	}
-
 	fn exp(&self) -> Self {
 		Self {
 			metric: self.metric.clone(),
@@ -125,12 +122,19 @@ impl<T:SeaCoefficient, I:SeaBasisBladeSet> Multivector<T> for SeaLowDimensionalM
 	}
 }
 impl<T:SeaCoefficient, I:SeaBasisBladeSet> MultivectorMut<T> for SeaLowDimensionalMultivectorCustomMetric<T, I> {
-	fn iter_mut(&mut self) -> SparseMultivectorIterMut<'_, T, I> {
-		self.into_iter()
-	}
-
 	fn negate(&mut self) {
 		self.multivector.negate();
+	}
+}
+
+impl<T:SeaCoefficient, I:SeaBasisBladeSet> MultivectorIter for SeaLowDimensionalMultivectorCustomMetric<T, I> {
+	fn iter(&self) -> <&Self as IntoIterator>::IntoIter {
+		self.into_iter()
+	}
+}
+impl<T:SeaCoefficient, I:SeaBasisBladeSet> MultivectorIterMut for SeaLowDimensionalMultivectorCustomMetric<T, I> {
+	fn iter_mut(&mut self) -> <&mut Self as IntoIterator>::IntoIter {
+		self.into_iter()
 	}
 }
 
@@ -142,13 +146,39 @@ impl<'a, T:SeaCoefficient, I:SeaBasisBladeSet> IntoIterator for &'a SeaLowDimens
 		self.multivector.iter()
 	}
 }
-
 impl<'a, T:SeaCoefficient, I:SeaBasisBladeSet> IntoIterator for &'a mut SeaLowDimensionalMultivectorCustomMetric<T, I> {
 	type Item = SeaBasisBladeLowRefMut<'a, T>;
 	type IntoIter = SparseMultivectorIterMut<'a, T, I>;
 
 	fn into_iter(self) -> Self::IntoIter {
 		self.multivector.iter_mut()
+	}
+}
+
+impl<'a, T:SeaCoefficient, I:SeaBasisBladeSet> MultivectorGradeIter for SeaLowDimensionalMultivectorCustomMetric<T, I> {
+	fn grade_iter(&self, grade: &SeaGrade) -> <&Self as MultivectorGradeIntoIterator>::MultivectorGradeIntoIter {
+		self.grade_into_iter(grade)
+	}
+}
+
+impl<'a, T:SeaCoefficient, I:SeaBasisBladeSet> MultivectorGradeIterMut for SeaLowDimensionalMultivectorCustomMetric<T, I> {
+	fn grade_iter_mut(&mut self, grade: &SeaGrade) -> <&mut Self as MultivectorGradeIntoIterator>::MultivectorGradeIntoIter {
+		self.grade_into_iter(grade)
+	}
+}
+
+impl<'a, T:SeaCoefficient, I:SeaBasisBladeSet> MultivectorGradeIntoIterator for &'a SeaLowDimensionalMultivectorCustomMetric<T, I> {
+	type MultivectorGradeIntoIter = SparseMultivectorIter<'a, T, I>;
+
+	fn grade_into_iter(self, grade: &SeaGrade) -> Self::MultivectorGradeIntoIter {
+		self.multivector.grade_iter(grade)
+	}
+}
+impl<'a, T:SeaCoefficient, I:SeaBasisBladeSet> MultivectorGradeIntoIterator for &'a mut SeaLowDimensionalMultivectorCustomMetric<T, I> {
+	type MultivectorGradeIntoIter = SparseMultivectorIterMut<'a, T, I>;
+
+	fn grade_into_iter(self, grade: &SeaGrade) -> Self::MultivectorGradeIntoIter {
+		self.multivector.grade_iter_mut(grade)
 	}
 }
 
@@ -446,6 +476,25 @@ mod tests {
 		let mut iter = a.grade_iter(&SeaGrade(4));
 		assert_eq!(iter.next().unwrap(), SeaBasisBladeLow::from_str("15e1234").unwrap());
 		assert_eq!(iter.next(), None);
+	}
+
+	#[test]
+	fn grade_iter_mut() {
+		let mut a = SeaLowDimensionalMultivectorCustomMetric::<f32, u16>::from_str("4>1 + e1 + 2e2 + 3e12 + 4e3 + 5e13 + 6e23 + 7e123 + 8e4 + 9e14 + 10e24 + 11e124 + 12e34 + 13e134 + 14e234 + 15e1234").unwrap();
+		let iter = a.grade_iter_mut(&SeaGrade(2));
+		for i in iter {
+			*i.coefficient = 1.12334;
+		}
+		let out = SeaLowDimensionalMultivectorCustomMetric::<f32, u16>::from_str("4>1 + e1 + 2e2 + 1.12334e12 + 4e3 + 1.12334e13 + 1.12334e23 + 7e123 + 8e4 + 1.12334e14 + 1.12334e24 + 11e124 + 1.12334e34 + 13e134 + 14e234 + 15e1234").unwrap();
+		assert_eq!(a, out);
+
+		let mut a = SeaLowDimensionalMultivectorCustomMetric::<f32, u16>::from_str("4> e1 + 3e12 + 4e3 + 13e134 + 15e1234").unwrap();
+		let iter = a.grade_iter_mut(&SeaGrade(2));
+		for i in iter {
+			*i.coefficient = 4.3342;
+		}
+		let out = SeaLowDimensionalMultivectorCustomMetric::<f32, u16>::from_str("4> e1 + 4.3342e12 + 4e3 + 13e134 + 15e1234").unwrap();
+		assert_eq!(a, out);
 	}
 
 	#[test]

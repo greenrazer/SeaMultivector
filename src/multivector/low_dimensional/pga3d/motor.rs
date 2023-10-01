@@ -191,19 +191,11 @@ impl<T:SeaCoefficient> Multivector<T> for SeaMotorPGA3D<T> {
 		(**self).grade(grade)
 	}
 
-	fn iter(&self) -> <&Self as IntoIterator>::IntoIter {
-		self.into_iter()
-	}
-
 	fn exp(&self) -> Self {
 		Self((**self).exp())
 	}
 }
 impl<T:SeaCoefficient> MultivectorMut<T> for SeaMotorPGA3D<T> {
-	fn iter_mut(&mut self) -> <&mut Self as IntoIterator>::IntoIter {
-		self.into_iter()
-	}
-
 	fn negate(&mut self) {
 		self.0.negate();
 	}
@@ -213,14 +205,20 @@ impl<T: SeaCoefficient> MultivectorConstMetric<T> for SeaMotorPGA3D<T> {
 	const METRIC: SeaMetric = SeaMultivectorPGA3D::<T>::METRIC;
 }
 
-impl<T:SeaCoefficient> From<T> for SeaMotorPGA3D<T> {
-	fn from(value: T) -> Self {
-		SeaMotorPGA3D(SeaMultivectorPGA3D::<T>::new_lifted_scalar(value))	
+impl<T:SeaCoefficient> MultivectorIter for SeaMotorPGA3D<T> {
+	fn iter(&self) -> <&Self as IntoIterator>::IntoIter {
+		self.into_iter()
+	}
+}
+
+impl<T:SeaCoefficient> MultivectorIterMut for SeaMotorPGA3D<T> {
+	fn iter_mut(&mut self) -> <&mut Self as IntoIterator>::IntoIter{
+		self.into_iter()
 	}
 }
 
 impl<'a, T:SeaCoefficient> IntoIterator for &'a SeaMotorPGA3D<T> {
-	type IntoIter =  SeaCoreSparseMultivectorIter4D<'a, T>;
+	type IntoIter =  SeaCoreSparseMultivector4DIter<'a, T>;
 	type Item = SeaBasisBladeLowRef<'a, T>;
 
 	fn into_iter(self) -> Self::IntoIter {
@@ -229,13 +227,46 @@ impl<'a, T:SeaCoefficient> IntoIterator for &'a SeaMotorPGA3D<T> {
 
 }
 impl<'a, T:SeaCoefficient> IntoIterator for &'a mut SeaMotorPGA3D<T> {
-	type IntoIter =  SeaCoreSparseMultivectorIterMut4D<'a, T>;
+	type IntoIter =  SeaCoreSparseMultivector4DIterMut<'a, T>;
 	type Item = SeaBasisBladeLowRefMut<'a, T>;
 
 	fn into_iter(self) -> Self::IntoIter {
 		self.0.iter_mut()
 	}
 
+}
+
+impl<'a, T:SeaCoefficient> MultivectorGradeIter for SeaMotorPGA3D<T> {
+	fn grade_iter(&self, grade: &SeaGrade) -> <&Self as MultivectorGradeIntoIterator>::MultivectorGradeIntoIter {
+		self.grade_into_iter(grade)
+	}
+}
+
+impl<'a, T:SeaCoefficient> MultivectorGradeIterMut for SeaMotorPGA3D<T> {
+	fn grade_iter_mut(&mut self, grade: &SeaGrade) -> <&mut Self as MultivectorGradeIntoIterator>::MultivectorGradeIntoIter {
+		self.grade_into_iter(grade)
+	}
+}
+
+impl<'a, T:SeaCoefficient> MultivectorGradeIntoIterator for &'a SeaMotorPGA3D<T> {
+	type MultivectorGradeIntoIter = SeaCoreSparseMultivector4DIter<'a, T>;
+
+	fn grade_into_iter(self, grade: &SeaGrade) -> Self::MultivectorGradeIntoIter {
+		self.0.grade_iter(grade)
+	}
+}
+impl<'a, T:SeaCoefficient> MultivectorGradeIntoIterator for &'a mut SeaMotorPGA3D<T> {
+	type MultivectorGradeIntoIter = SeaCoreSparseMultivector4DIterMut<'a, T>;
+
+	fn grade_into_iter(self, grade: &SeaGrade) -> Self::MultivectorGradeIntoIter {
+		self.0.grade_iter_mut(grade)
+	}
+}
+
+impl<T:SeaCoefficient> From<T> for SeaMotorPGA3D<T> {
+	fn from(value: T) -> Self {
+		SeaMotorPGA3D(SeaMultivectorPGA3D::<T>::new_lifted_scalar(value))	
+	}
 }
 
 impl<T:SeaCoefficient + 'static> From<Matrix3<T>> for SeaMotorPGA3D<T> {

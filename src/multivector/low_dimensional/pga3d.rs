@@ -11,6 +11,11 @@ use crate::multivector::multivector_traits::{
 	Versor, 
 	Motor, 
 	MultivectorConstMetric,
+	MultivectorIter,
+	MultivectorIterMut,
+	MultivectorGradeIntoIterator,
+	MultivectorGradeIter,
+	MultivectorGradeIterMut,
 	MultivectorConjugation, 
 	MultivectorConjugationMut, 
 	MultivectorDual, 
@@ -32,7 +37,7 @@ use crate::multivector::basis_blade::{SeaBasisBladeLow, SeaBasisBladeLowRef, Sea
 use crate::multivector::settings::MotorCreationOrder;
 
 use super::basis_blade_set::SeaBasisBladeSet;
-use super::core::{SeaLowDimensionalSparseMultivector, SparseMultivectorIter, SparseMultivectorIterMut, SparseMultivectorGradeIter}; 
+use super::core::{SeaLowDimensionalSparseMultivector, SparseMultivectorIter, SparseMultivectorIterMut}; 
 use super::SeaMultivector4D;
 
 mod multivector;
@@ -42,9 +47,8 @@ pub use multivector::SeaMultivectorPGA3D;
 pub use motor::SeaMotorPGA3D;
 
 type SeaCoreMultivector4D<T> = SeaLowDimensionalSparseMultivector::<T, u16>;
-type SeaCoreSparseMultivectorIter4D<'a, T> = SparseMultivectorIter::<'a, T, u16>;
-type SeaCoreSparseMultivectorIterMut4D<'a, T> = SparseMultivectorIterMut::<'a, T, u16>;
-type SeaCoreSparseMultivectorGradeIter4D<'a, T> = SparseMultivectorGradeIter::<'a, T, u16>;
+type SeaCoreSparseMultivector4DIter<'a, T> = SparseMultivectorIter::<'a, T, u16>;
+type SeaCoreSparseMultivector4DIterMut<'a, T> = SparseMultivectorIterMut::<'a, T, u16>;
 const METRIC_PGA3D: SeaMetric = SeaMetric{positive:3, negitive:0, zero:1, dimensions:4};
 
 const LINE_BASIS_BLADES: u16 = 0x0068;

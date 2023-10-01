@@ -2,9 +2,28 @@ use std::ops::{Mul, Add, Sub, Div, Neg, AddAssign, MulAssign, SubAssign, DivAssi
 
 use crate::coefficient::SeaCoefficient;
 
+use super::grade::SeaGrade;
+use super::metric::SeaMetric;
+
+mod multivector_index_traits;
 mod multivector_unary_traits;
 mod multivector_product_traits;
 
+pub use multivector_index_traits::{
+	MultivectorIter,
+	MultivectorIterMut,
+	MultivectorGradeIntoIterator,
+	MultivectorGradeIter,
+	MultivectorGradeIterMut
+};
+pub use multivector_unary_traits::{
+	MultivectorConjugation, 
+	MultivectorConjugationMut, 
+	MultivectorDual, 
+	MultivectorDualMut, 
+	MultivectorNorm,
+	MultivectorNormMut,
+};
 pub use multivector_product_traits::{
 	GeometricProduct, 
 	OuterProduct, 
@@ -15,25 +34,16 @@ pub use multivector_product_traits::{
 	RegressiveProduct,
 	SandwichProduct
 };
-pub use multivector_unary_traits::{
-	MultivectorConjugation, 
-	MultivectorConjugationMut, 
-	MultivectorDual, 
-	MultivectorDualMut, 
-	MultivectorNorm,
-	MultivectorNormMut,
-};
-
-use super::grade::SeaGrade;
-use super::metric::SeaMetric;
 
 pub trait Multivector<T:SeaCoefficient>: 
-		Neg 
-		+ Add<T> + Mul<T> + Sub<T> + Div<T>
+		MultivectorIter
+		+ MultivectorGradeIter
 		+ MultivectorConjugation
 		+ MultivectorDual
 		+ MultivectorNorm<T>
+		+ Neg 
 		+ Not
+		+ Add<T> + Mul<T> + Sub<T> + Div<T>
 		+ Add<Self> + for<'a> Add<&'a Self>
 		+ Sub<Self> + for<'a> Sub<&'a Self>
 		+ LeftContraction<Self> + for<'a> LeftContraction<&'a Self>
@@ -62,6 +72,7 @@ pub trait Multivector<T:SeaCoefficient>:
 								+ Mul<Self> + Mul<&'a Self>
 								+ BitAnd<Self> + BitAnd<&'a Self>
 								+ IntoIterator
+								+ MultivectorGradeIntoIterator
 								
 {
 	type MultivectorIndexType;
@@ -74,14 +85,12 @@ pub trait Multivector<T:SeaCoefficient>:
 
 	fn grade(&self, grade: &SeaGrade) -> Self::GeneralMultivectorOutput;
 
-	fn iter(&self) -> <&Self as IntoIterator>::IntoIter;
-
-	// fn grade_iter(&self) -> Self::MultivectorGradeIter;
-
 	fn exp(&self) -> Self;
 }
 pub trait MultivectorMut<T:SeaCoefficient>: 
 	Multivector<T>
+	+ MultivectorIterMut
+	+ MultivectorGradeIterMut
 	+ MultivectorConjugationMut
 	+ MultivectorDualMut
 	+ MultivectorNormMut
@@ -99,16 +108,14 @@ pub trait MultivectorMut<T:SeaCoefficient>:
 							+ BitXor<Self> + BitXor<&'a Self>
 							+ Mul<Self> + Mul<&'a Self>
 							+ BitAnd<Self> + BitAnd<&'a Self>
-							+ IntoIterator,
+							+ IntoIterator
+							+ MultivectorGradeIntoIterator,
 			for<'a> &'a mut Self: 
 							IntoIterator
+							+ MultivectorGradeIntoIterator,
 {
 
 	fn negate(&mut self);
-
-	fn iter_mut(&mut self) -> <&mut Self as IntoIterator>::IntoIter;
-
-	// fn grade_iter_mut(&self) -> Self::MultivectorGradeIterMut;
 }
 
 pub trait MultivectorConstMetric<T:SeaCoefficient>: 
@@ -124,7 +131,8 @@ pub trait MultivectorConstMetric<T:SeaCoefficient>:
 				+ BitXor<Self> + BitXor<&'a Self>
 				+ Mul<Self> + Mul<&'a Self>
 				+ BitAnd<Self> + BitAnd<&'a Self>
-				+ IntoIterator,
+				+ IntoIterator
+				+ MultivectorGradeIntoIterator,
 {
 	const METRIC: SeaMetric;
 }
@@ -145,7 +153,8 @@ pub trait Versor<T:SeaCoefficient>:
 				+ Mul<Self> + Mul<&'a Self>
 				+ BitAnd<Self> + BitAnd<&'a Self>
 				+ Div<Self> + Div<&'a Self>
-				+ IntoIterator,
+				+ IntoIterator
+				+ MultivectorGradeIntoIterator,
 {
 	fn inverse(&self) -> Self;
 }
@@ -164,7 +173,8 @@ pub trait Motor<T:SeaCoefficient>:
 				+ Mul<Self> + Mul<&'a Self>
 				+ BitAnd<Self> + BitAnd<&'a Self>
 				+ Div<Self> + Div<&'a Self>
-				+ IntoIterator,
+				+ IntoIterator
+				+ MultivectorGradeIntoIterator,
 {}
 
 pub trait Flector<T:SeaCoefficient>: 
@@ -181,5 +191,6 @@ pub trait Flector<T:SeaCoefficient>:
 				+ Mul<Self> + Mul<&'a Self>
 				+ BitAnd<Self> + BitAnd<&'a Self>
 				+ Div<Self> + Div<&'a Self>
-				+ IntoIterator,
+				+ IntoIterator
+				+ MultivectorGradeIntoIterator,
 {}

@@ -1,4 +1,4 @@
-use crate::coefficient::SeaCoefficient;
+use super::SeaCoefficient;
 
 pub trait MultivectorConjugation {
 	fn reversion_conjugated(&self) -> Self;
