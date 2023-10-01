@@ -57,10 +57,21 @@ pub struct SeaBasisBladeLowRef<'a, T: SeaCoefficient>{
 	pub coefficient: &'a T
 }
 
+impl<'a, T: SeaCoefficient> PartialEq<SeaBasisBladeLow<T>> for SeaBasisBladeLowRef<'a, T>{
+	fn eq(&self, other: &SeaBasisBladeLow<T>) -> bool {
+		self.coefficient == &other.coefficient
+	}
+}
+
 #[derive(Debug, PartialEq)]
 pub struct SeaBasisBladeLowRefMut<'a, T: SeaCoefficient>{
 	pub index: SeaBasisBladeIndexLow,
 	pub coefficient: &'a mut T
+}
+impl<'a, T: SeaCoefficient> PartialEq<SeaBasisBladeLow<T>> for SeaBasisBladeLowRefMut<'a, T>{
+	fn eq(&self, other: &SeaBasisBladeLow<T>) -> bool {
+		self.coefficient == &other.coefficient
+	}
 }
 
 #[cfg(test)]

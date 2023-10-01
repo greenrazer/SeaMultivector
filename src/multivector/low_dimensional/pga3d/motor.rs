@@ -191,11 +191,19 @@ impl<T:SeaCoefficient> Multivector<T> for SeaMotorPGA3D<T> {
 		(**self).grade(grade)
 	}
 
+	fn iter(&self) -> <&Self as IntoIterator>::IntoIter {
+		self.into_iter()
+	}
+
 	fn exp(&self) -> Self {
 		Self((**self).exp())
 	}
 }
 impl<T:SeaCoefficient> MultivectorMut<T> for SeaMotorPGA3D<T> {
+	fn iter_mut(&mut self) -> <&mut Self as IntoIterator>::IntoIter {
+		self.into_iter()
+	}
+
 	fn negate(&mut self) {
 		self.0.negate();
 	}
@@ -209,6 +217,25 @@ impl<T:SeaCoefficient> From<T> for SeaMotorPGA3D<T> {
 	fn from(value: T) -> Self {
 		SeaMotorPGA3D(SeaMultivectorPGA3D::<T>::new_lifted_scalar(value))	
 	}
+}
+
+impl<'a, T:SeaCoefficient> IntoIterator for &'a SeaMotorPGA3D<T> {
+	type IntoIter =  SeaCoreSparseMultivectorIter4D<'a, T>;
+	type Item = SeaBasisBladeLowRef<'a, T>;
+
+	fn into_iter(self) -> Self::IntoIter {
+		self.0.iter()
+	}
+
+}
+impl<'a, T:SeaCoefficient> IntoIterator for &'a mut SeaMotorPGA3D<T> {
+	type IntoIter =  SeaCoreSparseMultivectorIterMut4D<'a, T>;
+	type Item = SeaBasisBladeLowRefMut<'a, T>;
+
+	fn into_iter(self) -> Self::IntoIter {
+		self.0.iter_mut()
+	}
+
 }
 
 impl<T:SeaCoefficient + 'static> From<Matrix3<T>> for SeaMotorPGA3D<T> {

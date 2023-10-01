@@ -6,30 +6,29 @@ use crate::coefficient::SeaCoefficient;
 
 use crate::multivector::grade::SeaGrade;
 use crate::multivector::metric::SeaMetric;
-use crate::multivector::multivector_product_traits::{
+use crate::multivector::multivector_traits::{
+	Multivector, 
+	MultivectorMut,
+	MultivectorConjugation, 
+	MultivectorConjugationMut, 
+	MultivectorDual, 
+	MultivectorDualMut, 
+	MultivectorNorm,
+	MultivectorNormMut,
 	LeftContraction, 
 	RightContraction, 
 	InnerProduct, 
 	OuterProduct, 
 	GeometricProduct, 
 	RegressiveProduct, 
-	ScalarProduct
+	ScalarProduct,
 };
-use crate::multivector::multivector_unary_traits::{
-	MultivectorConjugation, 
-	MultivectorConjugationMut, 
-	MultivectorDual, 
-	MultivectorDualMut, 
-	MultivectorNorm,
-	MultivectorNormMut
-};
-use crate::multivector::multivector_traits::{Multivector, MultivectorMut};
 use crate::multivector::basis_blade_index::SeaBasisBladeIndexLow;
-use crate::multivector::basis_blade::SeaBasisBladeLow;
+use crate::multivector::basis_blade::{SeaBasisBladeLow, SeaBasisBladeLowRef, SeaBasisBladeLowRefMut};
 
 use super::basis_blade_set::SeaBasisBladeSet;
 
-use super::core::{SeaLowDimensionalSparseMultivector, SparseMultivectorIter, SparseMultivectorGradeIter}; 
+use super::core::{SeaLowDimensionalSparseMultivector, SparseMultivectorIter, SparseMultivectorIterMut, SparseMultivectorGradeIter}; 
 
 mod linear_operations;
 mod non_linear_operations;
@@ -48,10 +47,6 @@ impl<T:SeaCoefficient, I:SeaBasisBladeSet> SeaLowDimensionalMultivectorCustomMet
 			metric: SeaMetric::new(p,n,z),
 			multivector: SeaLowDimensionalSparseMultivector::<T, I>::default()
 		}
-	}
-
-	pub fn iter(&self) -> SparseMultivectorIter<'_, T, I> {
-		self.multivector.iter()
 	}
 
 	pub fn grade_iter(&self, grade: &SeaGrade) -> SparseMultivectorGradeIter<'_, T, I> {
@@ -118,6 +113,10 @@ impl<T:SeaCoefficient, I:SeaBasisBladeSet> Multivector<T> for SeaLowDimensionalM
 		}
 	}
 
+	fn iter(&self) -> SparseMultivectorIter<'_, T, I> {
+		self.into_iter()
+	}
+
 	fn exp(&self) -> Self {
 		Self {
 			metric: self.metric.clone(),
@@ -126,8 +125,30 @@ impl<T:SeaCoefficient, I:SeaBasisBladeSet> Multivector<T> for SeaLowDimensionalM
 	}
 }
 impl<T:SeaCoefficient, I:SeaBasisBladeSet> MultivectorMut<T> for SeaLowDimensionalMultivectorCustomMetric<T, I> {
+	fn iter_mut(&mut self) -> SparseMultivectorIterMut<'_, T, I> {
+		self.into_iter()
+	}
+
 	fn negate(&mut self) {
 		self.multivector.negate();
+	}
+}
+
+impl<'a, T:SeaCoefficient, I:SeaBasisBladeSet> IntoIterator for &'a SeaLowDimensionalMultivectorCustomMetric<T, I> {
+	type Item = SeaBasisBladeLowRef<'a, T>;
+	type IntoIter = SparseMultivectorIter<'a, T, I>;
+
+	fn into_iter(self) -> Self::IntoIter {
+		self.multivector.iter()
+	}
+}
+
+impl<'a, T:SeaCoefficient, I:SeaBasisBladeSet> IntoIterator for &'a mut SeaLowDimensionalMultivectorCustomMetric<T, I> {
+	type Item = SeaBasisBladeLowRefMut<'a, T>;
+	type IntoIter = SparseMultivectorIterMut<'a, T, I>;
+
+	fn into_iter(self) -> Self::IntoIter {
+		self.multivector.iter_mut()
 	}
 }
 
@@ -372,22 +393,22 @@ mod tests {
 	fn iter() {
 		let a = SeaLowDimensionalMultivectorCustomMetric::<f32, u16>::from_str("4>1 + e1 + 2e2 + 3e12 + 4e3 + 5e13 + 6e23 + 7e123 + 8e4 + 9e14 + 10e24 + 11e124 + 12e34 + 13e134 + 14e234 + 15e1234").unwrap();
 		let mut iter = a.iter();
-		assert_eq!(iter.next(), Some(SeaBasisBladeLow::from_str("1").unwrap()));
-		assert_eq!(iter.next(), Some(SeaBasisBladeLow::from_str("1e1").unwrap()));
-		assert_eq!(iter.next(), Some(SeaBasisBladeLow::from_str("2e2").unwrap()));
-		assert_eq!(iter.next(), Some(SeaBasisBladeLow::from_str("3e12").unwrap()));
-		assert_eq!(iter.next(), Some(SeaBasisBladeLow::from_str("4e3").unwrap()));
-		assert_eq!(iter.next(), Some(SeaBasisBladeLow::from_str("5e13").unwrap()));
-		assert_eq!(iter.next(), Some(SeaBasisBladeLow::from_str("6e23").unwrap()));
-		assert_eq!(iter.next(), Some(SeaBasisBladeLow::from_str("7e123").unwrap()));
-		assert_eq!(iter.next(), Some(SeaBasisBladeLow::from_str("8e4").unwrap()));
-		assert_eq!(iter.next(), Some(SeaBasisBladeLow::from_str("9e14").unwrap()));
-		assert_eq!(iter.next(), Some(SeaBasisBladeLow::from_str("10e24").unwrap()));
-		assert_eq!(iter.next(), Some(SeaBasisBladeLow::from_str("11e124").unwrap()));
-		assert_eq!(iter.next(), Some(SeaBasisBladeLow::from_str("12e34").unwrap()));
-		assert_eq!(iter.next(), Some(SeaBasisBladeLow::from_str("13e134").unwrap()));
-		assert_eq!(iter.next(), Some(SeaBasisBladeLow::from_str("14e234").unwrap()));
-		assert_eq!(iter.next(), Some(SeaBasisBladeLow::from_str("15e1234").unwrap()));
+		assert_eq!(iter.next().unwrap(), SeaBasisBladeLow::from_str("1").unwrap());
+		assert_eq!(iter.next().unwrap(), SeaBasisBladeLow::from_str("1e1").unwrap());
+		assert_eq!(iter.next().unwrap(), SeaBasisBladeLow::from_str("2e2").unwrap());
+		assert_eq!(iter.next().unwrap(), SeaBasisBladeLow::from_str("3e12").unwrap());
+		assert_eq!(iter.next().unwrap(), SeaBasisBladeLow::from_str("4e3").unwrap());
+		assert_eq!(iter.next().unwrap(), SeaBasisBladeLow::from_str("5e13").unwrap());
+		assert_eq!(iter.next().unwrap(), SeaBasisBladeLow::from_str("6e23").unwrap());
+		assert_eq!(iter.next().unwrap(), SeaBasisBladeLow::from_str("7e123").unwrap());
+		assert_eq!(iter.next().unwrap(), SeaBasisBladeLow::from_str("8e4").unwrap());
+		assert_eq!(iter.next().unwrap(), SeaBasisBladeLow::from_str("9e14").unwrap());
+		assert_eq!(iter.next().unwrap(), SeaBasisBladeLow::from_str("10e24").unwrap());
+		assert_eq!(iter.next().unwrap(), SeaBasisBladeLow::from_str("11e124").unwrap());
+		assert_eq!(iter.next().unwrap(), SeaBasisBladeLow::from_str("12e34").unwrap());
+		assert_eq!(iter.next().unwrap(), SeaBasisBladeLow::from_str("13e134").unwrap());
+		assert_eq!(iter.next().unwrap(), SeaBasisBladeLow::from_str("14e234").unwrap());
+		assert_eq!(iter.next().unwrap(), SeaBasisBladeLow::from_str("15e1234").unwrap());
 		assert_eq!(iter.next(), None);
 	}
 
@@ -396,34 +417,34 @@ mod tests {
 		let a = SeaLowDimensionalMultivectorCustomMetric::<f32, u16>::from_str("4>1 + e1 + 2e2 + 3e12 + 4e3 + 5e13 + 6e23 + 7e123 + 8e4 + 9e14 + 10e24 + 11e124 + 12e34 + 13e134 + 14e234 + 15e1234").unwrap();
 		
 		let mut iter = a.grade_iter(&SeaGrade(0));
-		assert_eq!(iter.next(), Some(SeaBasisBladeLow::from_str("1").unwrap()));
+		assert_eq!(iter.next().unwrap(), SeaBasisBladeLow::from_str("1").unwrap());
 		assert_eq!(iter.next(), None);
 
 		let mut iter = a.grade_iter(&SeaGrade(1));
-		assert_eq!(iter.next(), Some(SeaBasisBladeLow::from_str("1e1").unwrap()));
-		assert_eq!(iter.next(), Some(SeaBasisBladeLow::from_str("2e2").unwrap()));
-		assert_eq!(iter.next(), Some(SeaBasisBladeLow::from_str("4e3").unwrap()));
-		assert_eq!(iter.next(), Some(SeaBasisBladeLow::from_str("8e4").unwrap()));
+		assert_eq!(iter.next().unwrap(), SeaBasisBladeLow::from_str("1e1").unwrap());
+		assert_eq!(iter.next().unwrap(), SeaBasisBladeLow::from_str("2e2").unwrap());
+		assert_eq!(iter.next().unwrap(), SeaBasisBladeLow::from_str("4e3").unwrap());
+		assert_eq!(iter.next().unwrap(), SeaBasisBladeLow::from_str("8e4").unwrap());
 		assert_eq!(iter.next(), None);
 
 		let mut iter = a.grade_iter(&SeaGrade(2));
-		assert_eq!(iter.next(), Some(SeaBasisBladeLow::from_str("3e12").unwrap()));
-		assert_eq!(iter.next(), Some(SeaBasisBladeLow::from_str("5e13").unwrap()));
-		assert_eq!(iter.next(), Some(SeaBasisBladeLow::from_str("6e23").unwrap()));
-		assert_eq!(iter.next(), Some(SeaBasisBladeLow::from_str("9e14").unwrap()));
-		assert_eq!(iter.next(), Some(SeaBasisBladeLow::from_str("10e24").unwrap()));
-		assert_eq!(iter.next(), Some(SeaBasisBladeLow::from_str("12e34").unwrap()));
+		assert_eq!(iter.next().unwrap(), SeaBasisBladeLow::from_str("3e12").unwrap());
+		assert_eq!(iter.next().unwrap(), SeaBasisBladeLow::from_str("5e13").unwrap());
+		assert_eq!(iter.next().unwrap(), SeaBasisBladeLow::from_str("6e23").unwrap());
+		assert_eq!(iter.next().unwrap(), SeaBasisBladeLow::from_str("9e14").unwrap());
+		assert_eq!(iter.next().unwrap(), SeaBasisBladeLow::from_str("10e24").unwrap());
+		assert_eq!(iter.next().unwrap(), SeaBasisBladeLow::from_str("12e34").unwrap());
 		assert_eq!(iter.next(), None);
 
 		let mut iter = a.grade_iter(&SeaGrade(3));
-		assert_eq!(iter.next(), Some(SeaBasisBladeLow::from_str("7e123").unwrap()));
-		assert_eq!(iter.next(), Some(SeaBasisBladeLow::from_str("11e124").unwrap()));
-		assert_eq!(iter.next(), Some(SeaBasisBladeLow::from_str("13e134").unwrap()));
-		assert_eq!(iter.next(), Some(SeaBasisBladeLow::from_str("14e234").unwrap()));
+		assert_eq!(iter.next().unwrap(), SeaBasisBladeLow::from_str("7e123").unwrap());
+		assert_eq!(iter.next().unwrap(), SeaBasisBladeLow::from_str("11e124").unwrap());
+		assert_eq!(iter.next().unwrap(), SeaBasisBladeLow::from_str("13e134").unwrap());
+		assert_eq!(iter.next().unwrap(), SeaBasisBladeLow::from_str("14e234").unwrap());
 		assert_eq!(iter.next(), None);
 
 		let mut iter = a.grade_iter(&SeaGrade(4));
-		assert_eq!(iter.next(), Some(SeaBasisBladeLow::from_str("15e1234").unwrap()));
+		assert_eq!(iter.next().unwrap(), SeaBasisBladeLow::from_str("15e1234").unwrap());
 		assert_eq!(iter.next(), None);
 	}
 

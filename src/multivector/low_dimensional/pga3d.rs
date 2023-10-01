@@ -5,8 +5,18 @@ use nalgebra::geometry::{Quaternion, DualQuaternion};
 
 use crate::coefficient::SeaCoefficient;
 use crate::multivector::metric::SeaMetric;
-use crate::multivector::multivector_traits::{Multivector, MultivectorMut, Versor, Motor, MultivectorConstMetric};
-use crate::multivector::multivector_product_traits::{
+use crate::multivector::multivector_traits::{
+	Multivector, 
+	MultivectorMut,
+	Versor, 
+	Motor, 
+	MultivectorConstMetric,
+	MultivectorConjugation, 
+	MultivectorConjugationMut, 
+	MultivectorDual, 
+	MultivectorDualMut, 
+	MultivectorNorm,
+	MultivectorNormMut,
 	LeftContraction, 
 	RightContraction, 
 	InnerProduct, 
@@ -16,21 +26,13 @@ use crate::multivector::multivector_product_traits::{
 	ScalarProduct,
 	SandwichProduct
 };
-use crate::multivector::multivector_unary_traits::{
-	MultivectorConjugation, 
-	MultivectorConjugationMut, 
-	MultivectorDual, 
-	MultivectorDualMut, 
-	MultivectorNorm,
-	MultivectorNormMut,
-};
 use crate::multivector::grade::SeaGrade;
 use crate::multivector::basis_blade_index::SeaBasisBladeIndexLow;
-use crate::multivector::basis_blade::SeaBasisBladeLow;
+use crate::multivector::basis_blade::{SeaBasisBladeLow, SeaBasisBladeLowRef, SeaBasisBladeLowRefMut};
 use crate::multivector::settings::MotorCreationOrder;
 
 use super::basis_blade_set::SeaBasisBladeSet;
-use super::core::{SeaLowDimensionalSparseMultivector, SparseMultivectorIter, SparseMultivectorGradeIter}; 
+use super::core::{SeaLowDimensionalSparseMultivector, SparseMultivectorIter, SparseMultivectorIterMut, SparseMultivectorGradeIter}; 
 use super::SeaMultivector4D;
 
 mod multivector;
@@ -41,6 +43,7 @@ pub use motor::SeaMotorPGA3D;
 
 type SeaCoreMultivector4D<T> = SeaLowDimensionalSparseMultivector::<T, u16>;
 type SeaCoreSparseMultivectorIter4D<'a, T> = SparseMultivectorIter::<'a, T, u16>;
+type SeaCoreSparseMultivectorIterMut4D<'a, T> = SparseMultivectorIterMut::<'a, T, u16>;
 type SeaCoreSparseMultivectorGradeIter4D<'a, T> = SparseMultivectorGradeIter::<'a, T, u16>;
 const METRIC_PGA3D: SeaMetric = SeaMetric{positive:3, negitive:0, zero:1, dimensions:4};
 
