@@ -75,3 +75,77 @@ impl<T:SeaCoefficient> Sub<&SeaMotorPGA3D<T>> for &SeaMultivectorPGA3D<T> {
 		self - &**rhs
 	}
 }
+
+// Flector
+impl<T:SeaCoefficient> SubAssign<SeaFlectorPGA3D<T>> for SeaMultivectorPGA3D<T> {
+	fn sub_assign(&mut self, rhs: SeaFlectorPGA3D<T>) {
+		*self -= &*rhs;
+	}
+}
+impl<T:SeaCoefficient> SubAssign<&SeaFlectorPGA3D<T>> for SeaMultivectorPGA3D<T> {
+	fn sub_assign(&mut self, rhs: &SeaFlectorPGA3D<T>) {
+		*self -= &**rhs;
+	}
+}
+
+impl<T:SeaCoefficient> Sub<SeaFlectorPGA3D<T>> for SeaMultivectorPGA3D<T> {
+	type Output = SeaMultivectorPGA3D<T>;
+	fn sub(self, rhs: SeaFlectorPGA3D<T>) -> Self::Output {
+		self - &*rhs
+	}
+}
+impl<T:SeaCoefficient> Sub<&SeaFlectorPGA3D<T>> for SeaMultivectorPGA3D<T> {
+	type Output = SeaMultivectorPGA3D<T>;
+	fn sub(self, rhs: &SeaFlectorPGA3D<T>) -> Self::Output {
+		self - &**rhs
+	}
+}
+impl<T:SeaCoefficient> Sub<SeaFlectorPGA3D<T>> for &SeaMultivectorPGA3D<T> {
+	type Output = SeaMultivectorPGA3D<T>;
+	fn sub(self, rhs: SeaFlectorPGA3D<T>) -> Self::Output {
+		self - &*rhs
+	}
+}
+impl<T:SeaCoefficient> Sub<&SeaFlectorPGA3D<T>> for &SeaMultivectorPGA3D<T> {
+	type Output = SeaMultivectorPGA3D<T>;
+	fn sub(self, rhs: &SeaFlectorPGA3D<T>) -> Self::Output {
+		self - &**rhs
+	}
+}
+
+// Versor
+impl<T:SeaCoefficient> SubAssign<SeaVersorPGA3D<T>> for SeaMultivectorPGA3D<T> {
+	fn sub_assign(&mut self, rhs: SeaVersorPGA3D<T>) {
+		*self -= &*rhs;
+	}
+}
+impl<T:SeaCoefficient> SubAssign<&SeaVersorPGA3D<T>> for SeaMultivectorPGA3D<T> {
+	fn sub_assign(&mut self, rhs: &SeaVersorPGA3D<T>) {
+		*self -= &**rhs;
+	}
+}
+
+impl<T:SeaCoefficient> Sub<SeaVersorPGA3D<T>> for SeaMultivectorPGA3D<T> {
+	type Output = SeaMultivectorPGA3D<T>;
+	fn sub(self, rhs: SeaVersorPGA3D<T>) -> Self::Output {
+		self - &*rhs
+	}
+}
+impl<T:SeaCoefficient> Sub<&SeaVersorPGA3D<T>> for SeaMultivectorPGA3D<T> {
+	type Output = SeaMultivectorPGA3D<T>;
+	fn sub(self, rhs: &SeaVersorPGA3D<T>) -> Self::Output {
+		self - &**rhs
+	}
+}
+impl<T:SeaCoefficient> Sub<SeaVersorPGA3D<T>> for &SeaMultivectorPGA3D<T> {
+	type Output = SeaMultivectorPGA3D<T>;
+	fn sub(self, rhs: SeaVersorPGA3D<T>) -> Self::Output {
+		self - &*rhs
+	}
+}
+impl<T:SeaCoefficient> Sub<&SeaVersorPGA3D<T>> for &SeaMultivectorPGA3D<T> {
+	type Output = SeaMultivectorPGA3D<T>;
+	fn sub(self, rhs: &SeaVersorPGA3D<T>) -> Self::Output {
+		self - &**rhs
+	}
+}

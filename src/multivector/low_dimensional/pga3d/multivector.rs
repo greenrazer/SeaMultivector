@@ -14,48 +14,48 @@ mod into;
 #[derive(Debug, PartialEq, Clone)]
 pub struct SeaMultivectorPGA3D<T:SeaCoefficient>(SeaCoreMultivector4D<T>);
 impl<T:SeaCoefficient> SeaMultivectorPGA3D<T>{
-	pub fn new_lifted_scalar(s:T) -> Self {
+	pub fn new_scalar(s:T) -> SeaMotorPGA3D<T> {
 		let mv = SeaCoreMultivector4D::<T>::new(
 			SeaBasisBladeSet::SCALAR,
 			vec![s]
 		);
-		Self(mv)
+		SeaMotorPGA3D::<T>(Self(mv))
 	}
 
-	pub fn new_point(x:T, y:T, z:T) -> Self {
+	pub fn new_point(x:T, y:T, z:T) -> SeaFlectorPGA3D<T> {
 		let mut mv = SeaCoreMultivector4D::<T>::new(
 			SeaBasisBladeSet::grade(&SeaGrade(3)),
 			vec![T::one(),-z,y,-x]
 		);
 		mv.remove_zeros();
-		Self(mv)
+		SeaFlectorPGA3D::<T>(Self(mv))
 	}
 
-	pub fn new_plane(x:T, y:T, z:T, w:T) -> Self {
+	pub fn new_plane(x:T, y:T, z:T, w:T) -> SeaFlectorPGA3D<T> {
 		let mut mv = SeaCoreMultivector4D::<T>::new(
 			SeaBasisBladeSet::grade(&SeaGrade(1)),
 			vec![x,y,z,w]
 		);
 		mv.remove_zeros();
-		Self(mv)
+		SeaFlectorPGA3D::<T>(Self(mv))
 	}
 
-	pub fn new_line(x:T, y:T, z:T) -> Self {
+	pub fn new_line(x:T, y:T, z:T) -> SeaMotorPGA3D<T> {
 		let mut mv = SeaCoreMultivector4D::<T>::new(
 			LINE_BASIS_BLADES,
 			vec![-z,y,-x]
 		);
 		mv.remove_zeros();
-		Self(mv)
+		SeaMotorPGA3D::<T>(Self(mv))
 	}
 
-	pub fn new_ideal_line(x:T, y:T, z:T) -> Self {
+	pub fn new_ideal_line(x:T, y:T, z:T) -> SeaMotorPGA3D<T> {
 		let mut mv = SeaCoreMultivector4D::<T>::new(
 			IDEAL_LINE_BASIS_BLADES,
 			vec![x,y,z]
 		);
 		mv.remove_zeros();
-		Self(mv)
+		SeaMotorPGA3D::<T>(Self(mv))
 	}
 
 	pub fn new_motor(line:&Self, value:T) -> SeaMotorPGA3D<T> {
@@ -239,7 +239,7 @@ pub mod tests {
 		approx_one.simplify();
 		assert_eq!(
 			SeaMultivectorPGA3D::from(approx_one),
-			SeaMultivectorPGA3D::new_lifted_scalar(1.0),
+			SeaMultivectorPGA3D::new_scalar(1.0).into(),
 		);
 
 
@@ -269,7 +269,7 @@ pub mod tests {
 		approx_one.simplify();
 		assert_eq!(
 			SeaMultivectorPGA3D::from(approx_one),
-			SeaMultivectorPGA3D::new_lifted_scalar(1.0),
+			SeaMultivectorPGA3D::new_scalar(1.0).into(),
 		);
 
 

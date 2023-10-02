@@ -87,3 +87,82 @@ impl<T:SeaCoefficient> BitAnd<&SeaMultivectorPGA3D<T>> for &SeaMotorPGA3D<T> {
 	}
 }
 
+// Flector
+impl<T:SeaCoefficient> RegressiveProduct<SeaFlectorPGA3D<T>> for SeaMotorPGA3D<T> {
+	type Output = SeaVersorPGA3D<T>;
+
+	fn regressive_product(&self, rhs: SeaFlectorPGA3D<T>) -> Self::Output {
+		SeaVersorPGA3D::<T>((**self).regressive_product(rhs))
+	}
+}
+impl<T:SeaCoefficient> RegressiveProduct<&SeaFlectorPGA3D<T>> for SeaMotorPGA3D<T> {
+	type Output = SeaVersorPGA3D<T>;
+
+	fn regressive_product(&self, rhs: &SeaFlectorPGA3D<T>) -> Self::Output {
+		SeaVersorPGA3D::<T>((**self).regressive_product(rhs))
+	}
+}
+impl<T:SeaCoefficient> BitAnd<SeaFlectorPGA3D<T>> for SeaMotorPGA3D<T> {
+	type Output = SeaVersorPGA3D<T>;
+	fn bitand(self, rhs: SeaFlectorPGA3D<T>) -> Self::Output {
+		self.regressive_product(rhs)
+	}
+}
+impl<T:SeaCoefficient> BitAnd<&SeaFlectorPGA3D<T>> for SeaMotorPGA3D<T> {
+	type Output = SeaVersorPGA3D<T>;
+	fn bitand(self, rhs: &SeaFlectorPGA3D<T>) -> Self::Output {
+		self.regressive_product(rhs)
+	}
+}
+impl<T:SeaCoefficient> BitAnd<SeaFlectorPGA3D<T>> for &SeaMotorPGA3D<T> {
+	type Output = SeaVersorPGA3D<T>;
+	fn bitand(self, rhs: SeaFlectorPGA3D<T>) -> Self::Output {
+		self.regressive_product(rhs)
+	}
+}
+impl<T:SeaCoefficient> BitAnd<&SeaFlectorPGA3D<T>> for &SeaMotorPGA3D<T> {
+	type Output = SeaVersorPGA3D<T>;
+	fn bitand(self, rhs: &SeaFlectorPGA3D<T>) -> Self::Output {
+		self.regressive_product(rhs)
+	}
+}
+
+// Versor
+impl<T:SeaCoefficient> RegressiveProduct<SeaVersorPGA3D<T>> for SeaMotorPGA3D<T> {
+	type Output = SeaVersorPGA3D<T>;
+
+	fn regressive_product(&self, rhs: SeaVersorPGA3D<T>) -> Self::Output {
+		SeaVersorPGA3D::<T>((**self).regressive_product(rhs))
+	}
+}
+impl<T:SeaCoefficient> RegressiveProduct<&SeaVersorPGA3D<T>> for SeaMotorPGA3D<T> {
+	type Output = SeaVersorPGA3D<T>;
+
+	fn regressive_product(&self, rhs: &SeaVersorPGA3D<T>) -> Self::Output {
+		SeaVersorPGA3D::<T>((**self).regressive_product(rhs))
+	}
+}
+impl<T:SeaCoefficient> BitAnd<SeaVersorPGA3D<T>> for SeaMotorPGA3D<T> {
+	type Output = SeaVersorPGA3D<T>;
+	fn bitand(self, rhs: SeaVersorPGA3D<T>) -> Self::Output {
+		self.regressive_product(rhs)
+	}
+}
+impl<T:SeaCoefficient> BitAnd<&SeaVersorPGA3D<T>> for SeaMotorPGA3D<T> {
+	type Output = SeaVersorPGA3D<T>;
+	fn bitand(self, rhs: &SeaVersorPGA3D<T>) -> Self::Output {
+		self.regressive_product(rhs)
+	}
+}
+impl<T:SeaCoefficient> BitAnd<SeaVersorPGA3D<T>> for &SeaMotorPGA3D<T> {
+	type Output = SeaVersorPGA3D<T>;
+	fn bitand(self, rhs: SeaVersorPGA3D<T>) -> Self::Output {
+		self.regressive_product(rhs)
+	}
+}
+impl<T:SeaCoefficient> BitAnd<&SeaVersorPGA3D<T>> for &SeaMotorPGA3D<T> {
+	type Output = SeaVersorPGA3D<T>;
+	fn bitand(self, rhs: &SeaVersorPGA3D<T>) -> Self::Output {
+		self.regressive_product(rhs)
+	}
+}

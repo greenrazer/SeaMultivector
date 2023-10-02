@@ -78,3 +78,83 @@ impl<T:SeaCoefficient> BitXor<&SeaMultivectorPGA3D<T>> for &SeaMotorPGA3D<T> {
 		self.outer_product(rhs)
 	}
 }
+
+// Flector
+impl<T:SeaCoefficient> OuterProduct<SeaFlectorPGA3D<T>> for SeaMotorPGA3D<T> {
+	type Output = SeaVersorPGA3D<T>;
+
+	fn outer_product(&self, rhs: SeaFlectorPGA3D<T>) -> Self::Output {
+		SeaVersorPGA3D::<T>((**self).outer_product(rhs))
+	}
+}
+impl<T:SeaCoefficient> OuterProduct<&SeaFlectorPGA3D<T>> for SeaMotorPGA3D<T> {
+	type Output = SeaVersorPGA3D<T>;
+
+	fn outer_product(&self, rhs: &SeaFlectorPGA3D<T>) -> Self::Output {
+		SeaVersorPGA3D::<T>((**self).outer_product(rhs))
+	}
+}
+impl<T:SeaCoefficient> BitXor<SeaFlectorPGA3D<T>> for SeaMotorPGA3D<T> {
+	type Output = SeaVersorPGA3D<T>;
+	fn bitxor(self, rhs: SeaFlectorPGA3D<T>) -> Self::Output {
+		self.outer_product(rhs)
+	}
+}
+impl<T:SeaCoefficient> BitXor<&SeaFlectorPGA3D<T>> for SeaMotorPGA3D<T> {
+	type Output = SeaVersorPGA3D<T>;
+	fn bitxor(self, rhs: &SeaFlectorPGA3D<T>) -> Self::Output {
+		self.outer_product(rhs)
+	}
+}
+impl<T:SeaCoefficient> BitXor<SeaFlectorPGA3D<T>> for &SeaMotorPGA3D<T> {
+	type Output = SeaVersorPGA3D<T>;
+	fn bitxor(self, rhs: SeaFlectorPGA3D<T>) -> Self::Output {
+		self.outer_product(rhs)
+	}
+}
+impl<T:SeaCoefficient> BitXor<&SeaFlectorPGA3D<T>> for &SeaMotorPGA3D<T> {
+	type Output = SeaVersorPGA3D<T>;
+	fn bitxor(self, rhs: &SeaFlectorPGA3D<T>) -> Self::Output {
+		self.outer_product(rhs)
+	}
+}
+
+// Versor
+impl<T:SeaCoefficient> OuterProduct<SeaVersorPGA3D<T>> for SeaMotorPGA3D<T> {
+	type Output = SeaVersorPGA3D<T>;
+
+	fn outer_product(&self, rhs: SeaVersorPGA3D<T>) -> Self::Output {
+		SeaVersorPGA3D::<T>((**self).outer_product(rhs))
+	}
+}
+impl<T:SeaCoefficient> OuterProduct<&SeaVersorPGA3D<T>> for SeaMotorPGA3D<T> {
+	type Output = SeaVersorPGA3D<T>;
+
+	fn outer_product(&self, rhs: &SeaVersorPGA3D<T>) -> Self::Output {
+		SeaVersorPGA3D::<T>((**self).outer_product(rhs))
+	}
+}
+impl<T:SeaCoefficient> BitXor<SeaVersorPGA3D<T>> for SeaMotorPGA3D<T> {
+	type Output = SeaVersorPGA3D<T>;
+	fn bitxor(self, rhs: SeaVersorPGA3D<T>) -> Self::Output {
+		self.outer_product(rhs)
+	}
+}
+impl<T:SeaCoefficient> BitXor<&SeaVersorPGA3D<T>> for SeaMotorPGA3D<T> {
+	type Output = SeaVersorPGA3D<T>;
+	fn bitxor(self, rhs: &SeaVersorPGA3D<T>) -> Self::Output {
+		self.outer_product(rhs)
+	}
+}
+impl<T:SeaCoefficient> BitXor<SeaVersorPGA3D<T>> for &SeaMotorPGA3D<T> {
+	type Output = SeaVersorPGA3D<T>;
+	fn bitxor(self, rhs: SeaVersorPGA3D<T>) -> Self::Output {
+		self.outer_product(rhs)
+	}
+}
+impl<T:SeaCoefficient> BitXor<&SeaVersorPGA3D<T>> for &SeaMotorPGA3D<T> {
+	type Output = SeaVersorPGA3D<T>;
+	fn bitxor(self, rhs: &SeaVersorPGA3D<T>) -> Self::Output {
+		self.outer_product(rhs)
+	}
+}

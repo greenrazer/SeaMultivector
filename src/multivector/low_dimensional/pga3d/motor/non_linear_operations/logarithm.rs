@@ -2,19 +2,19 @@ use super::*;
 
 //log
 impl<T:SeaCoefficient> SeaMotorPGA3D<T> {
-	pub fn log(&self) -> SeaMultivectorPGA3D<T> {
+	pub fn log(&self) -> SeaMotorPGA3D<T> {
 		let b = &self.grade(&SeaGrade(2));
 		let s = (-b | b).scalar().sqrt();
 
 		// pure translation
 		if s.is_zero(){
-			return (&**self)/self.scalar() - T::one();
+			return Self((&**self)/self.scalar() - T::one());
 		}
 
 		// turn
 		if self.scalar().is_zero() {
 			let tau_div_4 = T::from(TAU/4.0).unwrap();
-			return -self.pseudoscalar()/s + tau_div_4;
+			return  Self(-self.pseudoscalar()/s + tau_div_4);
 		}
 
 		let two = T::from(2.0).unwrap();
@@ -23,7 +23,7 @@ impl<T:SeaCoefficient> SeaMotorPGA3D<T> {
 		let lhs = (p / self.scalar()) + (s / self.scalar()).atan();
 		let rhs = b*((-p+s)/(s*s));
 
-		lhs * rhs
+		Self(lhs * rhs)
 	}
 }
 
@@ -46,7 +46,7 @@ mod tests {
 
 		lout.simplify();
 
-		assert_approx_eq_mv(l, lout);
+		assert_approx_eq_mv(l.into(), lout.into());
 
 		let l = SeaMultivectorPGA3D::new_line(0.0,TAU/4.0,0.0);
 		let r = SeaMultivectorPGA3D::new_motor(&l, 2.0);
@@ -55,7 +55,7 @@ mod tests {
 
 		lout.simplify();
 
-		assert_approx_eq_mv(l, lout);
+		assert_approx_eq_mv(l.into(), lout.into());
 
 		let mut l = SeaMultivectorPGA3D::new_line(TAU/8.0,TAU/4.0,TAU/3.2);
 		l.scalar_normalize();
@@ -65,6 +65,6 @@ mod tests {
 
 		lout.simplify();
 
-		assert_approx_eq_mv(l, lout);
+		assert_approx_eq_mv(l.into(), lout.into());
 	}
 }

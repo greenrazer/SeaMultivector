@@ -9,7 +9,8 @@ use crate::multivector::multivector_traits::{
 	Multivector, 
 	MultivectorMut,
 	Versor, 
-	Motor, 
+	Motor,
+	Flector,
 	MultivectorConstMetric,
 	MultivectorIter,
 	MultivectorIterMut,
@@ -46,6 +47,12 @@ pub use multivector::SeaMultivectorPGA3D;
 
 mod motor;
 pub use motor::SeaMotorPGA3D;
+
+mod flector;
+pub use flector::SeaFlectorPGA3D;
+
+mod versor;
+pub use versor::SeaVersorPGA3D;
 
 type SeaCoreMultivector4D<T> = SeaLowDimensionalSparseMultivector::<T, u16>;
 type SeaCoreSparseMultivector4DIter<'a, T> = SparseMultivectorIter::<'a, T, u16>;

@@ -78,3 +78,83 @@ impl<T:SeaCoefficient> Shr<&SeaMultivectorPGA3D<T>> for &SeaMotorPGA3D<T> {
 		self.right_contraction(rhs)
 	}
 }
+
+// Flector
+impl<T:SeaCoefficient> RightContraction<SeaFlectorPGA3D<T>> for SeaMotorPGA3D<T> {
+	type Output = SeaVersorPGA3D<T>;
+
+	fn right_contraction(&self, rhs: SeaFlectorPGA3D<T>) -> Self::Output {
+		SeaVersorPGA3D::<T>((**self).right_contraction(rhs))
+	}
+}
+impl<T:SeaCoefficient> RightContraction<&SeaFlectorPGA3D<T>> for SeaMotorPGA3D<T> {
+	type Output = SeaVersorPGA3D<T>;
+
+	fn right_contraction(&self, rhs: &SeaFlectorPGA3D<T>) -> Self::Output {
+		SeaVersorPGA3D::<T>((**self).right_contraction(rhs))
+	}
+}
+impl<T:SeaCoefficient> Shr<SeaFlectorPGA3D<T>> for SeaMotorPGA3D<T> {
+	type Output = SeaVersorPGA3D<T>;
+	fn shr(self, rhs: SeaFlectorPGA3D<T>) -> Self::Output {
+		self.right_contraction(rhs)
+	}
+}
+impl<T:SeaCoefficient> Shr<&SeaFlectorPGA3D<T>> for SeaMotorPGA3D<T> {
+	type Output = SeaVersorPGA3D<T>;
+	fn shr(self, rhs: &SeaFlectorPGA3D<T>) -> Self::Output {
+		self.right_contraction(rhs)
+	}
+}
+impl<T:SeaCoefficient> Shr<SeaFlectorPGA3D<T>> for &SeaMotorPGA3D<T> {
+	type Output = SeaVersorPGA3D<T>;
+	fn shr(self, rhs: SeaFlectorPGA3D<T>) -> Self::Output {
+		self.right_contraction(rhs)
+	}
+}
+impl<T:SeaCoefficient> Shr<&SeaFlectorPGA3D<T>> for &SeaMotorPGA3D<T> {
+	type Output = SeaVersorPGA3D<T>;
+	fn shr(self, rhs: &SeaFlectorPGA3D<T>) -> Self::Output {
+		self.right_contraction(rhs)
+	}
+}
+
+// Versor
+impl<T:SeaCoefficient> RightContraction<SeaVersorPGA3D<T>> for SeaMotorPGA3D<T> {
+	type Output = SeaVersorPGA3D<T>;
+
+	fn right_contraction(&self, rhs: SeaVersorPGA3D<T>) -> Self::Output {
+		SeaVersorPGA3D::<T>((**self).right_contraction(rhs))
+	}
+}
+impl<T:SeaCoefficient> RightContraction<&SeaVersorPGA3D<T>> for SeaMotorPGA3D<T> {
+	type Output = SeaVersorPGA3D<T>;
+
+	fn right_contraction(&self, rhs: &SeaVersorPGA3D<T>) -> Self::Output {
+		SeaVersorPGA3D::<T>((**self).right_contraction(rhs))
+	}
+}
+impl<T:SeaCoefficient> Shr<SeaVersorPGA3D<T>> for SeaMotorPGA3D<T> {
+	type Output = SeaVersorPGA3D<T>;
+	fn shr(self, rhs: SeaVersorPGA3D<T>) -> Self::Output {
+		self.right_contraction(rhs)
+	}
+}
+impl<T:SeaCoefficient> Shr<&SeaVersorPGA3D<T>> for SeaMotorPGA3D<T> {
+	type Output = SeaVersorPGA3D<T>;
+	fn shr(self, rhs: &SeaVersorPGA3D<T>) -> Self::Output {
+		self.right_contraction(rhs)
+	}
+}
+impl<T:SeaCoefficient> Shr<SeaVersorPGA3D<T>> for &SeaMotorPGA3D<T> {
+	type Output = SeaVersorPGA3D<T>;
+	fn shr(self, rhs: SeaVersorPGA3D<T>) -> Self::Output {
+		self.right_contraction(rhs)
+	}
+}
+impl<T:SeaCoefficient> Shr<&SeaVersorPGA3D<T>> for &SeaMotorPGA3D<T> {
+	type Output = SeaVersorPGA3D<T>;
+	fn shr(self, rhs: &SeaVersorPGA3D<T>) -> Self::Output {
+		self.right_contraction(rhs)
+	}
+}

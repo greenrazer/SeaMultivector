@@ -117,7 +117,7 @@ pub trait MultivectorMut<T:SeaCoefficient>:
 }
 
 pub trait MultivectorConstMetric<T:SeaCoefficient>: 
-	From<T> + Multivector<T> 
+	Multivector<T> 
 		where 
 			for<'a> &'a Self: Neg + Not
 				+ Add<T> + Mul<T> + Sub<T> + Div<T>

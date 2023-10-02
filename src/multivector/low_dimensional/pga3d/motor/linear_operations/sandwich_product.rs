@@ -97,6 +97,110 @@ impl<T:SeaCoefficient> Div<&SeaMultivectorPGA3D<T>> for &SeaMotorPGA3D<T> {
 	}
 }
 
+// Flector
+impl<T:SeaCoefficient> SandwichProduct<SeaFlectorPGA3D<T>> for SeaMotorPGA3D<T> {
+	type Output = SeaVersorPGA3D<T>;
+
+	fn sandwich_product(&self, rhs: SeaFlectorPGA3D<T>) -> Self::Output {
+		let a_mv: &SeaCoreMultivector4D<T> = (&**self).into();
+		let b_mv: SeaCoreMultivector4D<T> = rhs.0.into();
+		SeaVersorPGA3D::<T>(
+			SeaMultivectorPGA3D::from(
+				a_mv.sandwich_product(&b_mv, &Self::METRIC)
+			)
+		)
+	}
+}
+impl<T:SeaCoefficient> SandwichProduct<&SeaFlectorPGA3D<T>> for SeaMotorPGA3D<T> {
+	type Output = SeaVersorPGA3D<T>;
+
+	fn sandwich_product(&self, rhs: &SeaFlectorPGA3D<T>) -> Self::Output {
+		let a_mv: &SeaCoreMultivector4D<T> = (&**self).into();
+		let b_mv: &SeaCoreMultivector4D<T> = (&**rhs).into();
+		SeaVersorPGA3D::<T>(
+			SeaMultivectorPGA3D::from(
+				a_mv.sandwich_product(&b_mv, &Self::METRIC)
+			)
+		)
+	}
+}
+impl<T:SeaCoefficient> Div<SeaFlectorPGA3D<T>> for SeaMotorPGA3D<T> {
+	type Output = SeaVersorPGA3D<T>;
+	fn div(self, rhs: SeaFlectorPGA3D<T>) -> Self::Output {
+		self.sandwich_product(rhs)
+	}
+}
+impl<T:SeaCoefficient> Div<&SeaFlectorPGA3D<T>> for SeaMotorPGA3D<T> {
+	type Output = SeaVersorPGA3D<T>;
+	fn div(self, rhs: &SeaFlectorPGA3D<T>) -> Self::Output {
+		self.sandwich_product(rhs)
+	}
+}
+impl<T:SeaCoefficient> Div<SeaFlectorPGA3D<T>> for &SeaMotorPGA3D<T> {
+	type Output = SeaVersorPGA3D<T>;
+	fn div(self, rhs: SeaFlectorPGA3D<T>) -> Self::Output {
+		self.sandwich_product(rhs)
+	}
+}
+impl<T:SeaCoefficient> Div<&SeaFlectorPGA3D<T>> for &SeaMotorPGA3D<T> {
+	type Output = SeaVersorPGA3D<T>;
+	fn div(self, rhs: &SeaFlectorPGA3D<T>) -> Self::Output {
+		self.sandwich_product(rhs)
+	}
+}
+
+// Versor
+impl<T:SeaCoefficient> SandwichProduct<SeaVersorPGA3D<T>> for SeaMotorPGA3D<T> {
+	type Output = SeaVersorPGA3D<T>;
+
+	fn sandwich_product(&self, rhs: SeaVersorPGA3D<T>) -> Self::Output {
+		let a_mv: &SeaCoreMultivector4D<T> = (&**self).into();
+		let b_mv: SeaCoreMultivector4D<T> = rhs.0.into();
+		SeaVersorPGA3D::<T>(
+			SeaMultivectorPGA3D::from(
+				a_mv.sandwich_product(&b_mv, &Self::METRIC)
+			)
+		)
+	}
+}
+impl<T:SeaCoefficient> SandwichProduct<&SeaVersorPGA3D<T>> for SeaMotorPGA3D<T> {
+	type Output = SeaVersorPGA3D<T>;
+
+	fn sandwich_product(&self, rhs: &SeaVersorPGA3D<T>) -> Self::Output {
+		let a_mv: &SeaCoreMultivector4D<T> = (&**self).into();
+		let b_mv: &SeaCoreMultivector4D<T> = (&**rhs).into();
+		SeaVersorPGA3D::<T>(
+			SeaMultivectorPGA3D::from(
+				a_mv.sandwich_product(&b_mv, &Self::METRIC)
+			)
+		)
+	}
+}
+impl<T:SeaCoefficient> Div<SeaVersorPGA3D<T>> for SeaMotorPGA3D<T> {
+	type Output = SeaVersorPGA3D<T>;
+	fn div(self, rhs: SeaVersorPGA3D<T>) -> Self::Output {
+		self.sandwich_product(rhs)
+	}
+}
+impl<T:SeaCoefficient> Div<&SeaVersorPGA3D<T>> for SeaMotorPGA3D<T> {
+	type Output = SeaVersorPGA3D<T>;
+	fn div(self, rhs: &SeaVersorPGA3D<T>) -> Self::Output {
+		self.sandwich_product(rhs)
+	}
+}
+impl<T:SeaCoefficient> Div<SeaVersorPGA3D<T>> for &SeaMotorPGA3D<T> {
+	type Output = SeaVersorPGA3D<T>;
+	fn div(self, rhs: SeaVersorPGA3D<T>) -> Self::Output {
+		self.sandwich_product(rhs)
+	}
+}
+impl<T:SeaCoefficient> Div<&SeaVersorPGA3D<T>> for &SeaMotorPGA3D<T> {
+	type Output = SeaVersorPGA3D<T>;
+	fn div(self, rhs: &SeaVersorPGA3D<T>) -> Self::Output {
+		self.sandwich_product(rhs)
+	}
+}
+
 #[cfg(test)]
 mod tests {
 	use std::f64::consts::TAU;

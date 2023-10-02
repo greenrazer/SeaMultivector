@@ -79,3 +79,83 @@ impl<T:SeaCoefficient> Mul<&SeaMultivectorPGA3D<T>> for &SeaMotorPGA3D<T> {
 	}
 }
 
+// Flector
+impl<T:SeaCoefficient> GeometricProduct<SeaFlectorPGA3D<T>> for SeaMotorPGA3D<T> {
+	type Output = SeaVersorPGA3D<T>;
+
+	fn geometric_product(&self, rhs: SeaFlectorPGA3D<T>) -> Self::Output {
+		SeaVersorPGA3D::<T>((**self).geometric_product(rhs))
+	}
+}
+impl<T:SeaCoefficient> GeometricProduct<&SeaFlectorPGA3D<T>> for SeaMotorPGA3D<T> {
+	type Output = SeaVersorPGA3D<T>;
+
+	fn geometric_product(&self, rhs: &SeaFlectorPGA3D<T>) -> Self::Output {
+		SeaVersorPGA3D::<T>((**self).geometric_product(rhs))
+	}
+}
+impl<T:SeaCoefficient> Mul<SeaFlectorPGA3D<T>> for SeaMotorPGA3D<T> {
+	type Output = SeaVersorPGA3D<T>;
+	fn mul(self, rhs: SeaFlectorPGA3D<T>) -> Self::Output {
+		self.geometric_product(rhs)
+	}
+}
+impl<T:SeaCoefficient> Mul<&SeaFlectorPGA3D<T>> for SeaMotorPGA3D<T> {
+	type Output = SeaVersorPGA3D<T>;
+	fn mul(self, rhs: &SeaFlectorPGA3D<T>) -> Self::Output {
+		self.geometric_product(rhs)
+	}
+}
+impl<T:SeaCoefficient> Mul<SeaFlectorPGA3D<T>> for &SeaMotorPGA3D<T> {
+	type Output = SeaVersorPGA3D<T>;
+	fn mul(self, rhs: SeaFlectorPGA3D<T>) -> Self::Output {
+		self.geometric_product(rhs)
+	}
+}
+impl<T:SeaCoefficient> Mul<&SeaFlectorPGA3D<T>> for &SeaMotorPGA3D<T> {
+	type Output = SeaVersorPGA3D<T>;
+	fn mul(self, rhs: &SeaFlectorPGA3D<T>) -> Self::Output {
+		self.geometric_product(rhs)
+	}
+}
+
+// Versor
+impl<T:SeaCoefficient> GeometricProduct<SeaVersorPGA3D<T>> for SeaMotorPGA3D<T> {
+	type Output = SeaVersorPGA3D<T>;
+
+	fn geometric_product(&self, rhs: SeaVersorPGA3D<T>) -> Self::Output {
+		SeaVersorPGA3D::<T>((**self).geometric_product(rhs))
+	}
+}
+impl<T:SeaCoefficient> GeometricProduct<&SeaVersorPGA3D<T>> for SeaMotorPGA3D<T> {
+	type Output = SeaVersorPGA3D<T>;
+
+	fn geometric_product(&self, rhs: &SeaVersorPGA3D<T>) -> Self::Output {
+		SeaVersorPGA3D::<T>((**self).geometric_product(rhs))
+	}
+}
+impl<T:SeaCoefficient> Mul<SeaVersorPGA3D<T>> for SeaMotorPGA3D<T> {
+	type Output = SeaVersorPGA3D<T>;
+	fn mul(self, rhs: SeaVersorPGA3D<T>) -> Self::Output {
+		self.geometric_product(rhs)
+	}
+}
+impl<T:SeaCoefficient> Mul<&SeaVersorPGA3D<T>> for SeaMotorPGA3D<T> {
+	type Output = SeaVersorPGA3D<T>;
+	fn mul(self, rhs: &SeaVersorPGA3D<T>) -> Self::Output {
+		self.geometric_product(rhs)
+	}
+}
+impl<T:SeaCoefficient> Mul<SeaVersorPGA3D<T>> for &SeaMotorPGA3D<T> {
+	type Output = SeaVersorPGA3D<T>;
+	fn mul(self, rhs: SeaVersorPGA3D<T>) -> Self::Output {
+		self.geometric_product(rhs)
+	}
+}
+impl<T:SeaCoefficient> Mul<&SeaVersorPGA3D<T>> for &SeaMotorPGA3D<T> {
+	type Output = SeaVersorPGA3D<T>;
+	fn mul(self, rhs: &SeaVersorPGA3D<T>) -> Self::Output {
+		self.geometric_product(rhs)
+	}
+}
+

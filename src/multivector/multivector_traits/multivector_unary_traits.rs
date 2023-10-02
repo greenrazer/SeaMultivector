@@ -40,5 +40,6 @@ pub trait MultivectorNormMut {
 }
 
 pub trait MultivectorExponentiation {
-	fn exp(&self) -> Self;
+	type ExponentialOutput;
+	fn exp(&self) -> Self::ExponentialOutput;
 }
