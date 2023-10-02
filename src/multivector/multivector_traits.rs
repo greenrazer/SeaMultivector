@@ -23,6 +23,7 @@ pub use multivector_unary_traits::{
 	MultivectorDualMut, 
 	MultivectorNorm,
 	MultivectorNormMut,
+	MultivectorExponentiation
 };
 pub use multivector_product_traits::{
 	GeometricProduct, 
@@ -41,6 +42,7 @@ pub trait Multivector<T:SeaCoefficient>:
 		+ MultivectorConjugation
 		+ MultivectorDual
 		+ MultivectorNorm<T>
+		+ MultivectorExponentiation
 		+ Neg 
 		+ Not
 		+ Add<T> + Mul<T> + Sub<T> + Div<T>
@@ -84,8 +86,6 @@ pub trait Multivector<T:SeaCoefficient>:
 	fn pseudoscalar(&self) -> Self::GeneralMultivectorOutput;
 
 	fn grade(&self, grade: &SeaGrade) -> Self::GeneralMultivectorOutput;
-
-	fn exp(&self) -> Self;
 }
 pub trait MultivectorMut<T:SeaCoefficient>: 
 	Multivector<T>

@@ -22,6 +22,7 @@ use crate::multivector::multivector_traits::{
 	MultivectorDualMut, 
 	MultivectorNorm,
 	MultivectorNormMut,
+	MultivectorExponentiation,
 	LeftContraction, 
 	RightContraction, 
 	InnerProduct, 

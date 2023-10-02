@@ -68,10 +68,6 @@ impl<T:SeaCoefficient> Multivector<T> for SeaMotorPGA3D<T> {
 	fn grade(&self, grade: &SeaGrade) -> Self::GeneralMultivectorOutput {
 		(**self).grade(grade)
 	}
-
-	fn exp(&self) -> Self {
-		Self((**self).exp())
-	}
 }
 impl<T:SeaCoefficient> MultivectorMut<T> for SeaMotorPGA3D<T> {}
 

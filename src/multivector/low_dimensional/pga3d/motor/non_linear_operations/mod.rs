@@ -1,4 +1,5 @@
 use super::*;
 
 mod normalization;
-mod log;
+mod exponentiation;
+mod logarithm;

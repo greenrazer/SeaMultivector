@@ -38,3 +38,7 @@ pub trait MultivectorNorm<T: SeaCoefficient> {
 pub trait MultivectorNormMut {
 	fn scalar_normalize(&mut self);
 }
+
+pub trait MultivectorExponentiation {
+	fn exp(&self) -> Self;
+}

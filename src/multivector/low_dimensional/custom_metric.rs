@@ -20,6 +20,7 @@ use crate::multivector::multivector_traits::{
 	MultivectorDualMut, 
 	MultivectorNorm,
 	MultivectorNormMut,
+	MultivectorExponentiation,
 	LeftContraction, 
 	RightContraction, 
 	InnerProduct, 
@@ -89,13 +90,6 @@ impl<T:SeaCoefficient, I:SeaBasisBladeSet> Multivector<T> for SeaLowDimensionalM
 		Self {
 			metric: self.metric.clone(),
 			multivector: self.multivector.grade(grade)
-		}
-	}
-
-	fn exp(&self) -> Self {
-		Self {
-			metric: self.metric.clone(),
-			multivector: self.multivector.exp(&self.metric)
 		}
 	}
 }
