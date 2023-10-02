@@ -19,6 +19,32 @@ impl<T:SeaCoefficient, I:SeaBasisBladeSet> InnerProduct<&Self> for SeaLowDimensi
 	}
 }
 
+impl<T:SeaCoefficient, I:SeaBasisBladeSet> BitOr<Self> for SeaLowDimensionalMultivectorCustomMetric<T, I> {
+	type Output = SeaLowDimensionalMultivectorCustomMetric<T, I>;
+	fn bitor(self, rhs: Self) -> Self::Output {
+		self.inner_product(rhs)
+	}
+}
+impl<T:SeaCoefficient, I:SeaBasisBladeSet> BitOr<&Self> for SeaLowDimensionalMultivectorCustomMetric<T, I> {
+	type Output = SeaLowDimensionalMultivectorCustomMetric<T, I>;
+	fn bitor(self, rhs: &Self) -> Self::Output {
+		self.inner_product(rhs)
+	}
+}
+impl<T:SeaCoefficient, I:SeaBasisBladeSet> BitOr<SeaLowDimensionalMultivectorCustomMetric<T, I>> for &SeaLowDimensionalMultivectorCustomMetric<T, I> {
+	type Output = SeaLowDimensionalMultivectorCustomMetric<T, I>;
+	fn bitor(self, rhs: SeaLowDimensionalMultivectorCustomMetric<T, I>) -> Self::Output {
+		self.inner_product(rhs)
+	}
+}
+impl<T:SeaCoefficient, I:SeaBasisBladeSet> BitOr<Self> for &SeaLowDimensionalMultivectorCustomMetric<T, I> {
+	type Output = SeaLowDimensionalMultivectorCustomMetric<T, I>;
+	fn bitor(self, rhs: Self) -> Self::Output {
+		self.inner_product(rhs)
+	}
+}
+
+
 #[cfg(test)]
 mod tests {
 	use crate::tests::catch_unwind_silent;

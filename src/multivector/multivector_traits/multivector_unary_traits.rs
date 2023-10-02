@@ -4,12 +4,14 @@ pub trait MultivectorConjugation {
 	fn reversion_conjugated(&self) -> Self;
 	fn involution_conjugated(&self) -> Self;
 	fn clifford_conjugated(&self) -> Self;
+	fn negated(&self) -> Self;
 }
 
 pub trait MultivectorConjugationMut {
 	fn reversion_conjugation(&mut self);
 	fn involution_conjugation(&mut self);
 	fn clifford_conjugation(&mut self);
+	fn negate(&mut self);
 }
 
 pub trait MultivectorDual {

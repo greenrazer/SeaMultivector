@@ -38,6 +38,13 @@ impl<T:SeaCoefficient, I:SeaBasisBladeSet> OuterProduct<&Self> for SeaLowDimensi
 	}
 }
 
+impl<T:SeaCoefficient, I:SeaBasisBladeSet> BitXor<Self> for &SeaLowDimensionalSparseMultivector<T, I> {
+	type Output = SeaLowDimensionalSparseMultivector<T, I>;
+	fn bitxor(self, rhs: Self) -> Self::Output {
+		self.outer_product(rhs)
+	}
+}
+
 #[cfg(test)]
 mod tests{
 	use std::time::Instant;

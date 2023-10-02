@@ -342,13 +342,6 @@ impl<T:SeaCoefficient, I:SeaBasisBladeSet> FromStr for SeaLowDimensionalSparseMu
 	}
 }
 
-impl<T:SeaCoefficient, I:SeaBasisBladeSet> BitXor<Self> for &SeaLowDimensionalSparseMultivector<T, I> {
-	type Output = SeaLowDimensionalSparseMultivector<T, I>;
-	fn bitxor(self, rhs: Self) -> Self::Output {
-		self.outer_product(rhs)
-	}
-}
-
 impl<T:SeaCoefficient, I:SeaBasisBladeSet> Neg for &SeaLowDimensionalSparseMultivector<T, I> {
 	type Output = SeaLowDimensionalSparseMultivector<T, I>;
 	fn neg(self) -> Self::Output {

@@ -58,3 +58,18 @@ impl<T:SeaCoefficient, I:SeaBasisBladeSet> MultivectorDualMut for SeaLowDimensio
 		self.multivector.left_compliment()
 	}
 }
+
+impl<T:SeaCoefficient, I:SeaBasisBladeSet> Not for SeaLowDimensionalMultivectorCustomMetric<T, I> {
+	type Output = SeaLowDimensionalMultivectorCustomMetric<T, I>;
+
+	fn not(self) -> Self::Output {
+		self.dual()
+	}
+}
+impl<T:SeaCoefficient, I:SeaBasisBladeSet> Not for &SeaLowDimensionalMultivectorCustomMetric<T, I> {
+	type Output = SeaLowDimensionalMultivectorCustomMetric<T, I>;
+
+	fn not(self) -> Self::Output {
+		self.dual()
+	}
+}

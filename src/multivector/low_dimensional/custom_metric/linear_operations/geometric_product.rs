@@ -19,6 +19,31 @@ impl<T:SeaCoefficient, I:SeaBasisBladeSet> GeometricProduct<&Self> for SeaLowDim
 	}
 }
 
+impl<T:SeaCoefficient, I:SeaBasisBladeSet> Mul<Self> for SeaLowDimensionalMultivectorCustomMetric<T, I> {
+	type Output = SeaLowDimensionalMultivectorCustomMetric<T, I>;
+	fn mul(self, rhs: Self) -> Self::Output {
+		self.geometric_product(rhs)
+	}
+}
+impl<T:SeaCoefficient, I:SeaBasisBladeSet> Mul<&Self> for SeaLowDimensionalMultivectorCustomMetric<T, I> {
+	type Output = SeaLowDimensionalMultivectorCustomMetric<T, I>;
+	fn mul(self, rhs: &Self) -> Self::Output {
+		self.geometric_product(rhs)
+	}
+}
+impl<T:SeaCoefficient, I:SeaBasisBladeSet> Mul<SeaLowDimensionalMultivectorCustomMetric<T, I>> for &SeaLowDimensionalMultivectorCustomMetric<T, I> {
+	type Output = SeaLowDimensionalMultivectorCustomMetric<T, I>;
+	fn mul(self, rhs: SeaLowDimensionalMultivectorCustomMetric<T, I>) -> Self::Output {
+		self.geometric_product(rhs)
+	}
+}
+impl<T:SeaCoefficient, I:SeaBasisBladeSet> Mul<Self> for &SeaLowDimensionalMultivectorCustomMetric<T, I> {
+	type Output = SeaLowDimensionalMultivectorCustomMetric<T, I>;
+	fn mul(self, rhs: Self) -> Self::Output {
+		self.geometric_product(rhs)
+	}
+}
+
 #[cfg(test)]
 mod tests {
 	use crate::tests::catch_unwind_silent;

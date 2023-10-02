@@ -41,9 +41,9 @@ use super::core::{SeaLowDimensionalSparseMultivector, SparseMultivectorIter, Spa
 use super::SeaMultivector4D;
 
 mod multivector;
-mod motor;
-
 pub use multivector::SeaMultivectorPGA3D;
+
+mod motor;
 pub use motor::SeaMotorPGA3D;
 
 type SeaCoreMultivector4D<T> = SeaLowDimensionalSparseMultivector::<T, u16>;

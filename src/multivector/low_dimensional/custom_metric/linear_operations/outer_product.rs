@@ -19,6 +19,31 @@ impl<T:SeaCoefficient, I:SeaBasisBladeSet> OuterProduct<&Self> for SeaLowDimensi
 	}
 }
 
+impl<T:SeaCoefficient, I:SeaBasisBladeSet> BitXor<Self> for SeaLowDimensionalMultivectorCustomMetric<T, I> {
+	type Output = SeaLowDimensionalMultivectorCustomMetric<T, I>;
+	fn bitxor(self, rhs: Self) -> Self::Output {
+		self.outer_product(rhs)
+	}
+}
+impl<T:SeaCoefficient, I:SeaBasisBladeSet> BitXor<&Self> for SeaLowDimensionalMultivectorCustomMetric<T, I> {
+	type Output = SeaLowDimensionalMultivectorCustomMetric<T, I>;
+	fn bitxor(self, rhs: &Self) -> Self::Output {
+		self.outer_product(rhs)
+	}
+}
+impl<T:SeaCoefficient, I:SeaBasisBladeSet> BitXor<SeaLowDimensionalMultivectorCustomMetric<T, I>> for &SeaLowDimensionalMultivectorCustomMetric<T, I> {
+	type Output = SeaLowDimensionalMultivectorCustomMetric<T, I>;
+	fn bitxor(self, rhs: SeaLowDimensionalMultivectorCustomMetric<T, I>) -> Self::Output {
+		self.outer_product(rhs)
+	}
+}
+impl<T:SeaCoefficient, I:SeaBasisBladeSet> BitXor<Self> for &SeaLowDimensionalMultivectorCustomMetric<T, I> {
+	type Output = SeaLowDimensionalMultivectorCustomMetric<T, I>;
+	fn bitxor(self, rhs: Self) -> Self::Output {
+		self.outer_product(rhs)
+	}
+}
+
 #[cfg(test)]
 mod tests {
 	use crate::tests::catch_unwind_silent;

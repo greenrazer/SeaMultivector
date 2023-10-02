@@ -12,6 +12,10 @@ impl<T:SeaCoefficient> MultivectorConjugation for SeaMotorPGA3D<T> {
 	fn clifford_conjugated(&self) -> Self {
 		Self((**self).clifford_conjugated())
 	}
+
+	fn negated(&self) -> Self {
+		Self((**self).negated())	
+	}
 }
 impl<T:SeaCoefficient> MultivectorConjugationMut for SeaMotorPGA3D<T> {	
 	fn reversion_conjugation(&mut self) {
@@ -24,5 +28,24 @@ impl<T:SeaCoefficient> MultivectorConjugationMut for SeaMotorPGA3D<T> {
 
 	fn clifford_conjugation(&mut self) {
 		(**self).clifford_conjugation()
+	}
+
+	fn negate(&mut self) {
+		(**self).negate()
+	}
+}
+
+impl<T:SeaCoefficient> Neg for SeaMotorPGA3D<T> {
+	type Output = Self;
+
+	fn neg(self) -> Self::Output {
+		self.negated()
+	}
+}
+impl<T:SeaCoefficient> Neg for &SeaMotorPGA3D<T> {
+	type Output = SeaMotorPGA3D<T>;
+
+	fn neg(self) -> Self::Output {
+		self.negated()
 	}
 }

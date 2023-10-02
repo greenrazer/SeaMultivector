@@ -19,6 +19,35 @@ impl<T:SeaCoefficient, I:SeaBasisBladeSet> RegressiveProduct<&Self> for SeaLowDi
 	}
 }
 
+impl<T:SeaCoefficient, I:SeaBasisBladeSet> BitAnd<Self> for SeaLowDimensionalMultivectorCustomMetric<T, I> {
+	type Output = SeaLowDimensionalMultivectorCustomMetric<T, I>;
+	
+	fn bitand(self, rhs: Self) -> Self::Output {
+		self.regressive_product(rhs)
+	}
+}
+impl<T:SeaCoefficient, I:SeaBasisBladeSet> BitAnd<&Self> for SeaLowDimensionalMultivectorCustomMetric<T, I> {
+	type Output = SeaLowDimensionalMultivectorCustomMetric<T, I>;
+	
+	fn bitand(self, rhs: &Self) -> Self::Output {
+		self.regressive_product(rhs)
+	}
+}
+impl<T:SeaCoefficient, I:SeaBasisBladeSet> BitAnd<SeaLowDimensionalMultivectorCustomMetric<T, I>> for &SeaLowDimensionalMultivectorCustomMetric<T, I> {
+	type Output = SeaLowDimensionalMultivectorCustomMetric<T, I>;
+	
+	fn bitand(self, rhs: SeaLowDimensionalMultivectorCustomMetric<T, I>) -> Self::Output {
+		self.regressive_product(rhs)
+	}
+}
+impl<T:SeaCoefficient, I:SeaBasisBladeSet> BitAnd<Self> for &SeaLowDimensionalMultivectorCustomMetric<T, I> {
+	type Output = SeaLowDimensionalMultivectorCustomMetric<T, I>;
+	
+	fn bitand(self, rhs: Self) -> Self::Output {
+		self.regressive_product(rhs)
+	}
+}
+
 #[cfg(test)]
 mod tests {
 	use crate::tests::catch_unwind_silent;

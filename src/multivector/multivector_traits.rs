@@ -114,8 +114,6 @@ pub trait MultivectorMut<T:SeaCoefficient>:
 							IntoIterator
 							+ MultivectorGradeIntoIterator,
 {
-
-	fn negate(&mut self);
 }
 
 pub trait MultivectorConstMetric<T:SeaCoefficient>: 

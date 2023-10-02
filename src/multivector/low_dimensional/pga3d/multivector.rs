@@ -5,6 +5,12 @@ mod linear_operations;
 mod non_linear_operations;
 mod non_geometric_linear_operations;
 
+mod matrix;
+
+mod iterators;
+mod from;
+mod into;
+
 #[derive(Debug, PartialEq, Clone)]
 pub struct SeaMultivectorPGA3D<T:SeaCoefficient>(SeaCoreMultivector4D<T>);
 impl<T:SeaCoefficient> SeaMultivectorPGA3D<T>{
@@ -58,25 +64,6 @@ impl<T:SeaCoefficient> SeaMultivectorPGA3D<T>{
 		SeaMotorPGA3D(inner)
 	}
 
-	pub fn new_translation_motor(x:T, y:T, z:T) -> SeaMotorPGA3D<T> {
-		let line = Self::new_ideal_line(x, y, z);
-		Self::new_motor(&line, T::one())
-	}
-
-	pub fn new_rotation_motor(rx:T, ry:T, rz:T) -> SeaMotorPGA3D<T> {
-		let line = Self::new_line(rx, ry, rz);
-		Self::new_motor(&line, T::one())
-	}
-
-	pub fn new_combined_motor(x:T, y:T, z:T, rx:T, ry:T, rz:T, order: MotorCreationOrder) -> SeaMotorPGA3D<T> {
-		let motor_trans = Self::new_translation_motor(x, y, z);
-		let motor_rot = Self::new_rotation_motor(rx, ry, rz);
-		match order {
-			MotorCreationOrder::TranslationFirst => motor_rot * motor_trans,
-			MotorCreationOrder::RotationFirst => motor_trans * motor_rot
-		}
-	}
-
 	pub fn identity() -> Self {
 		Self::from(T::one())
 	}
@@ -106,70 +93,6 @@ impl<T:SeaCoefficient> SeaMultivectorPGA3D<T>{
 
 }
 
-impl<T:SeaCoefficient> SeaMultivectorPGA3D<T>{
-	pub fn point_to_homogeneous(&self) -> Vector4<T> {
-		let x = -self.0.basis_blade_coefficient(&SeaBasisBladeIndexLow::E234);
-		let y =  self.0.basis_blade_coefficient(&SeaBasisBladeIndexLow::E134);
-		let z = -self.0.basis_blade_coefficient(&SeaBasisBladeIndexLow::E124);
-		let w =  self.0.basis_blade_coefficient(&SeaBasisBladeIndexLow::E123);
-
-		Vector4::new(x,y,z,w)
-	}
-
-	pub fn point_to_euclidean(&self) -> Vector3<T> {
-		let x = -self.0.basis_blade_coefficient(&SeaBasisBladeIndexLow::E234);
-		let y =  self.0.basis_blade_coefficient(&SeaBasisBladeIndexLow::E134);
-		let z = -self.0.basis_blade_coefficient(&SeaBasisBladeIndexLow::E124);
-		let w =  self.0.basis_blade_coefficient(&SeaBasisBladeIndexLow::E123);
-
-		Vector3::new(x/w, y/w, z/w)
-	}
-}
-
-impl<T:SeaCoefficient> From<SeaMotorPGA3D<T>> for SeaMultivectorPGA3D<T> {
-	fn from(value: SeaMotorPGA3D<T>) -> Self {
-		value.0	
-	}
-}
-impl<T:SeaCoefficient> From<&SeaMotorPGA3D<T>> for SeaMultivectorPGA3D<T> {
-	fn from(value: &SeaMotorPGA3D<T>) -> Self {
-		value.0.clone()
-	}
-}
-impl<T:SeaCoefficient> From<SeaCoreMultivector4D<T>> for SeaMultivectorPGA3D<T> {
-	fn from(value: SeaCoreMultivector4D<T>) -> Self {
-		Self(value)
-	}
-}
-impl<T:SeaCoefficient> From<&SeaCoreMultivector4D<T>> for SeaMultivectorPGA3D<T> {
-	fn from(value: &SeaCoreMultivector4D<T>) -> Self {
-		Self(value.clone())
-	}
-}
-impl<T:SeaCoefficient> From<T> for SeaMultivectorPGA3D<T> {
-	fn from(value: T) -> Self {
-		Self::new_lifted_scalar(value)	
-	}
-}
-
-
-impl<T: SeaCoefficient> Into<SeaCoreMultivector4D<T>> for SeaMultivectorPGA3D<T> {
-	fn into(self) -> SeaCoreMultivector4D<T> {
-		self.0
-	}
-}
-impl<'a, T: SeaCoefficient> Into<&'a SeaCoreMultivector4D<T>> for &'a SeaMultivectorPGA3D<T> {
-	fn into(self) -> &'a SeaCoreMultivector4D<T> {
-		&self.0
-	}
-}
-
-impl<T:SeaCoefficient> Default for SeaMultivectorPGA3D<T> {
-	fn default() -> Self {
-		Self(SeaCoreMultivector4D::<T>::default())
-	}
-}
-
 impl<T:SeaCoefficient> Multivector<T> for SeaMultivectorPGA3D<T> {
 	type MultivectorIndexType = SeaBasisBladeIndexLow;
 	type GeneralMultivectorOutput = Self;
@@ -194,110 +117,24 @@ impl<T:SeaCoefficient> Multivector<T> for SeaMultivectorPGA3D<T> {
 		Self(self.0.exp(&Self::METRIC))
 	}
 }
-impl<T:SeaCoefficient> MultivectorMut<T> for SeaMultivectorPGA3D<T> {
-	fn negate(&mut self) {
-		self.0.negate();
-	}
-}
-
-impl<T:SeaCoefficient> MultivectorIter for SeaMultivectorPGA3D<T> {
-	fn iter(&self) -> <&Self as IntoIterator>::IntoIter {
-		self.into_iter()
-	}
-}
-
-impl<T:SeaCoefficient> MultivectorIterMut for SeaMultivectorPGA3D<T> {
-	fn iter_mut(&mut self) -> <&mut Self as IntoIterator>::IntoIter{
-		self.into_iter()
-	}
-}
-
-impl<'a, T:SeaCoefficient> IntoIterator for &'a SeaMultivectorPGA3D<T> {
-	type IntoIter =  SeaCoreSparseMultivector4DIter<'a, T>;
-	type Item = SeaBasisBladeLowRef<'a, T>;
-
-	fn into_iter(self) -> Self::IntoIter {
-		self.0.iter()
-	}
-
-}
-impl<'a, T:SeaCoefficient> IntoIterator for &'a mut SeaMultivectorPGA3D<T> {
-	type IntoIter =  SeaCoreSparseMultivector4DIterMut<'a, T>;
-	type Item = SeaBasisBladeLowRefMut<'a, T>;
-
-	fn into_iter(self) -> Self::IntoIter {
-		self.0.iter_mut()
-	}
-
-}
-
-impl<'a, T:SeaCoefficient> MultivectorGradeIter for SeaMultivectorPGA3D<T> {
-	fn grade_iter(&self, grade: &SeaGrade) -> <&Self as MultivectorGradeIntoIterator>::MultivectorGradeIntoIter {
-		self.grade_into_iter(grade)
-	}
-}
-
-impl<'a, T:SeaCoefficient> MultivectorGradeIterMut for SeaMultivectorPGA3D<T> {
-	fn grade_iter_mut(&mut self, grade: &SeaGrade) -> <&mut Self as MultivectorGradeIntoIterator>::MultivectorGradeIntoIter {
-		self.grade_into_iter(grade)
-	}
-}
-
-impl<'a, T:SeaCoefficient> MultivectorGradeIntoIterator for &'a SeaMultivectorPGA3D<T> {
-	type MultivectorGradeIntoIter = SeaCoreSparseMultivector4DIter<'a, T>;
-
-	fn grade_into_iter(self, grade: &SeaGrade) -> Self::MultivectorGradeIntoIter {
-		self.0.grade_iter(grade)
-	}
-}
-impl<'a, T:SeaCoefficient> MultivectorGradeIntoIterator for &'a mut SeaMultivectorPGA3D<T> {
-	type MultivectorGradeIntoIter = SeaCoreSparseMultivector4DIterMut<'a, T>;
-
-	fn grade_into_iter(self, grade: &SeaGrade) -> Self::MultivectorGradeIntoIter {
-		self.0.grade_iter_mut(grade)
-	}
-}
-
+impl<T:SeaCoefficient> MultivectorMut<T> for SeaMultivectorPGA3D<T> {}
 
 impl<T: SeaCoefficient> MultivectorConstMetric<T> for SeaMultivectorPGA3D<T> {
 	const METRIC: SeaMetric = METRIC_PGA3D;
 }
 
-impl<T:SeaCoefficient> Neg for SeaMultivectorPGA3D<T> {
-	type Output = Self;
-
-	fn neg(self) -> Self::Output {
-		Self(-&self.0)
-	}
-}
-impl<T:SeaCoefficient> Neg for &SeaMultivectorPGA3D<T> {
-	type Output = SeaMultivectorPGA3D<T>;
-
-	fn neg(self) -> Self::Output {
-		SeaMultivectorPGA3D::<T>(-&self.0)
+impl<T:SeaCoefficient> Default for SeaMultivectorPGA3D<T> {
+	fn default() -> Self {
+		Self(SeaCoreMultivector4D::<T>::default())
 	}
 }
 
-impl<T:SeaCoefficient> Not for SeaMultivectorPGA3D<T> {
-	type Output = SeaMultivectorPGA3D<T>;
-
-	fn not(self) -> Self::Output {
-		self.dual()
-	}
-}
-impl<T:SeaCoefficient> Not for &SeaMultivectorPGA3D<T> {
-	type Output = SeaMultivectorPGA3D<T>;
-
-	fn not(self) -> Self::Output {
-		self.dual()
-	}
-}
 
 #[cfg(test)]
 pub mod tests {
 	use std::f64::consts::TAU;
 
-	use super::super::tests::assert_approx_eq_vec3;
+	pub use super::super::tests::assert_approx_eq_vec3;
 
 	use super::*;
 
@@ -341,16 +178,6 @@ pub mod tests {
 		assert_eq!(
 			c,
 			out
-		);
-	}
-
-	#[test]
-	fn point_to_vec() {
-		let p1 = SeaMultivectorPGA3D::new_point(1.0,2.0,3.0);
-		let v = p1.point_to_euclidean();
-		assert_approx_eq_vec3(
-			v,
-			Vector3::new(1.0, 2.0, 3.0)
 		);
 	}
 

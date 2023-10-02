@@ -19,6 +19,32 @@ impl<T:SeaCoefficient, I:SeaBasisBladeSet> LeftContraction<&Self> for SeaLowDime
 	}
 }
 
+impl<T:SeaCoefficient, I:SeaBasisBladeSet> Shl<Self> for SeaLowDimensionalMultivectorCustomMetric<T, I> {
+	type Output = SeaLowDimensionalMultivectorCustomMetric<T, I>;
+	fn shl(self, rhs: Self) -> Self::Output {
+		self.left_contraction(rhs)
+	}
+}
+impl<T:SeaCoefficient, I:SeaBasisBladeSet> Shl<&Self> for SeaLowDimensionalMultivectorCustomMetric<T, I> {
+	type Output = SeaLowDimensionalMultivectorCustomMetric<T, I>;
+	fn shl(self, rhs: &Self) -> Self::Output {
+		self.left_contraction(rhs)
+	}
+}
+impl<T:SeaCoefficient, I:SeaBasisBladeSet> Shl<SeaLowDimensionalMultivectorCustomMetric<T, I>> for &SeaLowDimensionalMultivectorCustomMetric<T, I> {
+	type Output = SeaLowDimensionalMultivectorCustomMetric<T, I>;
+	fn shl(self, rhs: SeaLowDimensionalMultivectorCustomMetric<T, I>) -> Self::Output {
+		self.left_contraction(rhs)
+	}
+}
+impl<T:SeaCoefficient, I:SeaBasisBladeSet> Shl<Self> for &SeaLowDimensionalMultivectorCustomMetric<T, I> {
+	type Output = SeaLowDimensionalMultivectorCustomMetric<T, I>;
+	fn shl(self, rhs: Self) -> Self::Output {
+		self.left_contraction(rhs)
+	}
+}
+
+
 #[cfg(test)]
 mod tests {
 	use crate::tests::catch_unwind_silent;

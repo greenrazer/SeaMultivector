@@ -43,3 +43,18 @@ impl<T:SeaCoefficient> MultivectorDualMut for SeaMultivectorPGA3D<T> {
 		self.0.undualization(&Self::METRIC)
 	}
 }
+
+impl<T:SeaCoefficient> Not for SeaMultivectorPGA3D<T> {
+	type Output = SeaMultivectorPGA3D<T>;
+
+	fn not(self) -> Self::Output {
+		self.dual()
+	}
+}
+impl<T:SeaCoefficient> Not for &SeaMultivectorPGA3D<T> {
+	type Output = SeaMultivectorPGA3D<T>;
+
+	fn not(self) -> Self::Output {
+		self.dual()
+	}
+}
