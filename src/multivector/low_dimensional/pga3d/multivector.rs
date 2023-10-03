@@ -23,9 +23,13 @@ impl<T:SeaCoefficient> SeaMultivectorPGA3D<T>{
 	}
 
 	pub fn new_point(x:T, y:T, z:T) -> SeaFlectorPGA3D<T> {
+		Self::new_homogeneous_point(x,y,z,T::one())
+	}
+
+	pub fn new_homogeneous_point(x:T, y:T, z:T, w:T) -> SeaFlectorPGA3D<T> {
 		let mut mv = SeaCoreMultivector4D::<T>::new(
 			SeaBasisBladeSet::grade(&SeaGrade(3)),
-			vec![T::one(),-z,y,-x]
+			vec![w,-z,y,-x]
 		);
 		mv.remove_zeros();
 		SeaFlectorPGA3D::<T>(Self(mv))

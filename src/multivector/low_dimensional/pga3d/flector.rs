@@ -6,11 +6,29 @@ mod non_linear_operations;
 mod non_geometric_linear_operations;
 
 mod iterators;
+mod from;
 
 mod matrix;
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct SeaFlectorPGA3D<T:SeaCoefficient>(pub SeaMultivectorPGA3D<T>);
+impl<T:SeaCoefficient> SeaFlectorPGA3D<T> {
+	pub fn from_point(x:T, y:T, z:T) -> SeaFlectorPGA3D<T> {
+		SeaMultivectorPGA3D::new_point(x, y, z)
+	}
+
+	pub fn from_homogeneous_point(x:T, y:T, z:T, w:T) -> SeaFlectorPGA3D<T> {
+		SeaMultivectorPGA3D::new_homogeneous_point(x, y, z, w)
+	}
+
+	pub fn from_plane(x:T, y:T, z:T, d:T) -> SeaFlectorPGA3D<T> {
+		SeaMultivectorPGA3D::new_plane(x, y, z, d)
+	}
+
+	pub fn from_origin_plane(x:T, y:T, z:T) -> SeaFlectorPGA3D<T> {
+		SeaMultivectorPGA3D::new_plane(x, y, z, T::zero())
+	}
+}
 
 impl<T: SeaCoefficient> MultivectorConstMetric<T> for SeaFlectorPGA3D<T> {
 	const METRIC: SeaMetric = SeaMultivectorPGA3D::<T>::METRIC;

@@ -42,6 +42,8 @@ impl<T:SeaCoefficient + 'static> SeaFlectorPGA3D<T> {
 mod tests {
 	use std::f64::consts::TAU;
 	
+	use funty::Floating;
+
 	use super::super::tests::assert_approx_eq_vec4;
 	use super::super::tests::assert_approx_eq_mat4;
 	use super::multivector::tests::assert_approx_eq_mv;
