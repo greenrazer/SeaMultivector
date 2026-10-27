@@ -1,0 +1,97 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 460" width="760" height="460" role="img" aria-labelledby="title desc" class="viz">
+<title id="title">Motor applied to a point: elements per second against batch size</title>
+<desc id="desc">Line chart, both axes logarithmic. Series: Seagrass GPU, specialised shader, Hand-written WGSL Mat4 × Vec4, Seagrass GPU, interpreter shader, Seagrass CPU, 24 threads, glam Mat4 × Vec4, 24 threads, glam Mat4 × Vec4, 1 thread.</desc>
+<style>
+.viz { --surface: #fcfcfb; --text: #0b0b0b; --text-2: #52514e; --muted: #898781; --grid: #e1e0d9; --axis: #c3c2b7;
+  --s1: #2a78d6; --s2: #eb6834; --s3: #1baf7a; --s4: #eda100; --s5: #e87ba4; --s6: #008300; }
+@media (prefers-color-scheme: dark) { .viz { --surface: #1a1a19; --text: #f0efec; --text-2: #c3c2b7; --muted: #898781; --grid: #2c2c2a; --axis: #383835;
+  --s1: #3987e5; --s2: #d95926; --s3: #199e70; --s4: #c98500; --s5: #d55181; --s6: #008300; } }
+text { font-family: system-ui, -apple-system, "Segoe UI", sans-serif; fill: var(--text-2); font-size: 12px; }
+.title { fill: var(--text); font-size: 16px; font-weight: 600; }
+.tick { fill: var(--muted); font-size: 11px; }
+.grid { stroke: var(--grid); stroke-width: 1; }
+.axis { stroke: var(--axis); stroke-width: 1; }
+.line { fill: none; stroke-width: 2; stroke-linejoin: round; stroke-linecap: round; }
+.cpu { stroke-dasharray: 6 4; }
+.mark { stroke: var(--surface); stroke-width: 2; }
+.s1 { stroke: var(--s1); } .f1 { fill: var(--s1); }
+.s2 { stroke: var(--s2); } .f2 { fill: var(--s2); }
+.s3 { stroke: var(--s3); } .f3 { fill: var(--s3); }
+.s4 { stroke: var(--s4); } .f4 { fill: var(--s4); }
+.s5 { stroke: var(--s5); } .f5 { fill: var(--s5); }
+.s6 { stroke: var(--s6); } .f6 { fill: var(--s6); }
+</style>
+<rect width="760" height="460" fill="var(--surface)"/>
+<text class="title" x="72" y="28">Motor applied to a point: elements per second</text>
+<text x="72" y="48">Data resident where it is computed. RTX 3090 (Vulkan) and Ryzen 9 5900X, f32. Higher is better.</text>
+<line class="line s1" x1="72" y1="72" x2="100" y2="72"/>
+<circle class="mark f1" cx="86.0" cy="72.0" r="4.5"/>
+<text x="108" y="76">Seagrass GPU, specialised shader</text>
+<line class="line s2" x1="72" y1="92" x2="100" y2="92"/>
+<rect class="mark f2" x="82.0" y="88.0" width="8" height="8" rx="1"/>
+<text x="108" y="96">Hand-written WGSL Mat4 × Vec4</text>
+<line class="line s3" x1="302" y1="72" x2="330" y2="72"/>
+<polygon class="mark f3" points="316.0,66.5 321.5,72.0 316.0,77.5 310.5,72.0"/>
+<text x="338" y="76">Seagrass GPU, interpreter shader</text>
+<line class="line s4 cpu" x1="302" y1="92" x2="330" y2="92"/>
+<circle class="mark f4" cx="316.0" cy="92.0" r="4.5"/>
+<text x="338" y="96">Seagrass CPU, 24 threads</text>
+<line class="line s5 cpu" x1="532" y1="72" x2="560" y2="72"/>
+<rect class="mark f5" x="542.0" y="68.0" width="8" height="8" rx="1"/>
+<text x="568" y="76">glam Mat4 × Vec4, 24 threads</text>
+<line class="line s6 cpu" x1="532" y1="92" x2="560" y2="92"/>
+<polygon class="mark f6" points="546.0,87.0 551.0,96.0 541.0,96.0"/>
+<text x="568" y="96">glam Mat4 × Vec4, 1 thread</text>
+<line class="grid" x1="72" y1="408" x2="736" y2="408"/>
+<text class="tick" x="64" y="412" text-anchor="end">10 M</text>
+<line class="grid" x1="72" y1="320.68845748437366" x2="736" y2="320.68845748437366"/>
+<text class="tick" x="64" y="324.68845748437366" text-anchor="end">100 M</text>
+<line class="grid" x1="72" y1="233.37691496874734" x2="736" y2="233.37691496874734"/>
+<text class="tick" x="64" y="237.37691496874734" text-anchor="end">1 G</text>
+<line class="grid" x1="72" y1="146.06537245312097" x2="736" y2="146.06537245312097"/>
+<text class="tick" x="64" y="150.06537245312097" text-anchor="end">10 G</text>
+<line class="axis" x1="72" y1="408" x2="736" y2="408"/>
+<text class="tick" x="72" y="426" text-anchor="middle">1k</text>
+<text class="tick" x="256.3389620379989" y="426" text-anchor="middle">10k</text>
+<text class="tick" x="440.6779240759978" y="426" text-anchor="middle">100k</text>
+<text class="tick" x="625.0168861139967" y="426" text-anchor="middle">1M</text>
+<text class="tick" x="736" y="426" text-anchor="middle">4M</text>
+<text x="404" y="450" text-anchor="middle">Batch size (elements)</text>
+<text x="16" y="263" text-anchor="middle" transform="rotate(-90 16 263)">Elements per second</text>
+<polyline class="line s1" points="72.0,367.3 256.3,267.3 440.7,181.4 625.0,141.3 736.0,135.5"/>
+<polyline class="line s2" points="72.0,329.1 256.3,239.5 440.7,177.5 625.0,153.3 736.0,150.6"/>
+<polyline class="line s3" points="72.0,361.6 256.3,266.8 440.7,217.0 625.0,208.7 736.0,207.1"/>
+<polyline class="line s4 cpu" points="72.0,385.0 256.3,281.3 440.7,245.7 625.0,256.1 736.0,270.5"/>
+<polyline class="line s5 cpu" points="72.0,364.4 256.3,292.3 440.7,233.2 625.0,273.2 736.0,281.4"/>
+<polyline class="line s6 cpu" points="72.0,227.4 256.3,227.5 440.7,231.6 625.0,280.2 736.0,285.3"/>
+<circle class="mark f1" cx="72.0" cy="367.3" r="4.5"/>
+<circle class="mark f1" cx="256.3" cy="267.3" r="4.5"/>
+<circle class="mark f1" cx="440.7" cy="181.4" r="4.5"/>
+<circle class="mark f1" cx="625.0" cy="141.3" r="4.5"/>
+<circle class="mark f1" cx="736.0" cy="135.5" r="4.5"/>
+<rect class="mark f2" x="68.0" y="325.1" width="8" height="8" rx="1"/>
+<rect class="mark f2" x="252.3" y="235.5" width="8" height="8" rx="1"/>
+<rect class="mark f2" x="436.7" y="173.5" width="8" height="8" rx="1"/>
+<rect class="mark f2" x="621.0" y="149.3" width="8" height="8" rx="1"/>
+<rect class="mark f2" x="732.0" y="146.6" width="8" height="8" rx="1"/>
+<polygon class="mark f3" points="72.0,356.1 77.5,361.6 72.0,367.1 66.5,361.6"/>
+<polygon class="mark f3" points="256.3,261.3 261.8,266.8 256.3,272.3 250.8,266.8"/>
+<polygon class="mark f3" points="440.7,211.5 446.2,217.0 440.7,222.5 435.2,217.0"/>
+<polygon class="mark f3" points="625.0,203.2 630.5,208.7 625.0,214.2 619.5,208.7"/>
+<polygon class="mark f3" points="736.0,201.6 741.5,207.1 736.0,212.6 730.5,207.1"/>
+<circle class="mark f4" cx="72.0" cy="385.0" r="4.5"/>
+<circle class="mark f4" cx="256.3" cy="281.3" r="4.5"/>
+<circle class="mark f4" cx="440.7" cy="245.7" r="4.5"/>
+<circle class="mark f4" cx="625.0" cy="256.1" r="4.5"/>
+<circle class="mark f4" cx="736.0" cy="270.5" r="4.5"/>
+<rect class="mark f5" x="68.0" y="360.4" width="8" height="8" rx="1"/>
+<rect class="mark f5" x="252.3" y="288.3" width="8" height="8" rx="1"/>
+<rect class="mark f5" x="436.7" y="229.2" width="8" height="8" rx="1"/>
+<rect class="mark f5" x="621.0" y="269.2" width="8" height="8" rx="1"/>
+<rect class="mark f5" x="732.0" y="277.4" width="8" height="8" rx="1"/>
+<polygon class="mark f6" points="72.0,222.4 77.0,231.4 67.0,231.4"/>
+<polygon class="mark f6" points="256.3,222.5 261.3,231.5 251.3,231.5"/>
+<polygon class="mark f6" points="440.7,226.6 445.7,235.6 435.7,235.6"/>
+<polygon class="mark f6" points="625.0,275.2 630.0,284.2 620.0,284.2"/>
+<polygon class="mark f6" points="736.0,280.3 741.0,289.3 731.0,289.3"/>
+</svg>

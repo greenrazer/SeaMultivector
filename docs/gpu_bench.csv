@@ -1,0 +1,241 @@
+workload,implementation,n,resident_ns_per_element,end_to_end_ns_per_element,gpu_timestamp_ns_per_element,max_difference
+"motor × motor","Seagrass GPU, specialised",1000,12.6884375,135.243359375,3.136,0.00000010534560601627163
+"motor × motor","Seagrass GPU, interpreted",1000,23.21675,149.06875,12.48,0
+"motor × motor","Seagrass GPU, dense storage",1000,13.457,147.05078125,3.968,0.00000010534560601627163
+"motor × motor","Seagrass CPU, 1 thread",1000,5.5532470703125,,,
+"motor × motor","Seagrass CPU, rayon",1000,50.341015625,,,
+"motor × motor","glam Mat4, 1 thread",1000,3.37366943359375,,,
+"motor × motor","glam Mat4, rayon",1000,35.03642578125,,,
+"motor × motor","nalgebra Matrix4, 1 thread",1000,5.99921875,,,
+"motor × motor","nalgebra Matrix4, rayon",1000,33.22919921875,,,
+"motor × motor","nalgebra UnitDualQuaternion, 1 thread",1000,3.7903076171875,,,
+"motor × motor","nalgebra UnitDualQuaternion, rayon",1000,33.09326171875,,,
+"motor × motor","geometric_algebra Motor (SSE), 1 thread",1000,1.33040771484375,,,
+"motor × motor","geometric_algebra Motor (SSE), rayon",1000,31.41025390625,,,
+"motor × motor","ultraviolet Rotor3x8 (AVX2, rotation only), 1 thread",1000,0.75640869140625,,,
+"motor × motor","ultraviolet Rotor3x8 (AVX2, rotation only), rayon",1000,19.148779296875,,,
+"motor applied to a point","Seagrass GPU, specialised",1000,34.14575,182.89453125,8.736,0.0000002934788483344164
+"motor applied to a point","Seagrass GPU, interpreted",1000,29.407125,133.990625,17.408,0.00000009782628040966301
+"motor applied to a point","Seagrass GPU, dense storage",1000,14.6908125,160.859375,4.512,0.0000001467394241672082
+"motor applied to a point","Seagrass CPU, 1 thread",1000,6.1604248046875,,,
+"motor applied to a point","Seagrass CPU, rayon",1000,54.5775390625,,,
+"motor applied to a point","hand-written WGSL Mat4 × Vec4",1000,12.4891875,182.334375,,
+"motor applied to a point","glam Mat4 × Vec4, 1 thread",1000,0.853070068359375,,,
+"motor applied to a point","glam Mat4 × Vec4, rayon",1000,31.69111328125,,,
+"motor applied to a point","nalgebra Matrix4 × Vector4, 1 thread",1000,2.7314697265625,,,
+"motor applied to a point","nalgebra Matrix4 × Vector4, rayon",1000,34.51474609375,,,
+"motor applied to a point","nalgebra UnitDualQuaternion, 1 thread",1000,2.4441650390625,,,
+"motor applied to a point","nalgebra UnitDualQuaternion, rayon",1000,31.814746093749996,,,
+"motor applied to a point","geometric_algebra Motor (SSE), 1 thread",1000,24.15302734375,,,
+"motor applied to a point","geometric_algebra Motor (SSE), rayon",1000,34.223828125,,,
+"motor applied to a point","ultraviolet Rotor3x8 (AVX2, rotation only), 1 thread",1000,0.837322998046875,,,
+"motor applied to a point","ultraviolet Rotor3x8 (AVX2, rotation only), rayon",1000,18.927734375,,,
+"frame loop (per frame)","Seagrass GPU, specialised",1000,43.41125000000001,,,
+"frame loop (per frame)","Seagrass CPU, 1 thread",1000,11.223193359375,,,
+"frame loop (per frame)","Seagrass CPU, rayon",1000,110.50703125,,,
+"frame loop (per frame)","glam Mat4, 1 thread",1000,4.2267578125,,,
+"frame loop (per frame)","glam Mat4, rayon",1000,34.323046875,,,
+"CGA (4,1) vector × vector","Seagrass GPU, specialised",1000,27.369875,151.133203125,5.248,0.00000010558023433304697
+"CGA (4,1) vector × vector","Seagrass GPU, interpreted",1000,25.328999999999997,142.225,10.944,0
+"CGA (4,1) vector × vector","Seagrass CPU, 1 thread",1000,4.2347412109375,,,
+"CGA (4,1) vector × vector","Seagrass CPU, rayon",1000,56.802734375,,,
+"STA (1,3) Lorentz transformation of a vector","Seagrass GPU, specialised",1000,13.301125,129.580078125,3.04,0.0000001027157878752405
+"STA (1,3) Lorentz transformation of a vector","Seagrass GPU, interpreted",1000,27.487875,146.91328125,16.032,0.0000001027157878752405
+"STA (1,3) Lorentz transformation of a vector","Seagrass CPU, 1 thread",1000,11.85107421875,,,
+"STA (1,3) Lorentz transformation of a vector","Seagrass CPU, rayon",1000,55.1458984375,,,
+"6D bivector × vector","Seagrass GPU, specialised",1000,13.3388125,157.15546875,3.296,0.00000007053110806509721
+"6D bivector × vector","Seagrass GPU, interpreted",1000,35.508750000000006,173.1109375,22.528,0
+"6D bivector × vector","Seagrass CPU, 1 thread",1000,10.5716796875,,,
+"6D bivector × vector","Seagrass CPU, rayon",1000,61.1361328125,,,
+"motor × motor","Seagrass GPU, specialised",10000,1.2804,28.0696875,0.2976,0.00000013907951768032945
+"motor × motor","Seagrass GPU, interpreted",10000,2.41885,28.1478125,1.3408,0
+"motor × motor","Seagrass GPU, dense storage",10000,1.37584375,87.7321875,0.368,0.00000013907951768032945
+"motor × motor","Seagrass CPU, 1 thread",10000,5.7283984375,,,
+"motor × motor","Seagrass CPU, rayon",10000,4.79423828125,,,
+"motor × motor","glam Mat4, 1 thread",10000,3.4330859375,,,
+"motor × motor","glam Mat4, rayon",10000,6.09466796875,,,
+"motor × motor","nalgebra Matrix4, 1 thread",10000,6.25169921875,,,
+"motor × motor","nalgebra Matrix4, rayon",10000,5.883203125,,,
+"motor × motor","nalgebra UnitDualQuaternion, 1 thread",10000,3.900078125,,,
+"motor × motor","nalgebra UnitDualQuaternion, rayon",10000,5.74056640625,,,
+"motor × motor","geometric_algebra Motor (SSE), 1 thread",10000,1.350712890625,,,
+"motor × motor","geometric_algebra Motor (SSE), rayon",10000,5.07279296875,,,
+"motor × motor","ultraviolet Rotor3x8 (AVX2, rotation only), 1 thread",10000,0.78575439453125,,,
+"motor × motor","ultraviolet Rotor3x8 (AVX2, rotation only), rayon",10000,3.76287109375,,,
+"motor applied to a point","Seagrass GPU, specialised",10000,2.443775,41.13140625,0.7584,0.0000002897909610055649
+"motor applied to a point","Seagrass GPU, interpreted",10000,2.4156625,22.008203125,1.2704,0.00000019319396926675836
+"motor applied to a point","Seagrass GPU, dense storage",10000,1.54253125,45.47203125,0.3904,0.00000019319396926675836
+"motor applied to a point","Seagrass CPU, 1 thread",10000,6.67982421875,,,
+"motor applied to a point","Seagrass CPU, rayon",10000,3.535751953125,,,
+"motor applied to a point","hand-written WGSL Mat4 × Vec4",10000,1.17584375,31.311484375,,
+"motor applied to a point","glam Mat4 × Vec4, 1 thread",10000,0.8568017578125,,,
+"motor applied to a point","glam Mat4 × Vec4, rayon",10000,4.72484375,,,
+"motor applied to a point","nalgebra Matrix4 × Vector4, 1 thread",10000,2.811064453125,,,
+"motor applied to a point","nalgebra Matrix4 × Vector4, rayon",10000,5.07130859375,,,
+"motor applied to a point","nalgebra UnitDualQuaternion, 1 thread",10000,2.43982421875,,,
+"motor applied to a point","nalgebra UnitDualQuaternion, rayon",10000,5.6324609375,,,
+"motor applied to a point","geometric_algebra Motor (SSE), 1 thread",10000,23.6353125,,,
+"motor applied to a point","geometric_algebra Motor (SSE), rayon",10000,7.60537109375,,,
+"motor applied to a point","ultraviolet Rotor3x8 (AVX2, rotation only), 1 thread",10000,0.8397412109375,,,
+"motor applied to a point","ultraviolet Rotor3x8 (AVX2, rotation only), rayon",10000,3.69427734375,,,
+"frame loop (per frame)","Seagrass GPU, specialised",10000,4.774525,,,
+"frame loop (per frame)","Seagrass CPU, 1 thread",10000,12.304374999999999,,,
+"frame loop (per frame)","Seagrass CPU, rayon",10000,9.9609375,,,
+"frame loop (per frame)","glam Mat4, 1 thread",10000,4.2447265625,,,
+"frame loop (per frame)","glam Mat4, rayon",10000,6.436875,,,
+"CGA (4,1) vector × vector","Seagrass GPU, specialised",10000,1.99849375,33.37,0.5216,0.00000007744926477926128
+"CGA (4,1) vector × vector","Seagrass GPU, interpreted",10000,2.3281124999999996,50,1.1584,0
+"CGA (4,1) vector × vector","Seagrass CPU, 1 thread",10000,3.9884765625,,,
+"CGA (4,1) vector × vector","Seagrass CPU, rayon",10000,6.99447265625,,,
+"STA (1,3) Lorentz transformation of a vector","Seagrass GPU, specialised",10000,1.32643125,21.948671875,0.2688,0.00000021009350348322187
+"STA (1,3) Lorentz transformation of a vector","Seagrass GPU, interpreted",10000,2.8323625,22.78265625,1.6544,0.0000001575701276124164
+"STA (1,3) Lorentz transformation of a vector","Seagrass CPU, 1 thread",10000,11.2728515625,,,
+"STA (1,3) Lorentz transformation of a vector","Seagrass CPU, rayon",10000,4.36515625,,,
+"6D bivector × vector","Seagrass GPU, specialised",10000,1.42808125,104.930625,0.3424,0.00000010245482684467788
+"6D bivector × vector","Seagrass GPU, interpreted",10000,3.5902625,103.46468749999998,2.2496,0
+"6D bivector × vector","Seagrass CPU, 1 thread",10000,11.2110546875,,,
+"6D bivector × vector","Seagrass CPU, rayon",10000,18.218125,,,
+"motor × motor","Seagrass GPU, specialised",100000,0.25528249999999997,30.101,0.12992,0.000000176403005980319
+"motor × motor","Seagrass GPU, interpreted",100000,0.771015,30.80575,0.64,0
+"motor × motor","Seagrass GPU, dense storage",100000,0.36551125,58.259,0.2512,0.000000176403005980319
+"motor × motor","Seagrass CPU, 1 thread",100000,6.1260625,,,
+"motor × motor","Seagrass CPU, rayon",100000,2.2409375,,,
+"motor × motor","glam Mat4, 1 thread",100000,3.58646875,,,
+"motor × motor","glam Mat4, rayon",100000,1.934875,,,
+"motor × motor","nalgebra Matrix4, 1 thread",100000,6.65409375,,,
+"motor × motor","nalgebra Matrix4, rayon",100000,1.918125,,,
+"motor × motor","nalgebra UnitDualQuaternion, 1 thread",100000,3.929296875,,,
+"motor × motor","nalgebra UnitDualQuaternion, rayon",100000,1.4029921875,,,
+"motor × motor","geometric_algebra Motor (SSE), 1 thread",100000,1.3640546875,,,
+"motor × motor","geometric_algebra Motor (SSE), rayon",100000,1.26451171875,,,
+"motor × motor","ultraviolet Rotor3x8 (AVX2, rotation only), 1 thread",100000,0.7755859375,,,
+"motor × motor","ultraviolet Rotor3x8 (AVX2, rotation only), rayon",100000,0.8253984375,,,
+"motor applied to a point","Seagrass GPU, specialised",100000,0.25394625,21.3101875,0.1136,0.0000002805242047543288
+"motor applied to a point","Seagrass GPU, interpreted",100000,0.6487375,18.2013125,0.52544,0.0000002805242047543288
+"motor applied to a point","Seagrass GPU, dense storage",100000,0.4044350000000001,57.29075,0.26272,0.0000002805242047543288
+"motor applied to a point","Seagrass CPU, 1 thread",100000,5.8248125,,,
+"motor applied to a point","Seagrass CPU, rayon",100000,1.3839296875,,,
+"motor applied to a point","hand-written WGSL Mat4 × Vec4",100000,0.22883125,15.4341875,,
+"motor applied to a point","glam Mat4 × Vec4, 1 thread",100000,0.95521484375,,,
+"motor applied to a point","glam Mat4 × Vec4, rayon",100000,0.9962109375,,,
+"motor applied to a point","nalgebra Matrix4 × Vector4, 1 thread",100000,2.777828125,,,
+"motor applied to a point","nalgebra Matrix4 × Vector4, rayon",100000,1.0483125,,,
+"motor applied to a point","nalgebra UnitDualQuaternion, 1 thread",100000,4.03425,,,
+"motor applied to a point","nalgebra UnitDualQuaternion, rayon",100000,1.2991640625,,,
+"motor applied to a point","geometric_algebra Motor (SSE), 1 thread",100000,23.50525,,,
+"motor applied to a point","geometric_algebra Motor (SSE), rayon",100000,2.8546484375,,,
+"motor applied to a point","ultraviolet Rotor3x8 (AVX2, rotation only), 1 thread",100000,0.9661171875,,,
+"motor applied to a point","ultraviolet Rotor3x8 (AVX2, rotation only), rayon",100000,0.744984375,,,
+"frame loop (per frame)","Seagrass GPU, specialised",100000,0.750695,,,
+"frame loop (per frame)","Seagrass CPU, 1 thread",100000,11.15028125,,,
+"frame loop (per frame)","Seagrass CPU, rayon",100000,4.007625,,,
+"frame loop (per frame)","glam Mat4, 1 thread",100000,4.319390625,,,
+"frame loop (per frame)","glam Mat4, rayon",100000,2.2565859375,,,
+"CGA (4,1) vector × vector","Seagrass GPU, specialised",100000,0.44090624999999994,49.684375,0.13792,0.0000001188015303910106
+"CGA (4,1) vector × vector","Seagrass GPU, interpreted",100000,0.860245,42.8595,0.72192,0
+"CGA (4,1) vector × vector","Seagrass CPU, 1 thread",100000,4.550453125,,,
+"CGA (4,1) vector × vector","Seagrass CPU, rayon",100000,2.6777734375,,,
+"STA (1,3) Lorentz transformation of a vector","Seagrass GPU, specialised",100000,0.159886875,18.245875,0.06304,0.0000002760947381830192
+"STA (1,3) Lorentz transformation of a vector","Seagrass GPU, interpreted",100000,0.7965075,19.2519375,0.65664,0.0000002300789390119462
+"STA (1,3) Lorentz transformation of a vector","Seagrass CPU, 1 thread",100000,11.79190625,,,
+"STA (1,3) Lorentz transformation of a vector","Seagrass CPU, rayon",100000,1.8484375,,,
+"6D bivector × vector","Seagrass GPU, specialised",100000,0.3730725,81.04825,0.24992,0.00000014154797156606946
+"6D bivector × vector","Seagrass GPU, interpreted",100000,1.46366,86.8315,1.34688,0
+"6D bivector × vector","Seagrass CPU, 1 thread",100000,11.097125,,,
+"6D bivector × vector","Seagrass CPU, rayon",100000,4.174328125,,,
+"motor × motor","Seagrass GPU, specialised",1000000,0.128064,31.533600000000003,0.114944,0.00000016780586520326324
+"motor × motor","Seagrass GPU, interpreted",1000000,0.685232,32.8766,0.662784,0
+"motor × motor","Seagrass GPU, dense storage",1000000,0.245569,61.0694,0.231712,0.00000016780586520326324
+"motor × motor","Seagrass CPU, 1 thread",1000000,9.58195,,,
+"motor × motor","Seagrass CPU, rayon",1000000,3.883625,,,
+"motor × motor","glam Mat4, 1 thread",1000000,8.425625,,,
+"motor × motor","glam Mat4, rayon",1000000,8.920225,,,
+"motor × motor","nalgebra Matrix4, 1 thread",1000000,9.609375,,,
+"motor × motor","nalgebra Matrix4, rayon",1000000,7.992249999999999,,,
+"motor × motor","nalgebra UnitDualQuaternion, 1 thread",1000000,4.7909375,,,
+"motor × motor","nalgebra UnitDualQuaternion, rayon",1000000,3.4420375,,,
+"motor × motor","geometric_algebra Motor (SSE), 1 thread",1000000,3.6065125,,,
+"motor × motor","geometric_algebra Motor (SSE), rayon",1000000,3.4678375,,,
+"motor × motor","ultraviolet Rotor3x8 (AVX2, rotation only), 1 thread",1000000,1.5574875,,,
+"motor × motor","ultraviolet Rotor3x8 (AVX2, rotation only), rayon",1000000,1.01291875,,,
+"motor applied to a point","Seagrass GPU, specialised",1000000,0.08812125000000001,16.62405,0.0744,0.0000003642196872988279
+"motor applied to a point","Seagrass GPU, interpreted",1000000,0.521026,17.00455,0.497152,0.0000002731647725795483
+"motor applied to a point","Seagrass GPU, dense storage",1000000,0.240475,61.8601,0.225952,0.0000003642196872988279
+"motor applied to a point","Seagrass CPU, 1 thread",1000000,7.1921,,,
+"motor applied to a point","Seagrass CPU, rayon",1000000,1.82111875,,,
+"motor applied to a point","hand-written WGSL Mat4 × Vec4",1000000,0.12089650000000002,17.91235,,
+"motor applied to a point","glam Mat4 × Vec4, 1 thread",1000000,3.4347625,,,
+"motor applied to a point","glam Mat4 × Vec4, rayon",1000000,2.8572625,,,
+"motor applied to a point","nalgebra Matrix4 × Vector4, 1 thread",1000000,5.043575,,,
+"motor applied to a point","nalgebra Matrix4 × Vector4, rayon",1000000,2.9680875,,,
+"motor applied to a point","nalgebra UnitDualQuaternion, 1 thread",1000000,2.87665,,,
+"motor applied to a point","nalgebra UnitDualQuaternion, rayon",1000000,1.32121875,,,
+"motor applied to a point","geometric_algebra Motor (SSE), 1 thread",1000000,23.367,,,
+"motor applied to a point","geometric_algebra Motor (SSE), rayon",1000000,2.1867,,,
+"motor applied to a point","ultraviolet Rotor3x8 (AVX2, rotation only), 1 thread",1000000,1.311775,,,
+"motor applied to a point","ultraviolet Rotor3x8 (AVX2, rotation only), rayon",1000000,0.68305,,,
+"frame loop (per frame)","Seagrass GPU, specialised",1000000,0.220824,,,
+"frame loop (per frame)","Seagrass CPU, 1 thread",1000000,17.3158,,,
+"frame loop (per frame)","Seagrass CPU, rayon",1000000,6.7686,,,
+"frame loop (per frame)","glam Mat4, 1 thread",1000000,7.05835,,,
+"frame loop (per frame)","glam Mat4, rayon",1000000,4.642025,,,
+"CGA (4,1) vector × vector","Seagrass GPU, specialised",1000000,0.134466,43.278,0.122048,0.00000011747617634227936
+"CGA (4,1) vector × vector","Seagrass GPU, interpreted",1000000,0.7485500000000002,44.9478,0.728544,0
+"CGA (4,1) vector × vector","Seagrass CPU, 1 thread",1000000,9.54705,,,
+"CGA (4,1) vector × vector","Seagrass CPU, rayon",1000000,4.644175,,,
+"STA (1,3) Lorentz transformation of a vector","Seagrass GPU, specialised",1000000,0.0867795,17.2799,0.075296,0.00000023722603259557218
+"STA (1,3) Lorentz transformation of a vector","Seagrass GPU, interpreted",1000000,0.564886,17.4524,0.536064,0.00000015815068366009655
+"STA (1,3) Lorentz transformation of a vector","Seagrass CPU, 1 thread",1000000,13.13315,,,
+"STA (1,3) Lorentz transformation of a vector","Seagrass CPU, rayon",1000000,2.52595,,,
+"6D bivector × vector","Seagrass GPU, specialised",1000000,0.240015,99.3901,0.224512,0.00000012371401680866256
+"6D bivector × vector","Seagrass GPU, interpreted",1000000,1.281534,105.6659,1.246912,0
+"6D bivector × vector","Seagrass CPU, 1 thread",1000000,21.8436,,,
+"6D bivector × vector","Seagrass CPU, rayon",1000000,9.2036,,,
+"motor × motor","Seagrass GPU, specialised",4000000,0.11945,47.285,0.111264,0.0000002392334295109322
+"motor × motor","Seagrass GPU, interpreted",4000000,0.648039,49.112525,0.641256,0
+"motor × motor","Seagrass GPU, dense storage",4000000,0.226545,101.93895,0.221872,0.00000015948896248119127
+"motor × motor","Seagrass CPU, 1 thread",4000000,11.7064,,,
+"motor × motor","Seagrass CPU, rayon",4000000,4.18885,,,
+"motor × motor","glam Mat4, 1 thread",4000000,8.920425,,,
+"motor × motor","glam Mat4, rayon",4000000,8.562,,,
+"motor × motor","nalgebra Matrix4, 1 thread",4000000,10.0127,,,
+"motor × motor","nalgebra Matrix4, rayon",4000000,8.673175,,,
+"motor × motor","nalgebra UnitDualQuaternion, 1 thread",4000000,5.113075,,,
+"motor × motor","nalgebra UnitDualQuaternion, rayon",4000000,4.1984125,,,
+"motor × motor","geometric_algebra Motor (SSE), 1 thread",4000000,4.996375,,,
+"motor × motor","geometric_algebra Motor (SSE), rayon",4000000,4.130775,,,
+"motor × motor","ultraviolet Rotor3x8 (AVX2, rotation only), 1 thread",4000000,2.11054375,,,
+"motor × motor","ultraviolet Rotor3x8 (AVX2, rotation only), rayon",4000000,1.99448125,,,
+"motor applied to a point","Seagrass GPU, specialised",4000000,0.07560675,21.776975,0.07204,0.0000003563934001249436
+"motor applied to a point","Seagrass GPU, interpreted",4000000,0.500345,21.469975,0.493024,0.0000002672950643045624
+"motor applied to a point","Seagrass GPU, dense storage",4000000,0.2287,103.404925,0.22228,0.0000003563934001249436
+"motor applied to a point","Seagrass CPU, 1 thread",4000000,7.682175,,,
+"motor applied to a point","Seagrass CPU, rayon",4000000,2.663625,,,
+"motor applied to a point","hand-written WGSL Mat4 × Vec4",4000000,0.112774,28.7063,,
+"motor applied to a point","glam Mat4 × Vec4, 1 thread",4000000,3.9355625,,,
+"motor applied to a point","glam Mat4 × Vec4, rayon",4000000,3.5516875,,,
+"motor applied to a point","nalgebra Matrix4 × Vector4, 1 thread",4000000,4.5520625,,,
+"motor applied to a point","nalgebra Matrix4 × Vector4, rayon",4000000,3.5639375,,,
+"motor applied to a point","nalgebra UnitDualQuaternion, 1 thread",4000000,2.94095,,,
+"motor applied to a point","nalgebra UnitDualQuaternion, rayon",4000000,2.0920187500000003,,,
+"motor applied to a point","geometric_algebra Motor (SSE), 1 thread",4000000,24.6838,,,
+"motor applied to a point","geometric_algebra Motor (SSE), rayon",4000000,2.5714125,,,
+"motor applied to a point","ultraviolet Rotor3x8 (AVX2, rotation only), 1 thread",4000000,1.94018125,,,
+"motor applied to a point","ultraviolet Rotor3x8 (AVX2, rotation only), rayon",4000000,1.565625,,,
+"frame loop (per frame)","Seagrass GPU, specialised",4000000,0.19149325,,,
+"frame loop (per frame)","Seagrass CPU, 1 thread",4000000,18.1582,,,
+"frame loop (per frame)","Seagrass CPU, rayon",4000000,6.93185,,,
+"frame loop (per frame)","glam Mat4, 1 thread",4000000,8.09735,,,
+"frame loop (per frame)","glam Mat4, rayon",4000000,6.065275,,,
+"CGA (4,1) vector × vector","Seagrass GPU, specialised",4000000,0.122423,58.832075,0.117216,0.00000017623733583604917
+"CGA (4,1) vector × vector","Seagrass GPU, interpreted",4000000,0.701325,60.708725,0.695432,0
+"CGA (4,1) vector × vector","Seagrass CPU, 1 thread",4000000,10.088475,,,
+"CGA (4,1) vector × vector","Seagrass CPU, rayon",4000000,5.433075,,,
+"STA (1,3) Lorentz transformation of a vector","Seagrass GPU, specialised",4000000,0.0772575,24.57755,0.072144,0.0000002227616846539604
+"STA (1,3) Lorentz transformation of a vector","Seagrass GPU, interpreted",4000000,0.5183245,21.112425,0.51788,0.0000002227616846539604
+"STA (1,3) Lorentz transformation of a vector","Seagrass CPU, 1 thread",4000000,12.8344,,,
+"STA (1,3) Lorentz transformation of a vector","Seagrass CPU, rayon",4000000,2.5216875,,,
+"6D bivector × vector","Seagrass GPU, specialised",4000000,0.22410800000000003,120.23765,0.22032,0.000000176301213627994
+"6D bivector × vector","Seagrass GPU, interpreted",4000000,1.197101,111.104975,1.19416,0
+"6D bivector × vector","Seagrass CPU, 1 thread",4000000,24.3807,,,
+"6D bivector × vector","Seagrass CPU, rayon",4000000,10.095725,,,

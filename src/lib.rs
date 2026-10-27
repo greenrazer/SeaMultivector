@@ -1,94 +1,79 @@
-#![allow(dead_code)]
-#![allow(unused_imports)]
+#![doc = include_str!("../readme.md")]
 
-mod errors;
+mod backend;
+mod batch;
+mod blade;
 mod coefficient;
+mod compat;
+mod error;
+mod macros;
+mod metric;
 mod multivector;
+mod pga3d;
+mod plan;
+mod traits;
+mod typed;
 
+#[cfg(feature = "simd")]
+pub use backend::SimdBackend;
+pub use backend::{Backend, CpuBackend};
+#[cfg(feature = "gpu")]
+pub use backend::{GpuBackend, GpuBatch, GpuError, GpuOptions, ShaderMode};
+pub use batch::{Batch, Product};
+pub use blade::{BladeIndex, BladeSet, SetBlades};
+pub use coefficient::Coefficient;
+// Re-exported so 0.1 code keeps compiling, with a warning at the use site.
+#[allow(deprecated)]
+pub use compat::{
+    ParseMetricError, ParseMultivectorError, SeaBasisBladeIndexLow, SeaFlectorPGA3D, SeaMotorPGA3D,
+    SeaMultivector3D, SeaMultivector4D, SeaMultivector5D, SeaMultivector6D, SeaMultivectorPGA3D,
+    SeaVersorPGA3D,
+};
+pub use error::{BladeError, KindError, MetricError, ParseError};
+pub use metric::{
+    Cga2, Cga3, Dyn3, Dyn4, Dyn5, Dyn6, Dynamic, Euclid3, Euclid4, Euclid5, Euclid6, Metric, Pga2,
+    Pga3, Pga4, Signature, Sta,
+};
+pub use multivector::{Iter, IterMut, Multivector};
+pub use pga3d::MotorCreationOrder;
+pub use traits::{
+    GeometricProduct, InnerProduct, LeftContraction, OuterProduct, RegressiveProduct,
+    RightContraction, SandwichProduct, ScalarProduct,
+};
+pub use typed::{Any, Even, Flector, Kind, KindMul, Motor, Odd, Typed, Versor};
+
+/// Runs the code in `ARCHITECTURE.md` as doctests, as the crate docs do for the readme.
+#[cfg(doctest)]
+#[doc = include_str!("../ARCHITECTURE.md")]
+pub struct ArchitectureDoctests;
+
+/// The types and traits a typical program needs, plus [`FromStr`](std::str::FromStr) and the
+/// nalgebra types used by the PGA3D conversions.
 pub mod prelude {
     pub use std::str::FromStr;
 
+    #[cfg(feature = "nalgebra")]
     pub use nalgebra::{Matrix4, Vector3};
-    
-    pub use super::multivector::multivector_traits::*;
-    pub use super::multivector::low_dimensional::basis_blade_set::SeaBasisBladeSet;
-    pub use super::multivector::low_dimensional::{
-        SeaMultivector3D, 
-        SeaMultivector4D, 
-        SeaMultivector5D, 
-        SeaMultivector6D
+
+    #[cfg(feature = "gpu")]
+    pub use crate::{GpuBackend, GpuOptions, ShaderMode};
+
+    #[cfg(feature = "simd")]
+    pub use crate::SimdBackend;
+
+    pub use crate::{
+        Any, Backend, Batch, BladeError, BladeIndex, Cga2, Cga3, Coefficient, CpuBackend, Dyn3,
+        Dyn4, Dyn5, Dyn6, Dynamic, Euclid3, Euclid4, Euclid5, Euclid6, Even, Flector,
+        GeometricProduct, InnerProduct, Kind, KindError, LeftContraction, Metric, MetricError,
+        Motor, MotorCreationOrder, Multivector, Odd, OuterProduct, ParseError, Pga2, Pga3, Pga4,
+        Product, RegressiveProduct, RightContraction, SandwichProduct, ScalarProduct, Signature,
+        Sta, Typed, Versor,
     };
-    pub use super::multivector::low_dimensional::pga3d::{
-        SeaMultivectorPGA3D,
-        SeaVersorPGA3D,
-        SeaMotorPGA3D,
-        SeaFlectorPGA3D
+    // Re-exported so 0.1 code keeps compiling, with a warning at the use site.
+    #[allow(deprecated)]
+    pub use crate::{
+        ParseMetricError, ParseMultivectorError, SeaBasisBladeIndexLow, SeaFlectorPGA3D,
+        SeaMotorPGA3D, SeaMultivector3D, SeaMultivector4D, SeaMultivector5D, SeaMultivector6D,
+        SeaMultivectorPGA3D, SeaVersorPGA3D,
     };
-}
-
-#[cfg(test)]
-mod tests {
-    use super::prelude::*;
-
-    pub fn catch_unwind_silent<F: FnOnce() -> R + std::panic::UnwindSafe, R>(f: F) -> std::thread::Result<R> {
-		let prev_hook = std::panic::take_hook();
-		std::panic::set_hook(Box::new(|_| {}));
-		let result = std::panic::catch_unwind(f);
-		std::panic::set_hook(prev_hook);
-		result
-	}
-
-    #[test]
-    fn multivector_type_wrapper_works() {
-		let mv = SeaMultivector4D::<f32>::from_str("3,1,0>e1 + e12");
-		assert!(mv.is_ok());
-	}
-
-    #[test]
-    fn multivector_products_works() {
-		let mv_a = SeaMultivector4D::<f32>::from_str("3,1,0>e1 + e12").unwrap();
-		let mv_b = SeaMultivector4D::<f32>::from_str("3,1,0>e3 + e123 + e4").unwrap();
-
-        let out = SeaMultivector4D::<f32>::from_str("3,1,0>-e3 +e13 +e14 +e23 +e123 +e124").unwrap();
-		assert_eq!(
-            &mv_a * &mv_b,
-            out
-        );
-
-        let mv_a = SeaMultivector4D::<f32>::from_str("3,1,0>e1 + e12").unwrap();
-		let mv_b = SeaMultivector4D::<f32>::from_str("3,1,0>e3 + e123 + e4").unwrap();
-
-        let out = SeaMultivector4D::<f32>::from_str("3,1,0>-e3 +e23").unwrap();
-		assert_eq!(
-            &mv_a | &mv_b,
-            out
-        );
-
-        let mv_a = SeaMultivector4D::<f32>::from_str("3,1,0>e1 + e12").unwrap();
-		let mv_b = SeaMultivector4D::<f32>::from_str("3,1,0>e3 + e123 + e4").unwrap();
-
-        let out = SeaMultivector4D::<f32>::from_str("3,1,0>e13 +e14 +e123 +e124").unwrap();
-		assert_eq!(
-            &mv_a ^ &mv_b,
-            out
-        );
-
-        let mv_a = SeaMultivector4D::<f32>::from_str("3,1,0>e1 + e12").unwrap();
-		let mv_b = SeaMultivector4D::<f32>::from_str("3,1,0>e3 + e123 + e4").unwrap();
-
-        let out = SeaMultivector4D::<f32>::from_str("3,1,0>-e3 +e23").unwrap();
-		assert_eq!(
-            &mv_a << &mv_b,
-            out
-        );
-
-        let mv_a = SeaMultivector4D::<f32>::from_str("3,1,0>e1 + e12").unwrap();
-		let mv_b = SeaMultivector4D::<f32>::from_str("3,1,0>e3 + e123 + e4").unwrap();
-
-        let out = SeaMultivector4D::<f32>::from_str("3,1,0>").unwrap();
-		assert_eq!(
-            &mv_a >> &mv_b,
-            out
-        );
-	}
 }

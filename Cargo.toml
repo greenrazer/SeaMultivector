@@ -1,13 +1,75 @@
 [package]
 name = "seagrass-math"
-version = "0.1.0"
-edition = "2021"
+version = "0.2.0"
+edition = "2024"
+rust-version = "1.89"
+description = "Sparse geometric algebra for any signature up to 6 dimensions, with product structure from bitset tricks"
+license = "MIT OR Apache-2.0"
+readme = "readme.md"
+repository = "https://github.com/greenrazer/seagrass-math"
+documentation = "https://docs.rs/seagrass-math"
+keywords = ["geometric-algebra", "clifford-algebra", "pga", "multivector", "projective"]
+categories = ["mathematics", "science", "graphics"]
+include = [
+    "src/**/*",
+    "tests/**/*",
+    "benches/**/*",
+    "examples/**/*",
+    "readme.md",
+    "ARCHITECTURE.md",
+    "CHANGELOG.md",
+    "BENCHMARKS.md",
+    "LICENSE-MIT",
+    "LICENSE-APACHE",
+]
 
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+[features]
+default = ["nalgebra"]
+# Conversions between PGA3D motors and flectors and nalgebra matrices, vectors and dual
+# quaternions.
+nalgebra = ["dep:nalgebra"]
+# Elementwise batch products on all cores.
+rayon = ["dep:rayon"]
+# Batch products with explicit SIMD instructions (AVX-512, AVX2, SSE, NEON), chosen at run time.
+simd = ["dep:fearless_simd"]
+# Batch products on a GPU through wgpu (Vulkan, Metal, DX12, OpenGL), in f32.
+gpu = ["dep:wgpu", "dep:bytemuck", "dep:pollster"]
 
 [dependencies]
-funty = "2.0.0"
-lazy_static = "1.4.0"
-nalgebra = "0.32.3"
-num-traits = "0.2.16"
-regex = "1.9.3"
+nalgebra = { version = "0.35.0", optional = true }
+num-traits = "0.2.19"
+bytemuck = { version = "1.25.2", optional = true }
+fearless_simd = { version = "1.2.0", optional = true }
+pollster = { version = "0.4.0", optional = true }
+wgpu = { version = "30.0.1", optional = true }
+rayon = { version = "1.12.0", optional = true }
+# Inline storage for up to 16 coefficients, so values up to 4D never allocate.
+smallvec = { version = "1.16.4", features = ["union"] }
+
+[dev-dependencies]
+# Competitors for benches/compare.rs and examples/gpu_bench.rs.
+clifford = "0.3.0"
+criterion = "0.8.2"
+geometric_algebra = "0.3.0"
+glam = "0.34.1"
+proptest = "1.12.0"
+rayon = "1.12.0"
+ultraviolet = "0.10.0"
+
+[[bench]]
+name = "products"
+harness = false
+
+[[bench]]
+name = "compare"
+harness = false
+
+[lints.rust]
+missing_docs = "warn"
+rust_2018_idioms = { level = "warn", priority = -1 }
+unreachable_pub = "warn"
+unsafe_code = "forbid"
+
+[[example]]
+name = "gpu_bench"
+required-features = ["gpu", "rayon", "simd"]
