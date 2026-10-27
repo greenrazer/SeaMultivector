@@ -18,7 +18,7 @@ assert_eq!(ab.iter().count(), 4);
 
 * Any signature (p, q, r) from 3 to 6 dimensions, including null basis vectors for projective geometry
 * Sparse values: a bitset of the blades present plus only their coefficients
-* Products that skip structural zeros, found at runtime with bitwise operations
+* Products that find their non-zero pairs at runtime by [multiplying a whole bitset of blades at once](#the-trick-multiply-a-whole-set-of-blades-at-once)
 * Geometric, outer, regressive, inner, and contraction products as operators
 * A PGA3D toolkit with points, planes, lines, motors, join and meet, `exp` and `log`, and nalgebra conversions
 * Generic over `f32` and `f64`
@@ -41,7 +41,7 @@ Geometric algebra libraries usually make you choose between two designs.
 * Dense, general libraries accept any algebra and any multivector. They store all 2ⁿ coefficients of every value, and a product of two values visits all 2ⁿ × 2ⁿ coefficient pairs, most of which are zero.
 * Specialized libraries generate code for one algebra and a fixed menu of object types such as points, planes, and motors. They are fast, but a new signature, a higher dimension, or a mixed-grade intermediate result means regenerating code or reaching for a different tool.
 
-Seagrass takes a third route. Every multivector carries a bitset recording which basis blades it holds, and every product works out the structure of its result with bitwise operations before it touches a single float. You keep the generality of the first design and do work in line with the second.
+Seagrass takes a third route. Every multivector carries a bitset recording which basis blades it holds, and every product works out the structure of its result with [one bit trick](#the-trick-multiply-a-whole-set-of-blades-at-once) before it touches a single float. You keep the generality of the first design and do work in line with the second.
 
 | Property          | Dense, general      | Specialized, generated                | Seagrass                                          |
 |-------------------|---------------------|---------------------------------------|---------------------------------------------------|
@@ -244,10 +244,54 @@ bitset         0b0100_0011      blades 0 (1), 1 (e1), and 6 (e23)
 coefficients   [3.0, 2.0, -1.0]
 ```
 
+### The trick: multiply a whole set of blades at once
+
+Multiplying a blade by the basis vector eₖ flips bit k − 1 of its index. Applied to every blade in a bitset, that flip always reorders the bitset's bits the same way: neighbouring groups of 2ᵏ⁻¹ bits trade places. One mask, two shifts, and an OR do it inside a single machine word, however many blades the set holds.
+
+```text
+{1, e12, e3} × e2: neighbouring groups of 2 bits trade places
+
+blade      1   e1     e2  e12      e3  e13    e23 e123
+before    [x   .]    [.   x]      [x   .]    [.   .]      {1, e12, e3}
+after     [.   x]    [x   .]      [.   .]    [x   .]      {e1, e2, e23}
+```
+
+```rust
+// Multiply every blade in `set` by e_k. CONTAINS[k] marks the blades that hold e_k,
+// such as 0b1100_1100 for e2 in 3D. Those move down and lose e_k; the rest move up and gain it.
+let shift = 1 << (k - 1);
+set = ((set & !CONTAINS[k]) << shift) | ((set & CONTAINS[k]) >> shift);
+```
+
+The bitset records only which blades are present, so signs are tracked separately (below). Multiplying by a blade with several basis vectors applies one swap per vector, so any blade takes at most n swaps (6 in 6D). The real code is `geometric_product_with_basis_vec` in [`basis_blade_set.rs`](src/multivector/low_dimensional/basis_blade_set.rs).
+
+### Finding every pair with one AND
+
+In a product A × B, a stored blade x of A lands on output blade o exactly when its partner x ⊕ o is stored in B. Multiplying B's bitset by o with the swaps above gives every such x at once, and ANDing the result with A's bitset leaves exactly the pairs that land on o.
+
+```text
+Rotor × vector in Euclidean 3D: the pairs that land on e1
+
+blade          1   e1  e2  e12 e3  e13 e23 e123
+vector B       .   x   x   .   x   .   .   .
+B × e1         x   .   .   x   .   x   .   .     groups of 1 bit trade places
+rotor A        x   .   .   x   .   x   x   .
+AND            x   .   .   x   .   x   .   .     pairs (1, e1), (e12, e2), (e13, e3)
+```
+
+Two more masks complete the pair list, both built from precomputed 64-bit constants:
+
+* Null vectors. A pair whose blades share a null basis vector multiplies to zero. One more AND removes those pairs before any coefficient is read, which matters in PGA.
+* Signs. With o fixed, a pair is identified by its left blade, so every sign fits in one mask laid out like the bitset. Reordering signs come from one constant XORed with one constant per basis vector in o. Each basis vector that squares to −1 and is not in o then flips the sign of every left blade that contains it, because both blades of such a pair contain it.
+
+What remains is a plain loop over the set bits: find both coefficient slots with `count_ones`, multiply, negate if the sign bit is set, and add.
+
+The outer product and the contractions follow the same pattern with their own masks, and the regressive product is an outer product between duals.
+
 ### Products run in two phases
 
-1. Structure comes first. The output bitset is computed from the input bitsets with shifts and masks, because multiplying by a basis vector permutes an entire bitset at once. The output coefficient vector is then allocated once, at its final length.
-2. Numbers come second. For each output blade, a few shifts and one AND find every stored left-hand blade that has a stored partner. The signs of all those pairs, from blade reordering and from the metric, come out of a single mask assembled from precomputed 64-bit constants, so the inner loop is a plain multiply-add.
+1. Structure comes first. The output bitset is the union of B's bitset multiplied by each stored blade of A, skipping pairs that share a null vector. The output coefficient vector is then allocated once, at its final length.
+2. Numbers come second. Each output blade gets its pair mask and sign mask as above, and the loop does the multiply-adds.
 
 ### Unary operations are word-sized
 
