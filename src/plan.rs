@@ -313,11 +313,12 @@ pub(crate) struct Term {
 /// `± m[i] x[j] m[k]`; since coefficients commute, the terms for (i, j, k) and (k, j, i) are
 /// merged, and terms that cancel are dropped, along with output blades whose terms all cancel.
 /// For a PGA3D motor applied to a point that leaves 40 terms where the two products have 68
-/// pairs.
+/// pairs. Offsets are `u32` because two dense 6D values give up to 64³ triples, more than a
+/// `u16` can count.
 #[derive(Debug, Clone)]
 pub(crate) struct SandwichPlan {
     output: u64,
-    offsets: Box<[u16]>,
+    offsets: Box<[u32]>,
     terms: Box<[Term]>,
 }
 
@@ -353,7 +354,7 @@ impl SandwichPlan {
                 output_blades |= B::from_index(BladeIndex::new(o));
             }
         }
-        let mut offsets = vec![0_u16];
+        let mut offsets = vec![0_u32];
         let mut terms = Vec::new();
         let mut current = None;
         for ((o, first, operand, second), coefficient) in sums {
@@ -361,7 +362,7 @@ impl SandwichPlan {
                 continue;
             }
             if current.is_some_and(|c| c != o) {
-                offsets.push(terms.len() as u16);
+                offsets.push(terms.len() as u32);
             }
             current = Some(o);
             // Each ordered (i, j, k) lands on exactly one output blade, so a merged term sums at
@@ -375,7 +376,7 @@ impl SandwichPlan {
             });
         }
         if current.is_some() {
-            offsets.push(terms.len() as u16);
+            offsets.push(terms.len() as u32);
         }
         Self {
             output: output_blades.to_u64(),
@@ -394,7 +395,7 @@ impl SandwichPlan {
     pub(crate) fn outputs(&self) -> impl ExactSizeIterator<Item = &[Term]> + '_ {
         self.offsets
             .windows(2)
-            .map(|range| &self.terms[usize::from(range[0])..usize::from(range[1])])
+            .map(|range| &self.terms[range[0] as usize..range[1] as usize])
     }
 
     /// The output coefficients for a versor `m` and operand `x` with the plan's blade sets.
@@ -403,7 +404,7 @@ impl SandwichPlan {
         let mut out = Coefficients::from_elem(T::zero(), self.offsets.len().saturating_sub(1));
         for (slot, range) in out.iter_mut().zip(self.offsets.windows(2)) {
             let mut sum = T::zero();
-            for term in &self.terms[usize::from(range[0])..usize::from(range[1])] {
+            for term in &self.terms[range[0] as usize..range[1] as usize] {
                 let product = m[usize::from(term.first)]
                     * x[usize::from(term.operand)]
                     * m[usize::from(term.second)];

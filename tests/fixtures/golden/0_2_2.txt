@@ -1,0 +1,155 @@
+# Random inputs a and b in signature (0, 2, 2) and the expected result of every
+# operation, computed once by an independent implementation, in Seagrass's string syntax
+# without the signature prefix. Read by tests/golden.rs; do not edit by hand.
+
+case 1
+a = -4 + e1 + 4e2 + e12 + 2e3 + 2e13 + 4e23 - 4e123 - 3e4 - 2e14 + 3e24 - 2e124 - 4e34 + e134 + 3e234 - 3e1234
+b = 2 + 3e1 + 3e2 - 2e12 - 2e3 + 3e13 + 4e23 - 3e123 + 3e4 - 2e14 + 4e24 + 3e124 + e34 - 3e134 + 2e234 - 3e1234
+a * b = -21 - 21e1 + e2 + e12 + 6e3 - 52e13 - 4e123 - 36e4 + 12e14 + 8e24 + 20e124 - 8e34 + 2e134 - 33e234 - 29e1234
+a ^ b = -8 - 10e1 - 4e2 + e12 + 12e3 - 16e13 - 22e23 - 4e123 - 18e4 + 16e14 + 11e24 + 20e124 - 12e34 - 12e234 - 29e1234
+a << b = -21 - 20e1 - 10e2 + 8e12 - 8e3 - 24e13 - 13e23 + 12e123 - 29e4 + 20e14 - 19e24 - 12e124 - 6e34 - 5e234 + 12e1234
+a >> b = -21 - e1 + 11e2 + 2e12 + 14e3 - 8e13 + 20e23 - 8e123 - 7e4 - 10e14 + 12e24 - 4e124 - 26e34 + 11e134 - 3e234 - 6e1234
+a | b = -21 - 21e1 + e2 + 10e12 + 6e3 - 32e13 + 7e23 + 4e123 - 36e4 + 10e14 - 7e24 - 16e124 - 32e34 + 11e134 - 8e234 + 6e1234
+a & b = -29 - 3e1 - 54e2 - 15e12 + 29e3 - 23e23 + 21e123 - 19e4 + 15e14 - 34e24 - 3e124 + 20e34 + 6e134 - 15e234 + 9e1234
+a b ã = 102 + 58e1 - 108e2 - 68e12 - 164e3 + 194e13 + 96e23 + 222e123 + 314e4 + 86e14 + 208e24 - 68e124 + 128e34 + 322e134 + 342e234 + 236e1234
+scalar product = -21
+reverse = -4 + e1 + 4e2 - e12 + 2e3 - 2e13 - 4e23 + 4e123 - 3e4 + 2e14 - 3e24 + 2e124 + 4e34 - e134 - 3e234 - 3e1234
+involute = -4 - e1 - 4e2 + e12 - 2e3 + 2e13 + 4e23 + 4e123 + 3e4 - 2e14 + 3e24 + 2e124 - 4e34 - e134 - 3e234 - 3e1234
+conjugate = -4 - e1 - 4e2 - e12 - 2e3 - 2e13 - 4e23 - 4e123 + 3e4 + 2e14 - 3e24 - 2e124 + 4e34 + e134 + 3e234 - 3e1234
+dual = -3 + 3e1 - e2 - 4e12 - 2e3 - 3e13 - 2e23 - 3e123 + 4e4 + 4e14 - 2e24 - 2e124 + e34 + 4e134 - e234 - 4e1234
+undual = -3 - 3e1 + e2 - 4e12 + 2e3 - 3e13 - 2e23 + 3e123 - 4e4 + 4e14 - 2e24 + 2e124 + e34 - 4e134 + e234 - 4e1234
+left complement = -3 - 3e1 + e2 - 4e12 + 2e3 - 3e13 - 2e23 + 3e123 - 4e4 + 4e14 - 2e24 + 2e124 + e34 - 4e134 + e234 - 4e1234
+right complement = -3 + 3e1 - e2 - 4e12 - 2e3 - 3e13 - 2e23 - 3e123 + 4e4 + 4e14 - 2e24 - 2e124 + e34 + 4e134 - e234 - 4e1234
+
+case 2
+a = -1 - 3e12 - e13 + 2e23 + 4e14 - e24 + e34 + 3e1234
+b = -3e1234
+a * b = -9e34 + 3e1234
+a ^ b = 3e1234
+a << b = -9e34 + 3e1234
+a >> b = 
+a | b = -9e34 + 3e1234
+a & b = 3 + 9e12 + 3e13 - 6e23 - 12e14 + 3e24 - 3e34 - 9e1234
+a b ã = -30e1234
+scalar product = 
+reverse = -1 + 3e12 + e13 - 2e23 - 4e14 + e24 - e34 + 3e1234
+involute = -1 - 3e12 - e13 + 2e23 + 4e14 - e24 + e34 + 3e1234
+conjugate = -1 + 3e12 + e13 - 2e23 - 4e14 + e24 - e34 + 3e1234
+dual = 3 + e12 + e13 + 4e23 + 2e14 + e24 - 3e34 - e1234
+undual = 3 + e12 + e13 + 4e23 + 2e14 + e24 - 3e34 - e1234
+left complement = 3 + e12 + e13 + 4e23 + 2e14 + e24 - 3e34 - e1234
+right complement = 3 + e12 + e13 + 4e23 + 2e14 + e24 - 3e34 - e1234
+
+case 3
+a = -4e1234
+b = e1234
+a * b = 
+a ^ b = 
+a << b = 
+a >> b = 
+a | b = 
+a & b = -4e1234
+a b ã = 
+scalar product = 
+reverse = -4e1234
+involute = -4e1234
+conjugate = -4e1234
+dual = -4
+undual = -4
+left complement = -4
+right complement = -4
+
+case 4
+a = 4e1 + 2e2 + 3e3 - 3e4
+b = 2 - 3e12 - 2e13 - 3e23 + e14 - e24 + e34 - 4e1234
+a * b = 2e1 + 16e2 + 20e3 - 17e123 - 8e4 + 3e124 - e134 + 30e234
+a ^ b = 8e1 + 4e2 + 6e3 - 17e123 - 6e4 + 3e124 + 7e134 + 14e234
+a << b = -6e1 + 12e2 + 14e3 - 2e4 - 8e134 + 16e234
+a >> b = 8e1 + 4e2 + 6e3 - 6e4
+a | b = 2e1 + 16e2 + 20e3 - 8e4 - 8e134 + 16e234
+a & b = -16e1 - 8e2 - 12e3 + 12e4
+a b ã = -40 - 60e12 - 108e13 + 76e23 + 32e14 - 44e24 - 92e34 - 80e1234
+scalar product = 
+reverse = 4e1 + 2e2 + 3e3 - 3e4
+involute = -4e1 - 2e2 - 3e3 + 3e4
+conjugate = -4e1 - 2e2 - 3e3 + 3e4
+dual = -3e123 - 3e124 + 2e134 - 4e234
+undual = 3e123 + 3e124 - 2e134 + 4e234
+left complement = 3e123 + 3e124 - 2e134 + 4e234
+right complement = -3e123 - 3e124 + 2e134 - 4e234
+
+case 5
+a = -2e1 + 3e2 - 3e3 + 2e4
+b = -4 - 4e12 - 3e13 - 2e23 - 2e14 + 3e24 - e34 + 2e1234
+a * b = -4e1 - 20e2 + 12e3 + 25e123 - 21e4 - 8e124 - 4e134 + 6e234
+a ^ b = 8e1 - 12e2 + 12e3 + 25e123 - 8e4 - 8e124 - 10e134 + 2e234
+a << b = -12e1 - 8e2 - 13e4 + 6e134 + 4e234
+a >> b = 8e1 - 12e2 + 12e3 - 8e4
+a | b = -4e1 - 20e2 + 12e3 - 21e4 + 6e134 + 4e234
+a & b = -4e1 + 6e2 - 6e3 + 4e4
+a b ã = 52 - 52e12 + 111e13 + 74e23 - 74e14 + 7e24 - 65e34 + 26e1234
+scalar product = 
+reverse = -2e1 + 3e2 - 3e3 + 2e4
+involute = 2e1 - 3e2 + 3e3 - 2e4
+conjugate = 2e1 - 3e2 + 3e3 - 2e4
+dual = 2e123 + 3e124 + 3e134 + 2e234
+undual = -2e123 - 3e124 - 3e134 - 2e234
+left complement = -2e123 - 3e124 - 3e134 - 2e234
+right complement = 2e123 + 3e124 + 3e134 + 2e234
+
+case 6
+a = 2e1 + e14 - 3e124
+b = -e4 + e14 - 3e34
+a * b = -2e4 - 2e14 - 6e134
+a ^ b = -2e14 - 6e134
+a << b = -2e4
+a >> b = 
+a | b = -2e4
+a & b = 9e4
+a b ã = -4e4 + 4e14 + 12e34
+scalar product = 
+reverse = 2e1 - e14 + 3e124
+involute = -2e1 + e14 + 3e124
+conjugate = -2e1 - e14 - 3e124
+dual = -3e3 + e23 - 2e234
+undual = 3e3 + e23 + 2e234
+left complement = 3e3 + e23 + 2e234
+right complement = -3e3 + e23 - 2e234
+
+case 7
+a = -3 - e12 + 4e13 - 4e23 + 3e14 - 4e24 + e34 - 2e1234
+b = -4e134
+a * b = 12e134 + 4e234
+a ^ b = 12e134
+a << b = 12e134
+a >> b = 
+a | b = 12e134
+a & b = 4e1 - 16e3 - 16e4 + 8e134
+a b ã = -32e134 - 24e234
+scalar product = 
+reverse = -3 + e12 - 4e13 + 4e23 - 3e14 + 4e24 - e34 - 2e1234
+involute = -3 - e12 + 4e13 - 4e23 + 3e14 - 4e24 + e34 - 2e1234
+conjugate = -3 + e12 - 4e13 + 4e23 - 3e14 + 4e24 - e34 - 2e1234
+dual = -2 + e12 + 4e13 + 3e23 - 4e14 - 4e24 - e34 - 3e1234
+undual = -2 + e12 + 4e13 + 3e23 - 4e14 - 4e24 - e34 - 3e1234
+left complement = -2 + e12 + 4e13 + 3e23 - 4e14 - 4e24 - e34 - 3e1234
+right complement = -2 + e12 + 4e13 + 3e23 - 4e14 - 4e24 - e34 - 3e1234
+
+case 8
+a = 1
+b = -4 + 3e12 - e13 - e23 - 3e14 + 3e24 - 3e34 + e1234
+a * b = -4 + 3e12 - e13 - e23 - 3e14 + 3e24 - 3e34 + e1234
+a ^ b = -4 + 3e12 - e13 - e23 - 3e14 + 3e24 - 3e34 + e1234
+a << b = -4 + 3e12 - e13 - e23 - 3e14 + 3e24 - 3e34 + e1234
+a >> b = -4
+a | b = -4 + 3e12 - e13 - e23 - 3e14 + 3e24 - 3e34 + e1234
+a & b = 1
+a b ã = -4 + 3e12 - e13 - e23 - 3e14 + 3e24 - 3e34 + e1234
+scalar product = -4
+reverse = 1
+involute = 1
+conjugate = 1
+dual = e1234
+undual = e1234
+left complement = e1234
+right complement = e1234

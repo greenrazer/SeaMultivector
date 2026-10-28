@@ -270,7 +270,7 @@ Products of typed values are typed: a motor times a motor is a motor, a motor ti
 | `a * b`                            | Geometric product                                                        |
 | `a ^ b`                            | Outer (wedge) product, the meet in PGA                                   |
 | `a & b`                            | Regressive (vee) product, the join in PGA                                |
-| `a \| b`                           | Inner product, the sum of the left and right contractions                |
+| `a \| b`                           | Inner product: left plus right contraction, scalar part counted once     |
 | `a << b`                           | Left contraction                                                         |
 | `a >> b`                           | Right contraction                                                        |
 | `!a`                               | Dual                                                                     |
@@ -374,4 +374,4 @@ cargo run --release --example gpu_bench --features gpu,rayon,simd           # th
 cargo run --release --example gpu_bench --features gpu,rayon,simd -- --cpu  # the CPU and SIMD batch tables, without a GPU
 ```
 
-Golden values cover products under Euclidean, projective, hyperbolic, and mixed signatures such as (3, 1, 1) in up to 6 dimensions, duals with two null vectors as in (3, 0, 2), parsing, `exp` and `log`, nalgebra conversions, and PGA camera projections. Property tests check associativity, reversion, duals, complements, quadratic forms, and the `Display` round trip on random values in twelve signatures, and every cached plan is checked against the per-call product it replaces in all 74 signatures.
+Golden values cover products under Euclidean, projective, hyperbolic, and mixed signatures such as (3, 1, 1) in up to 6 dimensions, duals with two null vectors as in (3, 0, 2), parsing, `exp` and `log`, nalgebra conversions, and PGA camera projections. Property tests check associativity, reversion, duals, complements, quadratic forms, and the `Display` round trip on random values in twelve signatures. In all 74 signatures from 3 to 6 dimensions, at compile time and at runtime, every product, dual, complement, and reversion is checked twice: against a reference in the tests that multiplies blades by hand, and against golden values computed once by an independent implementation and stored in `tests/fixtures/golden`, one file per signature. Every cached plan is also checked against the per-call product it replaces.
